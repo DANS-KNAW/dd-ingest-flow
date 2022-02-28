@@ -22,6 +22,7 @@ import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import nl.knaw.dans.ingest.core.AutoIngestInbox;
 import nl.knaw.dans.ingest.core.ImportInbox;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
@@ -73,13 +74,22 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
 
-        final ImportInbox inbox = new ImportInbox(
+        final ImportInbox importInbox = new ImportInbox(
             configuration.getIngestFlow().getImportConfig().getInbox(),
             configuration.getIngestFlow().getImportConfig().getOutbox(),
             importTaskFactoryWrapper,
             taskEventService,
             enqueuingService);
 
-        environment.jersey().register(new ImportResource(inbox));
+        final AutoIngestInbox autoIngestInbox = new AutoIngestInbox(
+            configuration.getIngestFlow().getAutoIngest().getInbox(),
+            configuration.getIngestFlow().getAutoIngest().getOutbox(),
+            importTaskFactoryWrapper,
+            taskEventService,
+            enqueuingService
+        );
+
+        environment.lifecycle().manage(autoIngestInbox);
+        environment.jersey().register(new ImportResource(importInbox));
     }
 }

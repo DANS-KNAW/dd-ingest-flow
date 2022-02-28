@@ -31,11 +31,8 @@ public class TargettedTaskSourceImpl implements TargettedTaskSource<DepositImpor
     private final Path outDir;
     private final EventWriter eventWriter;
     private final DepositIngestTaskFactoryWrapper taskFactory;
-    private final boolean keepWatching;
 
-    private boolean getTasksFailed = false;
-
-    public TargettedTaskSourceImpl(String name, Path inDir, Path outDir, TaskEventService taskEventService, DepositIngestTaskFactoryWrapper taskFactory, boolean keepWatching) {
+    public TargettedTaskSourceImpl(String name, Path inDir, Path outDir, TaskEventService taskEventService, DepositIngestTaskFactoryWrapper taskFactory) {
         this.name = name;
         if (!inDir.isAbsolute())
             throw new IllegalArgumentException("inDir must be an absolute path");
@@ -45,21 +42,14 @@ public class TargettedTaskSourceImpl implements TargettedTaskSource<DepositImpor
         this.outDir = outDir;
         this.eventWriter = new EventWriter(taskEventService, name);
         this.taskFactory = taskFactory;
-        this.keepWatching = keepWatching;
     }
 
     @Override
     public Iterator<DepositImportTaskWrapper> iterator() {
-        if (keepWatching) {
-            return new ContinuousDepositsImportTaskIterator(inDir, outDir, 500, taskFactory, eventWriter);
-        } else {
-            return new DepositsImportTaskIterator(inDir, outDir, taskFactory, eventWriter);
-        }
+        return createIterator(inDir, outDir, taskFactory, eventWriter);
     }
 
-    @Override
-    public boolean isFailed() {
-        return getTasksFailed;
+    protected Iterator<DepositImportTaskWrapper> createIterator(Path inDir, Path outDir, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
+        return new DepositsImportTaskIterator(inDir, outDir, taskFactory, eventWriter);
     }
-
 }

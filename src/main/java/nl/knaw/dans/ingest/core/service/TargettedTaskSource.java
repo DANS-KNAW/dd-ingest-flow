@@ -24,6 +24,4 @@ public interface TargettedTaskSource<T extends TargettedTask> extends Iterable<T
     @Override
     Iterator<T> iterator();
 
-    boolean isFailed();
-
 }

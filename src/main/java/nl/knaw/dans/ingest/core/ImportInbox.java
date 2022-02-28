@@ -51,7 +51,7 @@ public class ImportInbox extends AbstractInbox {
 
         validateInDir(inDir);
         initOutbox(outDir, continuePrevious);
-        TargettedTaskSource<DepositImportTaskWrapper> taskSource = new TargettedTaskSourceImpl(relativeBatchDir.toString(), inDir, outDir, taskEventService, taskFactory, false);
+        TargettedTaskSource<DepositImportTaskWrapper> taskSource = new TargettedTaskSourceImpl(relativeBatchDir.toString(), inDir, outDir, taskEventService, taskFactory);
         enqueuingService.executeEnqueue(taskSource);
     }
 }

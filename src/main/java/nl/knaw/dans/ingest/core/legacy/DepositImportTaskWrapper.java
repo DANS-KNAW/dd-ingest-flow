@@ -50,6 +50,7 @@ public class DepositImportTaskWrapper implements TargettedTask, Comparable<Depos
     }
 
 
+    @Override
     public void writeEvent(TaskEvent.EventType eventType, TaskEvent.Result result, String message) {
         eventWriter.write(getDepositId(), eventType, result, message);
     }

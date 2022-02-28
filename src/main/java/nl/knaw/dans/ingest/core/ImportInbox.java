@@ -18,31 +18,20 @@ package nl.knaw.dans.ingest.core;
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import nl.knaw.dans.ingest.core.service.TargettedTaskSource;
-import nl.knaw.dans.ingest.core.service.ImportTargettedTaskSource;
+import nl.knaw.dans.ingest.core.service.TargettedTaskSourceImpl;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ImportInbox {
+public class ImportInbox extends AbstractInbox {
     private static final Logger log = LoggerFactory.getLogger(ImportInbox.class);
-    private final Path inboxDir;
-    private final Path outboxDir;
-    private final DepositIngestTaskFactoryWrapper taskFactory;
-    private final TaskEventService taskEventService;
-    private final EnqueuingService enqueuingService;
 
     public ImportInbox(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory, TaskEventService taskEventService, EnqueuingService enqueuingService) {
-        this.inboxDir = inboxDir.toAbsolutePath();
-        this.outboxDir = outboxDir.toAbsolutePath();
-        this.taskFactory = taskFactory;
-        this.taskEventService = taskEventService;
-        this.enqueuingService = enqueuingService;
+        super(inboxDir, outboxDir, taskFactory, taskEventService, enqueuingService);
     }
 
     public void importBatch(Path batchPath, boolean continuePrevious) {
@@ -60,40 +49,9 @@ public class ImportInbox {
         Path inDir = inboxDir.resolve(relativeBatchDir);
         Path outDir = outboxDir.resolve(relativeBatchDir);
 
-        validateBatchDir(inDir);
+        validateInDir(inDir);
         initOutbox(outDir, continuePrevious);
-        TargettedTaskSource<DepositImportTaskWrapper> taskSource = new ImportTargettedTaskSource(relativeBatchDir.toString(), inDir, outDir, taskEventService, taskFactory);
+        TargettedTaskSource<DepositImportTaskWrapper> taskSource = new TargettedTaskSourceImpl(relativeBatchDir.toString(), inDir, outDir, taskEventService, taskFactory, false);
         enqueuingService.executeEnqueue(taskSource);
-    }
-
-    private void validateBatchDir(Path batchDir) {
-        if (Files.isRegularFile(batchDir))
-            throw new IllegalArgumentException("Batch directory is a regular file: " + batchDir);
-        if (!Files.exists(batchDir))
-            throw new IllegalArgumentException("Batch directory does not exist: " + batchDir);
-    }
-
-    private void initOutbox(Path outbox, boolean continuePrevious) {
-        try {
-            Path processedDir = outbox.resolve("processed");
-            Path failedDir = outbox.resolve("failed");
-            Path rejectedDir = outbox.resolve("rejected");
-
-            Files.createDirectories(outbox);
-            Files.createDirectories(processedDir);
-            Files.createDirectories(failedDir);
-            Files.createDirectories(rejectedDir);
-
-            if (!continuePrevious && (nonEmpty(processedDir) || nonEmpty(failedDir) || nonEmpty(rejectedDir))) {
-                throw new IllegalArgumentException("outbox is not empty; start with empty outbox at " + outbox + ", or use the 'continue' option");
-            }
-        }
-        catch (IOException e) {
-            throw new IllegalArgumentException("cannot initialize outbox for batch at " + outbox, e);
-        }
-    }
-
-    private boolean nonEmpty(Path p) throws IOException {
-        return Files.list(p).findAny().isPresent();
     }
 }

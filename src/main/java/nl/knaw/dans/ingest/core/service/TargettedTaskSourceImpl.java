@@ -15,27 +15,27 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
-import org.apache.commons.io.monitor.FileAlterationMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.Iterator;
-import java.util.concurrent.LinkedBlockingDeque;
 
-public class WatchedDirectoryTargettedTaskSource implements TargettedTaskSource, Managed {
-    // TODO: Move common fields to superclass
+public class TargettedTaskSourceImpl implements TargettedTaskSource<DepositImportTaskWrapper> {
+    private static final Logger log = LoggerFactory.getLogger(TargettedTaskSourceImpl.class);
+
     private final String name;
     private final Path inDir;
     private final Path outDir;
     private final EventWriter eventWriter;
     private final DepositIngestTaskFactoryWrapper taskFactory;
+    private final boolean keepWatching;
 
-    private FileAlterationMonitor monitor;
-    private LinkedBlockingDeque<DepositImportTaskWrapper> queue = new LinkedBlockingDeque<>();
+    private boolean getTasksFailed = false;
 
-    public WatchedDirectoryTargettedTaskSource(String name, Path inDir, Path outDir, TaskEventService taskEventService, DepositIngestTaskFactoryWrapper taskFactory) {
+    public TargettedTaskSourceImpl(String name, Path inDir, Path outDir, TaskEventService taskEventService, DepositIngestTaskFactoryWrapper taskFactory, boolean keepWatching) {
         this.name = name;
         if (!inDir.isAbsolute())
             throw new IllegalArgumentException("inDir must be an absolute path");
@@ -45,24 +45,21 @@ public class WatchedDirectoryTargettedTaskSource implements TargettedTaskSource,
         this.outDir = outDir;
         this.eventWriter = new EventWriter(taskEventService, name);
         this.taskFactory = taskFactory;
+        this.keepWatching = keepWatching;
     }
 
     @Override
     public Iterator<DepositImportTaskWrapper> iterator() {
-        return null;
+        if (keepWatching) {
+            return new ContinuousDepositsImportTaskIterator(inDir, outDir, 500, taskFactory, eventWriter);
+        } else {
+            return new DepositsImportTaskIterator(inDir, outDir, taskFactory, eventWriter);
+        }
     }
 
     @Override
     public boolean isFailed() {
-        return false;
+        return getTasksFailed;
     }
 
-    @Override
-    public void start() throws Exception {
-    }
-
-    @Override
-    public void stop() throws Exception {
-
-    }
 }

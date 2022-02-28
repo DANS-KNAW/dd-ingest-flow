@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core.service;
 
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
+import nl.knaw.dans.ingest.core.sequencing.TargettedTask;
 import nl.knaw.dans.ingest.core.sequencing.TargettedTaskSequenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,14 +39,15 @@ public class EnqueuingServiceImpl implements EnqueuingService {
     }
 
     @Override
-    public void executeEnqueue(TargettedTaskSource source) {
+    public <T extends TargettedTask> void executeEnqueue(TargettedTaskSource<T> source) {
         enqueingExecutor.execute(() -> {
-            Spliterator<DepositImportTaskWrapper> spliterator = Spliterators.spliteratorUnknownSize(source.iterator(), 0);
-            StreamSupport.stream(spliterator, false).forEach(this::enqueue);
+            for (T t: source) {
+                enqueue(t);
+            }
         });
     }
 
-    private void enqueue(DepositImportTaskWrapper w) {
+    private <T extends TargettedTask> void enqueue(T w) {
         log.trace("Enqueuing {}", w);
         try {
             targettedTaskSequenceManager.scheduleTask(w);

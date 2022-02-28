@@ -21,8 +21,11 @@ import nl.knaw.dans.ingest.core.sequencing.TargettedTaskSequenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.StreamSupport;
 
 public class EnqueuingServiceImpl implements EnqueuingService {
     private static final Logger log = LoggerFactory.getLogger(EnqueuingServiceImpl.class);
@@ -35,21 +38,22 @@ public class EnqueuingServiceImpl implements EnqueuingService {
     }
 
     @Override
-    public void executeEnqueue(Batch source) {
+    public void executeEnqueue(TargettedTaskSource source) {
         enqueingExecutor.execute(() -> {
-            source.getTasks().forEach(t -> enqueue(t, source.getEventWriter()));
+            Spliterator<DepositImportTaskWrapper> spliterator = Spliterators.spliteratorUnknownSize(source.iterator(), 0);
+            StreamSupport.stream(spliterator, false).forEach(this::enqueue);
         });
     }
 
-    private void enqueue(DepositImportTaskWrapper w, EventWriter eventWriter) {
+    private void enqueue(DepositImportTaskWrapper w) {
         log.trace("Enqueuing {}", w);
         try {
             targettedTaskSequenceManager.scheduleTask(w);
-            eventWriter.write(w.getDepositId(), TaskEvent.EventType.ENQUEUE, TaskEvent.Result.OK, null);
+            w.writeEvent(TaskEvent.EventType.ENQUEUE, TaskEvent.Result.OK, null);
         }
         catch (Exception e) {
             log.error("Enqueing of {} failed", w, e);
-            eventWriter.write(w.getDepositId(), TaskEvent.EventType.ENQUEUE, TaskEvent.Result.FAILED, e.getMessage());
+            w.writeEvent(TaskEvent.EventType.ENQUEUE, TaskEvent.Result.FAILED, e.getMessage());
         }
     }
 }

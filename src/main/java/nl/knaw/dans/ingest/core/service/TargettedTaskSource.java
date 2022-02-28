@@ -15,16 +15,14 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
+import nl.knaw.dans.ingest.core.sequencing.TargettedTask;
 
-import java.util.List;
+import java.util.Iterator;
 
-public interface Batch {
+public interface TargettedTaskSource<T extends TargettedTask> extends Iterable<T> {
 
-    EventWriter getEventWriter();
-
-    // TODO: change to iterator or stream, so that this can also be used as a continuous source of tasks?
-    List<DepositImportTaskWrapper> getTasks();
+    @Override
+    Iterator<T> iterator();
 
     boolean isFailed();
 

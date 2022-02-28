@@ -49,18 +49,23 @@ public class DepositImportTaskWrapper implements TargettedTask, Comparable<Depos
         return UUID.fromString(task.deposit().depositId());
     }
 
+
+    public void writeEvent(TaskEvent.EventType eventType, TaskEvent.Result result, String message) {
+        eventWriter.write(getDepositId(), eventType, result, message);
+    }
+
     @Override
     public void run() {
-        eventWriter.write(getDepositId(), TaskEvent.EventType.START_PROCESSING, TaskEvent.Result.OK, null);
+        writeEvent(TaskEvent.EventType.START_PROCESSING, TaskEvent.Result.OK, null);
         try {
             task.run().get();
-            eventWriter.write(getDepositId(), TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.OK, null);
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.OK, null);
         }
         catch (RejectedDepositException e) {
-            eventWriter.write(getDepositId(), TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.REJECTED, e.getMessage());
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.REJECTED, e.getMessage());
         }
         catch (FailedDepositException e) {
-            eventWriter.write(getDepositId(), TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.FAILED, e.getMessage());
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.FAILED, e.getMessage());
         }
     }
 
@@ -70,7 +75,7 @@ public class DepositImportTaskWrapper implements TargettedTask, Comparable<Depos
     }
 
     private static Instant getCreatedInstant(DepositIngestTask t) {
-        Bag bag = null;
+        Bag bag;
         try {
             bag = t.deposit().tryBag().get();
         }

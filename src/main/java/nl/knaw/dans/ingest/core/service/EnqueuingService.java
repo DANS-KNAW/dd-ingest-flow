@@ -16,9 +16,11 @@
 package nl.knaw.dans.ingest.core.service;
 
 /**
- * Enqueues a batch of tasks
+ * Enqueues a sequence of tasks asynchronously, i.e. it schedules the enqueuing action to be executed by a dedicated background thread. the reason is that the enqueuing can take
+ * arbitrarily long. In case of a continuous stream of tasks it may even last until the service is stopped, but even in case of a batch it may take too long for the client to wait for
+ * the enqueuing to finish.
  */
 public interface EnqueuingService {
 
-    void executeEnqueue(Batch source);
+    void executeEnqueue(TargettedTaskSource source);
 }

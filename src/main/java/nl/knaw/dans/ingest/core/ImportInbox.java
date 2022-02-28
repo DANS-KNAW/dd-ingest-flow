@@ -15,9 +15,10 @@
  */
 package nl.knaw.dans.ingest.core;
 
+import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
-import nl.knaw.dans.ingest.core.service.Batch;
-import nl.knaw.dans.ingest.core.service.BatchImpl;
+import nl.knaw.dans.ingest.core.service.TargettedTaskSource;
+import nl.knaw.dans.ingest.core.service.ImportTargettedTaskSource;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import org.slf4j.Logger;
@@ -61,8 +62,8 @@ public class ImportInbox {
 
         validateBatchDir(inDir);
         initOutbox(outDir, continuePrevious);
-        Batch batch = new BatchImpl(relativeBatchDir.toString(), inDir, outDir, taskEventService, taskFactory);
-        enqueuingService.executeEnqueue(batch);
+        TargettedTaskSource<DepositImportTaskWrapper> taskSource = new ImportTargettedTaskSource(relativeBatchDir.toString(), inDir, outDir, taskEventService, taskFactory);
+        enqueuingService.executeEnqueue(taskSource);
     }
 
     private void validateBatchDir(Path batchDir) {
@@ -95,6 +96,4 @@ public class ImportInbox {
     private boolean nonEmpty(Path p) throws IOException {
         return Files.list(p).findAny().isPresent();
     }
-
-    // TODO: implement getStatus (base on list of tasks? on database?)
 }

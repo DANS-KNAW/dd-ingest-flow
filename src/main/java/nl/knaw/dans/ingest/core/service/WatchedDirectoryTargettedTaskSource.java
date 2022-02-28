@@ -15,31 +15,27 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
+import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.io.monitor.FileAlterationMonitor;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Iterator;
+import java.util.concurrent.LinkedBlockingDeque;
 
-public class BatchImpl implements Batch {
-    private static final Logger log = LoggerFactory.getLogger(BatchImpl.class);
-
+public class WatchedDirectoryTargettedTaskSource implements TargettedTaskSource, Managed {
+    // TODO: Move common fields to superclass
     private final String name;
     private final Path inDir;
     private final Path outDir;
     private final EventWriter eventWriter;
     private final DepositIngestTaskFactoryWrapper taskFactory;
 
-    private boolean getTasksCalled = false;
-    private boolean getTasksFailed = false;
+    private FileAlterationMonitor monitor;
+    private LinkedBlockingDeque<DepositImportTaskWrapper> queue = new LinkedBlockingDeque<>();
 
-    public BatchImpl(String name, Path inDir, Path outDir, TaskEventService taskEventService, DepositIngestTaskFactoryWrapper taskFactory) {
+    public WatchedDirectoryTargettedTaskSource(String name, Path inDir, Path outDir, TaskEventService taskEventService, DepositIngestTaskFactoryWrapper taskFactory) {
         this.name = name;
         if (!inDir.isAbsolute())
             throw new IllegalArgumentException("inDir must be an absolute path");
@@ -52,33 +48,21 @@ public class BatchImpl implements Batch {
     }
 
     @Override
-    public EventWriter getEventWriter() {
-        return eventWriter;
-    }
-
-    @Override
-    public List<DepositImportTaskWrapper> getTasks() {
-        if (getTasksCalled)
-            throw new IllegalStateException("getTasks should be called only once per batch");
-        try {
-            return Files.list(inDir)
-                .map(d -> taskFactory.createIngestTask(d, outDir, eventWriter))
-                .sorted()
-                .collect(Collectors.toList());
-        }
-        catch (IOException e) {
-            log.error("Could not create tasks for batch {}", name, e);
-            getTasksFailed = true;
-            return Collections.emptyList();
-        }
-        finally {
-            getTasksCalled = true;
-        }
+    public Iterator<DepositImportTaskWrapper> iterator() {
+        return null;
     }
 
     @Override
     public boolean isFailed() {
-        return getTasksFailed;
+        return false;
     }
 
+    @Override
+    public void start() throws Exception {
+    }
+
+    @Override
+    public void stop() throws Exception {
+
+    }
 }

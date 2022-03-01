@@ -16,46 +16,45 @@
 package nl.knaw.dans.ingest.core.service;
 
 import nl.knaw.dans.ingest.core.TaskEvent;
-import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.sequencing.TargettedTask;
 import nl.knaw.dans.ingest.core.sequencing.TargettedTaskSequenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.StreamSupport;
 
 public class EnqueuingServiceImpl implements EnqueuingService {
     private static final Logger log = LoggerFactory.getLogger(EnqueuingServiceImpl.class);
 
-    private final ExecutorService enqueingExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService enqueuingExecutor;
     private final TargettedTaskSequenceManager targettedTaskSequenceManager;
 
-    public EnqueuingServiceImpl(TargettedTaskSequenceManager targettedTaskSequenceManager) {
+    public EnqueuingServiceImpl(TargettedTaskSequenceManager targettedTaskSequenceManager, int numberOfClients) {
         this.targettedTaskSequenceManager = targettedTaskSequenceManager;
+        enqueuingExecutor = Executors.newFixedThreadPool(numberOfClients);
     }
 
     @Override
     public <T extends TargettedTask> void executeEnqueue(TargettedTaskSource<T> source) {
-        enqueingExecutor.execute(() -> {
+        log.trace("executeEnqueue({})", source);
+        enqueuingExecutor.execute(() -> {
+            log.debug("Start enqueuing tasks");
             for (T t: source) {
                 enqueue(t);
             }
         });
     }
 
-    private <T extends TargettedTask> void enqueue(T w) {
-        log.trace("Enqueuing {}", w);
+    private <T extends TargettedTask> void enqueue(T t) {
+        log.trace("Enqueuing {}", t);
         try {
-            targettedTaskSequenceManager.scheduleTask(w);
-            w.writeEvent(TaskEvent.EventType.ENQUEUE, TaskEvent.Result.OK, null);
+            targettedTaskSequenceManager.scheduleTask(t);
+            t.writeEvent(TaskEvent.EventType.ENQUEUE, TaskEvent.Result.OK, null);
         }
         catch (Exception e) {
-            log.error("Enqueuing of {} failed", w, e);
-            w.writeEvent(TaskEvent.EventType.ENQUEUE, TaskEvent.Result.FAILED, e.getMessage());
+            log.error("Enqueuing of {} failed", t, e);
+            t.writeEvent(TaskEvent.EventType.ENQUEUE, TaskEvent.Result.FAILED, e.getMessage());
         }
     }
 }

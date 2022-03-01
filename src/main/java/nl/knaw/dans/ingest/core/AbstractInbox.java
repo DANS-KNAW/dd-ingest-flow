@@ -18,12 +18,15 @@ package nl.knaw.dans.ingest.core;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class AbstractInbox {
+    private static final Logger log = LoggerFactory.getLogger(AbstractInbox.class);
     protected final Path inboxDir;
     protected final Path outboxDir;
     protected final DepositIngestTaskFactoryWrapper taskFactory;
@@ -44,6 +47,7 @@ public class AbstractInbox {
     }
 
     protected void validateInDir(Path inDir) {
+        log.trace("validateInDir({})", inDir);
         if (Files.isRegularFile(inDir))
             throw new IllegalArgumentException("Input directory is a regular file: " + inDir);
         if (!Files.exists(inDir))
@@ -51,6 +55,7 @@ public class AbstractInbox {
     }
 
     protected void initOutbox(Path outbox, boolean allowNonEmpty) {
+        log.trace("initOutbox({}, {})", outbox, allowNonEmpty);
         try {
             Path processedDir = outbox.resolve("processed");
             Path failedDir = outbox.resolve("failed");

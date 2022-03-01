@@ -38,6 +38,7 @@ public class ImportInbox extends AbstractInbox {
     }
 
     public void importBatch(Path batchPath, boolean continuePrevious, boolean isMigration) {
+        log.trace("importBatch({}, {}, {})", batchPath, continuePrevious, isMigration);
         Path relativeBatchDir;
         if (batchPath.isAbsolute()) {
             relativeBatchDir = inboxDir.relativize(batchPath);
@@ -51,7 +52,7 @@ public class ImportInbox extends AbstractInbox {
         }
         Path inDir = inboxDir.resolve(relativeBatchDir);
         Path outDir = outboxDir.resolve(relativeBatchDir);
-
+        log.debug("inDir = {}, outDir = {}", inDir, outDir);
         validateInDir(inDir);
         initOutbox(outDir, continuePrevious);
         TargettedTaskSource<DepositImportTaskWrapper> taskSource = new TargettedTaskSourceImpl(relativeBatchDir.toString(), inDir, outDir, taskEventService,

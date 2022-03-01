@@ -77,8 +77,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getManagePrestaging(),
             configuration.getValidateDansBag());
 
-        final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targettedTaskSequenceManager);
-
+        final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targettedTaskSequenceManager, 2 /* Must support both importInbox and autoIngestInbox */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
 
@@ -86,7 +85,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getIngestFlow().getImportConfig().getInbox(),
             configuration.getIngestFlow().getImportConfig().getOutbox(),
             ingestTaskFactoryWrapper,
-            migrationTaskFactoryWrapper,
+            migrationTaskFactoryWrapper, // Only necessary during migration. Can be phased out after that.
             taskEventService,
             enqueuingService);
 

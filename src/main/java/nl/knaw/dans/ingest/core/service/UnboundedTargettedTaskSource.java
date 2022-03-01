@@ -21,21 +21,21 @@ import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import java.nio.file.Path;
 import java.util.Iterator;
 
-public class ContinuousTargettedTaskSource extends TargettedTaskSourceImpl{
-    private ContinuousDepositsImportTaskIterator iterator;
+public class UnboundedTargettedTaskSource extends TargettedTaskSourceImpl {
+    private UnboundedDepositsImportTaskIterator iterator;
 
-    public ContinuousTargettedTaskSource(String name, Path inDir, Path outDir, TaskEventService taskEventService,
+    public UnboundedTargettedTaskSource(String name, Path inDir, Path outDir, TaskEventService taskEventService,
         DepositIngestTaskFactoryWrapper taskFactory) {
         super(name, inDir, outDir, taskEventService, taskFactory);
     }
 
     @Override
     protected Iterator<DepositImportTaskWrapper> createIterator(Path inDir, Path outDir, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
-        iterator =  new ContinuousDepositsImportTaskIterator(inDir, outDir, 500, taskFactory, eventWriter);
+        iterator = new UnboundedDepositsImportTaskIterator(inDir, outDir, 500, taskFactory, eventWriter); // TODO: make pollinginterval configurable
         return iterator;
     }
 
-    public void stopWatching() {
-        iterator.stopWatching();
+    public void stop() {
+        iterator.stop();
     }
 }

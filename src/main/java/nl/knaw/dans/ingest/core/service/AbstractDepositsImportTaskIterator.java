@@ -17,6 +17,8 @@ package nl.knaw.dans.ingest.core.service;
 
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,14 +26,15 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class DepositsImportTaskIterator implements Iterator<DepositImportTaskWrapper>  {
+public abstract class AbstractDepositsImportTaskIterator implements Iterator<DepositImportTaskWrapper>  {
+    private static final Logger log = LoggerFactory.getLogger(AbstractDepositsImportTaskIterator.class);
     private final LinkedBlockingDeque<DepositImportTaskWrapper> deque = new LinkedBlockingDeque<>();
     private final Path inboxDir;
     private final Path outBox;
     private final DepositIngestTaskFactoryWrapper taskFactory;
     private final EventWriter eventWriter;
 
-    public DepositsImportTaskIterator(
+    public AbstractDepositsImportTaskIterator(
         Path inboxDir, Path outBox, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
         this.inboxDir = inboxDir;
         this.outBox = outBox;
@@ -39,14 +42,15 @@ public class DepositsImportTaskIterator implements Iterator<DepositImportTaskWra
         this.eventWriter = eventWriter;
     }
 
-    protected void readAddDepositsFromInbox() {
+    protected boolean readAllDepositsFromInbox() {
         try {
             Files.list(inboxDir)
                 .map(d -> taskFactory.createIngestTask(d, outBox, eventWriter))
                 .sorted().forEach(deque::add);
+            return !deque.isEmpty();
         }
         catch (IOException e) {
-            e.printStackTrace();
+            throw new IllegalStateException("Could not read deposits from inbox", e);
         }
     }
 
@@ -65,7 +69,7 @@ public class DepositsImportTaskIterator implements Iterator<DepositImportTaskWra
             return deque.take();
         }
         catch (InterruptedException e) {
-            e.printStackTrace();
+            log.warn("Deque threw error", e);
         }
         return null;
     }

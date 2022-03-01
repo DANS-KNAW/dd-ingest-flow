@@ -19,36 +19,40 @@ import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
 
-public class ContinuousDepositsImportTaskIterator extends DepositsImportTaskIterator {
+public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportTaskIterator {
+    private static final Logger log = LoggerFactory.getLogger(UnboundedDepositsImportTaskIterator.class);
     private boolean initialized = false;
-    private boolean initializationTriggered = false;
-    private boolean keepWatching = true;
+    private boolean depositsReadInInitialization = false;
+    private boolean keepRunning = true;
 
     private class EventHandler extends FileAlterationListenerAdaptor {
         @Override
         public void onStart(FileAlterationObserver observer) {
+            log.trace("onStart called");
             if (!initialized) {
-                readAddDepositsFromInbox();
                 initialized = true;
-                initializationTriggered = true;
+                depositsReadInInitialization = readAllDepositsFromInbox();
             }
         }
 
         @Override
         public void onDirectoryCreate(File file) {
-            if (initializationTriggered) {
-                initializationTriggered = false;
-                return; // file already added to queue by readFromBackLog
+            log.trace("onDirectoryCreate: {}", file);
+            if (depositsReadInInitialization) {
+                depositsReadInInitialization = false;
+                return; // file already added to queue by onStart
             }
             addTaskForDeposit(file.toPath());
         }
     }
 
-    public ContinuousDepositsImportTaskIterator(Path inboxDir, Path outBox, int pollingInterval, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
+    public UnboundedDepositsImportTaskIterator(Path inboxDir, Path outBox, int pollingInterval, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
         super(inboxDir, outBox, taskFactory, eventWriter);
         FileAlterationObserver observer = new FileAlterationObserver(inboxDir.toFile(), f -> f.isDirectory() && f.getParentFile().equals(inboxDir.toFile()));
         observer.addListener(new EventHandler());
@@ -64,10 +68,11 @@ public class ContinuousDepositsImportTaskIterator extends DepositsImportTaskIter
 
     @Override
     public boolean hasNext() {
-        return keepWatching || super.hasNext();
+        // Assuming that eventually a new item will arrive.
+        return keepRunning;
     }
 
-    public void stopWatching() {
-        keepWatching = false;
+    public void stop() {
+        keepRunning = false;
     }
 }

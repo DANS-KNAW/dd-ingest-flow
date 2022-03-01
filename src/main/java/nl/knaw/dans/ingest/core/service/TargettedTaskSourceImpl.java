@@ -50,6 +50,6 @@ public class TargettedTaskSourceImpl implements TargettedTaskSource<DepositImpor
     }
 
     protected Iterator<DepositImportTaskWrapper> createIterator(Path inDir, Path outDir, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
-        return new DepositsImportTaskIterator(inDir, outDir, taskFactory, eventWriter);
+        return new BoundedDepositImportTaskIterator(inDir, outDir, taskFactory, eventWriter);
     }
 }

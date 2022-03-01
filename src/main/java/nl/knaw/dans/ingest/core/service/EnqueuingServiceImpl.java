@@ -54,7 +54,7 @@ public class EnqueuingServiceImpl implements EnqueuingService {
             w.writeEvent(TaskEvent.EventType.ENQUEUE, TaskEvent.Result.OK, null);
         }
         catch (Exception e) {
-            log.error("Enqueing of {} failed", w, e);
+            log.error("Enqueuing of {} failed", w, e);
             w.writeEvent(TaskEvent.EventType.ENQUEUE, TaskEvent.Result.FAILED, e.getMessage());
         }
     }

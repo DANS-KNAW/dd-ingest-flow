@@ -45,7 +45,7 @@ public class ImportResource {
     public Response startBatch(Import start) {
         log.trace("Received command = {}", start);
         try {
-            inbox.importBatch(start.getBatch(), start.isContinue());
+            inbox.importBatch(start.getBatch(), start.isContinue(), start.isMigration());
         }
         catch (IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());

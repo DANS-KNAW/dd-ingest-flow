@@ -64,11 +64,19 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
     public void run(final DdIngestFlowConfiguration configuration, final Environment environment) {
         final ExecutorService taskExecutor = configuration.getIngestFlow().getTaskQueue().build(environment);
         final TargettedTaskSequenceManager targettedTaskSequenceManager = new TargettedTaskSequenceManager(taskExecutor);
-        final DepositIngestTaskFactoryWrapper importTaskFactoryWrapper = new DepositIngestTaskFactoryWrapper(
+        final DepositIngestTaskFactoryWrapper ingestTaskFactoryWrapper = new DepositIngestTaskFactoryWrapper(
+            false,
             configuration.getIngestFlow(),
             configuration.getDataverse(),
             configuration.getManagePrestaging(),
             configuration.getValidateDansBag());
+        final DepositIngestTaskFactoryWrapper migrationTaskFactoryWrapper = new DepositIngestTaskFactoryWrapper(
+            true,
+            configuration.getIngestFlow(),
+            configuration.getDataverse(),
+            configuration.getManagePrestaging(),
+            configuration.getValidateDansBag());
+
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targettedTaskSequenceManager);
 
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
@@ -77,14 +85,15 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final ImportInbox importInbox = new ImportInbox(
             configuration.getIngestFlow().getImportConfig().getInbox(),
             configuration.getIngestFlow().getImportConfig().getOutbox(),
-            importTaskFactoryWrapper,
+            ingestTaskFactoryWrapper,
+            migrationTaskFactoryWrapper,
             taskEventService,
             enqueuingService);
 
         final AutoIngestInbox autoIngestInbox = new AutoIngestInbox(
             configuration.getIngestFlow().getAutoIngest().getInbox(),
             configuration.getIngestFlow().getAutoIngest().getOutbox(),
-            importTaskFactoryWrapper,
+            ingestTaskFactoryWrapper,
             taskEventService,
             enqueuingService
         );

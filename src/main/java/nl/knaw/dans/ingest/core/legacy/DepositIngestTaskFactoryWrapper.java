@@ -44,6 +44,7 @@ public class DepositIngestTaskFactoryWrapper {
     private final DepositIngestTaskFactory factory;
 
     public DepositIngestTaskFactoryWrapper(
+        boolean isMigration,
         IngestFlowConfig ingestFlowConfig,
         DataverseConfigScala dataverseConfigScala,
         HttpServiceConfig migrationInfoConfig,
@@ -80,7 +81,7 @@ public class DepositIngestTaskFactoryWrapper {
         final List<URI> supportedLicenses = getUriList(ingestFlowConfig, "supported-licenses.txt");
 
         factory = new DepositIngestTaskFactory(
-            true, // TODO: make configurable
+            isMigration,
             Option.apply(Pattern.compile(ingestFlowConfig.getFileExclusionPattern())),
             new ZipFileHandler(File.apply(ingestFlowConfig.getZipWrappingTempDir())),
             ingestFlowConfig.getDepositorRole(),
@@ -116,5 +117,4 @@ public class DepositIngestTaskFactoryWrapper {
     public DepositImportTaskWrapper createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) {
         return new DepositImportTaskWrapper(factory.createDepositIngestTask(new Deposit(File.apply(depositDir)), File.apply(outboxDir)), eventWriter);
     }
-
 }

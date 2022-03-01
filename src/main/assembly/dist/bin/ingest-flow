@@ -9,11 +9,18 @@ parser.add_argument('-c', '--continue',
                     action='store_true',
                     dest='continue_previous',
                     help='continue previously stopped batch (output directory is allowed to be non-empty)')
+parser.add_argument('-m', '--migration',
+                    action='store_true',
+                    dest='migration',
+                    default=True,
+                    help='import as migrated datasets')
+
 args = parser.parse_args()
 
 r = requests.post('http://localhost:20300/import', json={
     'batch': os.path.abspath(args.batch),
-    'continue': args.continue_previous
+    'continue': args.continue_previous,
+    'migration': args.migration
 })
 
 print('Server responded: %s' % r.text)

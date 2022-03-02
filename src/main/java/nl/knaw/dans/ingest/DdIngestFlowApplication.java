@@ -32,7 +32,7 @@ import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
-import nl.knaw.dans.ingest.resources.ImportResource;
+import nl.knaw.dans.ingest.resources.ImportsResource;
 
 import java.util.concurrent.ExecutorService;
 
@@ -98,6 +98,6 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         );
 
         environment.lifecycle().manage(autoIngestInbox);
-        environment.jersey().register(new ImportResource(importInbox));
+        environment.jersey().register(new ImportsResource(importInbox));
     }
 }

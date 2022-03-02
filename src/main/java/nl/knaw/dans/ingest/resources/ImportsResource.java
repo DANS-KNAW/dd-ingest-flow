@@ -29,14 +29,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("/import")
+@Path("/imports")
 @Produces(MediaType.APPLICATION_JSON)
-public class ImportResource {
-    private static final Logger log = LoggerFactory.getLogger(ImportResource.class);
+public class ImportsResource {
+    private static final Logger log = LoggerFactory.getLogger(ImportsResource.class);
 
     private final ImportInbox inbox;
 
-    public ImportResource(ImportInbox inbox) {
+    public ImportsResource(ImportInbox inbox) {
         this.inbox = inbox;
     }
 
@@ -44,14 +44,16 @@ public class ImportResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response startBatch(Import start) {
         log.trace("Received command = {}", start);
+        String batchName;
         try {
-            inbox.importBatch(start.getBatch(), start.isContinue(), start.isMigration());
+            batchName = inbox.importBatch(start.getBatch(), start.isContinue(), start.isMigration());
         }
         catch (IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());
         }
         return Response.accepted(
-                new ResponseMessage(Response.Status.ACCEPTED.getStatusCode(), "import request was received; check progress with the 'status' command"))
+                new ResponseMessage(Response.Status.ACCEPTED.getStatusCode(),
+                    String.format("import request was received (batch = %s, continue = %s, migration = %s", batchName, start.isContinue(), start.isMigration())))
             .build();
     }
 

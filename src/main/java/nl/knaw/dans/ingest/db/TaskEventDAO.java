@@ -18,6 +18,9 @@ package nl.knaw.dans.ingest.db;
 import io.dropwizard.hibernate.AbstractDAO;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
+
+import java.util.List;
 
 public class TaskEventDAO extends AbstractDAO<TaskEvent> {
 
@@ -28,4 +31,12 @@ public class TaskEventDAO extends AbstractDAO<TaskEvent> {
     public TaskEvent save(TaskEvent taskEvent) {
         return persist(taskEvent);
     }
+
+    public List<TaskEvent> getEventsByBatch(String batchName) {
+        Query<TaskEvent> query = currentSession().createQuery("from TaskEvent "
+            + "where batch = :batchName", TaskEvent.class);
+        query.setParameter("batchName", batchName);
+        return query.list();
+    }
+
 }

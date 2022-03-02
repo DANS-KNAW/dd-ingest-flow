@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 
 public class ImportInbox extends AbstractInbox {
     private static final Logger log = LoggerFactory.getLogger(ImportInbox.class);
-    private DepositIngestTaskFactoryWrapper migrationTaskFactory;
+    private final DepositIngestTaskFactoryWrapper migrationTaskFactory;
 
     public ImportInbox(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory, DepositIngestTaskFactoryWrapper migrationTaskFactory,
         TaskEventService taskEventService, EnqueuingService enqueuingService) {
@@ -37,14 +37,14 @@ public class ImportInbox extends AbstractInbox {
         this.migrationTaskFactory = migrationTaskFactory;
     }
 
-    public void importBatch(Path batchPath, boolean continuePrevious, boolean isMigration) {
+    public String importBatch(Path batchPath, boolean continuePrevious, boolean isMigration) {
         log.trace("importBatch({}, {}, {})", batchPath, continuePrevious, isMigration);
         Path relativeBatchDir;
         if (batchPath.isAbsolute()) {
             relativeBatchDir = inboxDir.relativize(batchPath);
             if (relativeBatchDir.startsWith(Paths.get(".."))) {
-                throw new IllegalArgumentException("Batch directory must be subdirectory of" + inboxDir
-                    + ". Provide correct absolute path or a path relative to this directory");
+                throw new IllegalArgumentException(
+                    String.format("Batch directory must be subdirectory of %s. Provide correct absolute path or a path relative to this directory.", inboxDir));
             }
         }
         else {
@@ -58,5 +58,6 @@ public class ImportInbox extends AbstractInbox {
         TargettedTaskSource<DepositImportTaskWrapper> taskSource = new TargettedTaskSourceImpl(relativeBatchDir.toString(), inDir, outDir, taskEventService,
             isMigration ? migrationTaskFactory : taskFactory);
         enqueuingService.executeEnqueue(taskSource);
+        return  relativeBatchDir.toString();
     }
 }

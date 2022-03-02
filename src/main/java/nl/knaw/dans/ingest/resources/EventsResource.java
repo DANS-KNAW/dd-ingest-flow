@@ -30,6 +30,6 @@ public class EventsResource {
         this.taskEventDAO = taskEventDAO;
     }
 
-
+    public getEvents
 
 }

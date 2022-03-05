@@ -39,4 +39,10 @@ public class TaskEventDAO extends AbstractDAO<TaskEvent> {
         return query.list();
     }
 
+    public List<TaskEvent> getEventsByDeposit(String depositId) {
+        Query<TaskEvent> query = currentSession().createQuery("from TaskEvent "
+            + "where depositId = :depositId", TaskEvent.class);
+        query.setParameter("depositId", depositId);
+        return query.list();
+    }
 }

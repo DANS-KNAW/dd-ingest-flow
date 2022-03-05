@@ -23,6 +23,7 @@ import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ingest.core.AutoIngestInbox;
+import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportInbox;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
@@ -32,6 +33,7 @@ import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
+import nl.knaw.dans.ingest.resources.EventsResource;
 import nl.knaw.dans.ingest.resources.ImportsResource;
 
 import java.util.concurrent.ExecutorService;
@@ -99,5 +101,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
         environment.lifecycle().manage(autoIngestInbox);
         environment.jersey().register(new ImportsResource(importInbox));
+        environment.jersey().register(new EventsResource(taskEventDAO));
+        environment.jersey().register(new CsvMessageBodyWriter());
     }
 }

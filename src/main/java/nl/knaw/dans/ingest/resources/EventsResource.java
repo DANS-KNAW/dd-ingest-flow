@@ -15,11 +15,16 @@
  */
 package nl.knaw.dans.ingest.resources;
 
+import io.dropwizard.hibernate.UnitOfWork;
+import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.QueryParam;
+import java.util.List;
 
 @Path("/events")
 public class EventsResource {
@@ -30,6 +35,20 @@ public class EventsResource {
         this.taskEventDAO = taskEventDAO;
     }
 
-    public getEvents
+    @GET
+    @Produces("text/csv")
+    @Path("/batch/{batch}")
+    @UnitOfWork
+    public List<TaskEvent> getEventsByBatch(@PathParam("batch") String batch) {
+        return taskEventDAO.getEventsByBatch(batch);
+    }
+
+    @GET
+    @Produces("text/csv")
+    @Path("/deposit/{depositId}")
+    @UnitOfWork
+    public List<TaskEvent> getEventsByDeposit(@PathParam("depositId") String depositId) {
+        return taskEventDAO.getEventsByDeposit(depositId);
+    }
 
 }

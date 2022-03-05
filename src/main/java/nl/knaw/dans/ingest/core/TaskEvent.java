@@ -63,6 +63,9 @@ public class TaskEvent {
     @Column(name = "message", length = 1000)
     private String message;
 
+    public TaskEvent() {
+    }
+
     public TaskEvent(String batch, OffsetDateTime timestamp, UUID depositId, EventType evenType, Result result, String message) {
         this.batch = batch;
         this.timestamp = timestamp;

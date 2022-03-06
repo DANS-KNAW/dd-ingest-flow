@@ -17,14 +17,14 @@ package nl.knaw.dans.ingest.core;
 
 import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
-import nl.knaw.dans.ingest.core.service.UnboundedTargettedTaskSource;
+import nl.knaw.dans.ingest.core.service.UnboundedTargetedTaskSource;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 
 import java.nio.file.Path;
 
 public class AutoIngestInbox extends AbstractInbox implements Managed {
-    private UnboundedTargettedTaskSource taskSource;
+    private UnboundedTargetedTaskSource taskSource;
 
     public AutoIngestInbox(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory,
         TaskEventService taskEventService, EnqueuingService enqueuingService) {
@@ -35,7 +35,7 @@ public class AutoIngestInbox extends AbstractInbox implements Managed {
     public void start() throws Exception {
         validateInDir(inboxDir);
         initOutbox(outboxDir, true);
-        taskSource = new UnboundedTargettedTaskSource("auto-ingest", inboxDir, outboxDir, taskEventService, taskFactory);
+        taskSource = new UnboundedTargetedTaskSource("auto-ingest", inboxDir, outboxDir, taskEventService, taskFactory);
         enqueuingService.executeEnqueue(taskSource);
     }
 

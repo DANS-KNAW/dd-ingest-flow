@@ -21,19 +21,19 @@ import org.slf4j.LoggerFactory;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-class TargettedTaskSequencer implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(TargettedTaskSequencer.class);
-    private final Queue<TargettedTask> localQueue = new ConcurrentLinkedDeque<>();
-    private final TargettedTaskSequenceManager targettedTaskSequenceManager;
+class TargetedTaskSequencer implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(TargetedTaskSequencer.class);
+    private final Queue<TargetedTask> localQueue = new ConcurrentLinkedDeque<>();
+    private final TargetedTaskSequenceManager targetedTaskSequenceManager;
     private final String target;
 
-    public TargettedTaskSequencer(TargettedTaskSequenceManager targettedTaskSequenceManager, TargettedTask task) {
-        this.targettedTaskSequenceManager = targettedTaskSequenceManager;
+    public TargetedTaskSequencer(TargetedTaskSequenceManager targetedTaskSequenceManager, TargetedTask task) {
+        this.targetedTaskSequenceManager = targetedTaskSequenceManager;
         this.target = task.getTarget();
         enqueue(task);
     }
 
-    public synchronized void enqueue(TargettedTask task) {
+    public synchronized void enqueue(TargetedTask task) {
         log.debug("Adding task {} to sequencer queue", task);
         if (task.getTarget().equals(target)) {
             localQueue.add(task);
@@ -49,21 +49,21 @@ class TargettedTaskSequencer implements Runnable {
 
     @Override
     public void run() {
-        TargettedTask task = localQueue.poll();
+        TargetedTask task = localQueue.poll();
 
         while (task != null) {
             log.debug("Processing task {}", task);
             task.run();
-            task = getNextDeposit();
+            task = getNextTask();
         }
     }
 
-    private TargettedTask getNextDeposit() {
-        synchronized (targettedTaskSequenceManager) {
-            TargettedTask task = localQueue.poll();
+    private TargetedTask getNextTask() {
+        synchronized (targetedTaskSequenceManager) {
+            TargetedTask task = localQueue.poll();
             if (task == null) {
                 log.debug("No more tasks on sequencer queue. Removing sequencer for target {}", target);
-                targettedTaskSequenceManager.removeSequencer(this);
+                targetedTaskSequenceManager.removeSequencer(this);
             }
             return task;
         }

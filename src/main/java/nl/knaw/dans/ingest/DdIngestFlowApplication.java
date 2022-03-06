@@ -27,7 +27,7 @@ import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportInbox;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
-import nl.knaw.dans.ingest.core.sequencing.TargettedTaskSequenceManager;
+import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
@@ -65,7 +65,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
     @Override
     public void run(final DdIngestFlowConfiguration configuration, final Environment environment) {
         final ExecutorService taskExecutor = configuration.getIngestFlow().getTaskQueue().build(environment);
-        final TargettedTaskSequenceManager targettedTaskSequenceManager = new TargettedTaskSequenceManager(taskExecutor);
+        final TargetedTaskSequenceManager targetedTaskSequenceManager = new TargetedTaskSequenceManager(taskExecutor);
         final DepositIngestTaskFactoryWrapper ingestTaskFactoryWrapper = new DepositIngestTaskFactoryWrapper(
             false,
             configuration.getIngestFlow(),
@@ -79,7 +79,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getManagePrestaging(),
             configuration.getValidateDansBag());
 
-        final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targettedTaskSequenceManager, 2 /* Must support both importInbox and autoIngestInbox */);
+        final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 2 /* Must support both importInbox and autoIngestInbox */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
 

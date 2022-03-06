@@ -25,32 +25,32 @@ import java.util.concurrent.ExecutorService;
  * Manages the process of ingesting deposits in the correct order by ensuring that deposits that target the same dataset are not concurrently scheduled on different threads. If an unfinished deposit
  * for the same dataset is still present, the next deposit for that dataset will be queued on the same thread, ensuring that it cannot overtake the already processing deposit.
  */
-public class TargettedTaskSequenceManager {
-    private static final Logger log = LoggerFactory.getLogger(TargettedTaskSequenceManager.class);
-    private final LinkedHashMap<String, TargettedTaskSequencer> sequencers = new LinkedHashMap<>();
+public class TargetedTaskSequenceManager {
+    private static final Logger log = LoggerFactory.getLogger(TargetedTaskSequenceManager.class);
+    private final LinkedHashMap<String, TargetedTaskSequencer> sequencers = new LinkedHashMap<>();
     private final ExecutorService executorService;
 
-    public TargettedTaskSequenceManager(ExecutorService executorService) {
+    public TargetedTaskSequenceManager(ExecutorService executorService) {
         this.executorService = executorService;
     }
 
-    public synchronized void scheduleTask(TargettedTask targettedTask) {
-        log.trace("Scheduling targetted task {}", targettedTask);
+    public synchronized void scheduleTask(TargetedTask targetedTask) {
+        log.trace("Scheduling targeted task {}", targetedTask);
         // TODO: Use Is-Version-Of in autoIngest service (DOI is not available there)
-        TargettedTaskSequencer sequencer = sequencers.get(targettedTask.getTarget());
+        TargetedTaskSequencer sequencer = sequencers.get(targetedTask.getTarget());
         if (sequencer == null) {
-            log.debug("Creating NEW sequencer for target {}", targettedTask.getTarget());
-            sequencer = new TargettedTaskSequencer(this, targettedTask);
-            sequencers.put(targettedTask.getTarget(), sequencer);
+            log.debug("Creating NEW sequencer for target {}", targetedTask.getTarget());
+            sequencer = new TargetedTaskSequencer(this, targetedTask);
+            sequencers.put(targetedTask.getTarget(), sequencer);
             executorService.execute(sequencer);
         }
         else {
-            log.debug("Using EXISTING sequencer for target {}", targettedTask.getTarget());
-            sequencer.enqueue(targettedTask);
+            log.debug("Using EXISTING sequencer for target {}", targetedTask.getTarget());
+            sequencer.enqueue(targetedTask);
         }
     }
 
-    synchronized void removeSequencer(TargettedTaskSequencer sequencer) {
+    synchronized void removeSequencer(TargetedTaskSequencer sequencer) {
         log.trace("Removing sequencer for target {}", sequencer.getTarget());
         sequencers.remove(sequencer.getTarget());
     }

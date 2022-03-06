@@ -68,7 +68,7 @@ public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportT
 
     @Override
     public boolean hasNext() {
-        // Assuming that eventually a new item will arrive.
+        // Assuming that eventually a new item will arrive, unless we are explicitly stopping watching the inbox
         return keepRunning;
     }
 

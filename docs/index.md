@@ -83,7 +83,7 @@ Per metadata block a mapping is defined from information in the deposit director
 details of these mappings are defined in internal document, but can be found in the `DepositToDvDatasetMetadataMapper.scala`
 class as well. 
 
-If a block is found to be active in the targetted Dataverse instance, the mapping is executed, if the block is
+If a block is found to be active in the targeted Dataverse instance, the mapping is executed, if the block is
 inactive, it is skipped.
 
 Mappings for the following blocks have been defined:

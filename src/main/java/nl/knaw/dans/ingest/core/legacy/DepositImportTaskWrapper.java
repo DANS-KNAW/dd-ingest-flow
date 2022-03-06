@@ -21,15 +21,19 @@ import nl.knaw.dans.easy.dd2d.DepositIngestTask;
 import nl.knaw.dans.easy.dd2d.FailedDepositException;
 import nl.knaw.dans.easy.dd2d.RejectedDepositException;
 import nl.knaw.dans.ingest.core.TaskEvent;
-import nl.knaw.dans.ingest.core.sequencing.TargettedTask;
+import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 import nl.knaw.dans.ingest.core.service.EventWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-public class DepositImportTaskWrapper implements TargettedTask, Comparable<DepositImportTaskWrapper> {
+public class DepositImportTaskWrapper implements TargetedTask, Comparable<DepositImportTaskWrapper> {
+    private static final Logger log = LoggerFactory.getLogger(DepositImportTaskWrapper.class);
+
     private final DepositIngestTask task;
     private final Instant created;
     private final EventWriter eventWriter;

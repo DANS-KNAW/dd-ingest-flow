@@ -18,18 +18,21 @@ package nl.knaw.dans.ingest.core;
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
-import nl.knaw.dans.ingest.core.service.TargettedTaskSource;
-import nl.knaw.dans.ingest.core.service.TargettedTaskSourceImpl;
+import nl.knaw.dans.ingest.core.service.TargetedTaskSource;
+import nl.knaw.dans.ingest.core.service.TargetedTaskSourceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ImportInbox extends AbstractInbox {
     private static final Logger log = LoggerFactory.getLogger(ImportInbox.class);
     private final DepositIngestTaskFactoryWrapper migrationTaskFactory;
+    private final Map<String, TargetedTaskSource<DepositImportTaskWrapper>> batches = new HashMap<>();
 
     public ImportInbox(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory, DepositIngestTaskFactoryWrapper migrationTaskFactory,
         TaskEventService taskEventService, EnqueuingService enqueuingService) {
@@ -37,8 +40,8 @@ public class ImportInbox extends AbstractInbox {
         this.migrationTaskFactory = migrationTaskFactory;
     }
 
-    public String importBatch(Path batchPath, boolean continuePrevious, boolean isMigration) {
-        log.trace("importBatch({}, {}, {})", batchPath, continuePrevious, isMigration);
+    public String startBatch(Path batchPath, boolean continuePrevious, boolean isMigration) {
+        log.trace("startBatch({}, {}, {})", batchPath, continuePrevious, isMigration);
         Path relativeBatchDir;
         if (batchPath.isAbsolute()) {
             relativeBatchDir = inboxDir.relativize(batchPath);
@@ -55,8 +58,10 @@ public class ImportInbox extends AbstractInbox {
         log.debug("inDir = {}, outDir = {}", inDir, outDir);
         validateInDir(inDir);
         initOutbox(outDir, continuePrevious);
-        TargettedTaskSource<DepositImportTaskWrapper> taskSource = new TargettedTaskSourceImpl(relativeBatchDir.toString(), inDir, outDir, taskEventService,
+        String batchName = relativeBatchDir.toString();
+        TargetedTaskSource<DepositImportTaskWrapper> taskSource = new TargetedTaskSourceImpl(batchName, inDir, outDir, taskEventService,
             isMigration ? migrationTaskFactory : taskFactory);
+        batches.put(batchName, taskSource);
         enqueuingService.executeEnqueue(taskSource);
         return  relativeBatchDir.toString();
     }

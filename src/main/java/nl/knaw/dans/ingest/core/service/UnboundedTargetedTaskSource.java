@@ -15,22 +15,20 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 
 import java.nio.file.Path;
-import java.util.Iterator;
 
-public class UnboundedTargettedTaskSource extends TargettedTaskSourceImpl {
+public class UnboundedTargetedTaskSource extends TargetedTaskSourceImpl {
     private UnboundedDepositsImportTaskIterator iterator;
 
-    public UnboundedTargettedTaskSource(String name, Path inDir, Path outDir, TaskEventService taskEventService,
+    public UnboundedTargetedTaskSource(String name, Path inDir, Path outDir, TaskEventService taskEventService,
         DepositIngestTaskFactoryWrapper taskFactory) {
         super(name, inDir, outDir, taskEventService, taskFactory);
     }
 
     @Override
-    protected Iterator<DepositImportTaskWrapper> createIterator(Path inDir, Path outDir, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
+    protected UnboundedDepositsImportTaskIterator createIterator(Path inDir, Path outDir, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
         iterator = new UnboundedDepositsImportTaskIterator(inDir, outDir, 500, taskFactory, eventWriter); // TODO: make pollinginterval configurable
         return iterator;
     }

@@ -16,8 +16,8 @@
 package nl.knaw.dans.ingest.core.service;
 
 import nl.knaw.dans.ingest.core.TaskEvent;
-import nl.knaw.dans.ingest.core.sequencing.TargettedTask;
-import nl.knaw.dans.ingest.core.sequencing.TargettedTaskSequenceManager;
+import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
+import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,15 +28,15 @@ public class EnqueuingServiceImpl implements EnqueuingService {
     private static final Logger log = LoggerFactory.getLogger(EnqueuingServiceImpl.class);
 
     private final ExecutorService enqueuingExecutor;
-    private final TargettedTaskSequenceManager targettedTaskSequenceManager;
+    private final TargetedTaskSequenceManager targetedTaskSequenceManager;
 
-    public EnqueuingServiceImpl(TargettedTaskSequenceManager targettedTaskSequenceManager, int numberOfClients) {
-        this.targettedTaskSequenceManager = targettedTaskSequenceManager;
+    public EnqueuingServiceImpl(TargetedTaskSequenceManager targetedTaskSequenceManager, int numberOfClients) {
+        this.targetedTaskSequenceManager = targetedTaskSequenceManager;
         enqueuingExecutor = Executors.newFixedThreadPool(numberOfClients);
     }
 
     @Override
-    public <T extends TargettedTask> void executeEnqueue(TargettedTaskSource<T> source) {
+    public <T extends TargetedTask> void executeEnqueue(TargetedTaskSource<T> source) {
         log.trace("executeEnqueue({})", source);
         enqueuingExecutor.execute(() -> {
             log.debug("Start enqueuing tasks");
@@ -46,10 +46,10 @@ public class EnqueuingServiceImpl implements EnqueuingService {
         });
     }
 
-    private <T extends TargettedTask> void enqueue(T t) {
+    private <T extends TargetedTask> void enqueue(T t) {
         log.trace("Enqueuing {}", t);
         try {
-            targettedTaskSequenceManager.scheduleTask(t);
+            targetedTaskSequenceManager.scheduleTask(t);
             t.writeEvent(TaskEvent.EventType.ENQUEUE, TaskEvent.Result.OK, null);
         }
         catch (Exception e) {

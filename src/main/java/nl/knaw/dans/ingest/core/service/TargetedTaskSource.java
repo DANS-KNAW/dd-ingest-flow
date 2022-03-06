@@ -15,11 +15,11 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.sequencing.TargettedTask;
+import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 
 import java.util.Iterator;
 
-public interface TargettedTaskSource<T extends TargettedTask> extends Iterable<T> {
+public interface TargetedTaskSource<T extends TargetedTask> extends Iterable<T> {
 
     @Override
     Iterator<T> iterator();

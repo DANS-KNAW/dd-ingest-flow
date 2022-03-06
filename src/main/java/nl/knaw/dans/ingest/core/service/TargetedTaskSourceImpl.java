@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.util.Iterator;
 
-public class TargettedTaskSourceImpl implements TargettedTaskSource<DepositImportTaskWrapper> {
-    private static final Logger log = LoggerFactory.getLogger(TargettedTaskSourceImpl.class);
+public class TargetedTaskSourceImpl implements TargetedTaskSource<DepositImportTaskWrapper> {
+    private static final Logger log = LoggerFactory.getLogger(TargetedTaskSourceImpl.class);
 
     private final String name;
     private final Path inDir;
@@ -32,7 +32,7 @@ public class TargettedTaskSourceImpl implements TargettedTaskSource<DepositImpor
     private final EventWriter eventWriter;
     private final DepositIngestTaskFactoryWrapper taskFactory;
 
-    public TargettedTaskSourceImpl(String name, Path inDir, Path outDir, TaskEventService taskEventService, DepositIngestTaskFactoryWrapper taskFactory) {
+    public TargetedTaskSourceImpl(String name, Path inDir, Path outDir, TaskEventService taskEventService, DepositIngestTaskFactoryWrapper taskFactory) {
         this.name = name;
         if (!inDir.isAbsolute())
             throw new IllegalArgumentException("inDir must be an absolute path");
@@ -49,7 +49,7 @@ public class TargettedTaskSourceImpl implements TargettedTaskSource<DepositImpor
         return createIterator(inDir, outDir, taskFactory, eventWriter);
     }
 
-    protected Iterator<DepositImportTaskWrapper> createIterator(Path inDir, Path outDir, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
+    protected AbstractDepositsImportTaskIterator createIterator(Path inDir, Path outDir, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
         return new BoundedDepositImportTaskIterator(inDir, outDir, taskFactory, eventWriter);
     }
 }

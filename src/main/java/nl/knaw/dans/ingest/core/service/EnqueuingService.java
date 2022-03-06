@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.sequencing.TargettedTask;
+import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 
 /**
  * Enqueues a sequence of tasks asynchronously, i.e. it schedules the enqueuing action to be executed by a dedicated background thread. the reason is that the enqueuing can take
@@ -24,5 +24,5 @@ import nl.knaw.dans.ingest.core.sequencing.TargettedTask;
  */
 public interface EnqueuingService {
 
-    <T extends TargettedTask> void executeEnqueue(TargettedTaskSource<T> source);
+    <T extends TargetedTask> void executeEnqueue(TargetedTaskSource<T> source);
 }

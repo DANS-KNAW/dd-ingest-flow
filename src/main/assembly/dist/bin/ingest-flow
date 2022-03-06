@@ -9,18 +9,16 @@ service_baseurl = 'http://localhost:20300'
 
 
 def start_import(path, continue_previous, migration):
-    r = requests.post('%s/imports' % service_baseurl, json={
+    r = requests.post('%s/imports/:start' % service_baseurl, json={
         'batch': os.path.abspath(path),
         'continue': continue_previous,
         'migration': migration
     })
     print('Server responded: %s' % r.text)
 
-
 def list_events_for_batch(batch):
     r = requests.get('%s/events/batch/%s' % (service_baseurl, batch), headers={'Accept': 'text/csv'})
     print(r.text)
-
 
 def list_events_for_deposit(depositId):
     r = requests.get('%s/events/deposit/%s' % (service_baseurl, depositId), headers={'Accept': 'text/csv'})

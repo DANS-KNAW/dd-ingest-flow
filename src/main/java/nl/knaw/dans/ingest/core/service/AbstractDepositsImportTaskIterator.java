@@ -73,5 +73,4 @@ public abstract class AbstractDepositsImportTaskIterator implements Iterator<Dep
         }
         return null;
     }
-
 }

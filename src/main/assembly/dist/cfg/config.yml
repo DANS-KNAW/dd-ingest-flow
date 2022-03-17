@@ -35,7 +35,6 @@ ingestFlow:
   deduplicate: true
   zipWrappingTempDir: /var/opt/dans.knaw.nl/tmp/zip-wrapping
   mappingDefsDir: /etc/opt/dans.knaw.nl/dd-ingest-flow
-  retryStalledAfter: 1 minute
   taskQueue:
     nameFormat: "ingest-worker-%d"
     maxQueueSize: 5000

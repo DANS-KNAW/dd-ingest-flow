@@ -26,11 +26,16 @@ public class IngestFlowConfig {
     @NotNull
     @Valid
     @JsonProperty("import")
-    private InOutConfig importConfig;
+    private IngestAreaConfig importConfig;
 
     @NotNull
     @Valid
-    private InOutConfig autoIngest;
+    private IngestAreaConfig migration;
+
+
+    @NotNull
+    @Valid
+    private IngestAreaConfig autoIngest;
 
     @NotNull
     @Valid
@@ -55,19 +60,27 @@ public class IngestFlowConfig {
     @Valid
     private ExecutorServiceFactory taskQueue;
 
-    public InOutConfig getImportConfig() {
+    public IngestAreaConfig getImportConfig() {
         return importConfig;
     }
 
-    public void setImportConfig(InOutConfig importConfig) {
+    public void setImportConfig(IngestAreaConfig importConfig) {
         this.importConfig = importConfig;
     }
 
-    public InOutConfig getAutoIngest() {
+    public IngestAreaConfig getMigration() {
+        return migration;
+    }
+
+    public void setMigration(IngestAreaConfig migration) {
+        this.migration = migration;
+    }
+
+    public IngestAreaConfig getAutoIngest() {
         return autoIngest;
     }
 
-    public void setAutoIngest(InOutConfig autoIngest) {
+    public void setAutoIngest(IngestAreaConfig autoIngest) {
         this.autoIngest = autoIngest;
     }
 

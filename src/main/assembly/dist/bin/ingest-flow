@@ -11,7 +11,7 @@ service_baseurl = 'http://localhost:20300'
 
 file_writeable_to_group = lambda f: os.stat(f).st_mode & stat.S_IWGRP > 0
 
-def start_import(path, continue_previous, migration):
+def start_import(path, continue_previous, is_migration):
     if not has_dirtree_pred(path, file_writeable_to_group):
         chmod_command = "chmod -R g+w %s" % path
         print("Some files in the import batch do not give the owner group write permissions. Executing '%s' to fix it" % chmod_command)
@@ -20,10 +20,9 @@ def start_import(path, continue_previous, migration):
             print("Could not give owner group write permissions. Possibly your account is not the owner user of the files.")
             return
     print("Sending start import request to server...")
-    r = requests.post('%s/imports/:start' % service_baseurl, json={
+    r = requests.post('%s/%s/:start' % (service_baseurl, "migrations" if is_migration else "imports"), json={
         'batch': os.path.abspath(path),
-        'continue': continue_previous,
-        'migration': migration
+        'continue': continue_previous
     })
     print('Server responded: %s' % r.text)
 
@@ -47,7 +46,6 @@ parser = argparse.ArgumentParser(add_help=True)
 subparsers = parser.add_subparsers(dest='command')
 parser_import = subparsers.add_parser('start-import',
                                       help='start import of a batch of deposits')
-
 parser_import.add_argument('batch',
                            metavar='<batch-directory>',
                            help='path to batch of deposits to import; the directory must be located inside the import area')
@@ -55,11 +53,17 @@ parser_import.add_argument('-c', '--continue',
                            action='store_true',
                            dest='continue_previous',
                            help='continue previously stopped batch (i.e. allow output directory to be non-empty)')
-parser_import.add_argument('-m', '--migration',
+
+parser_migration = subparsers.add_parser('start-migration',
+                                      help='start migration of a batch of deposits')
+parser_migration.add_argument('batch',
+                           metavar='<batch-directory>',
+                           help='path to batch of deposits to migration; the directory must be located inside the migration area')
+parser_migration.add_argument('-c', '--continue',
                            action='store_true',
-                           dest='migration',
-                           default=True,
-                           help='import as migrated datasets (default = True)')
+                           dest='continue_previous',
+                           help='continue previously stopped batch (i.e. allow output directory to be non-empty)')
+
 
 parser_events = subparsers.add_parser('list-events',
                                       help='print events per deposit')
@@ -85,8 +89,10 @@ parser_status.add_argument('-d', '--deposit',
 
 args = parser.parse_args()
 
+if args.command == 'start-migration':
+    start_import(args.batch, args.continue_previous, True)
 if args.command == 'start-import':
-    start_import(args.batch, args.continue_previous, args.migration)
+    start_import(args.batch, args.continue_previous, False)
 elif args.command == 'list-events':
     params = {}
     if args.source is not None:

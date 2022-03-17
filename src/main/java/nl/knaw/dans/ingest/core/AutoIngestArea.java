@@ -23,10 +23,10 @@ import nl.knaw.dans.ingest.core.service.TaskEventService;
 
 import java.nio.file.Path;
 
-public class AutoIngestInbox extends AbstractInbox implements Managed {
+public class AutoIngestArea extends AbstractIngestArea implements Managed {
     private UnboundedTargetedTaskSource taskSource;
 
-    public AutoIngestInbox(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory,
+    public AutoIngestArea(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory,
         TaskEventService taskEventService, EnqueuingService enqueuingService) {
         super(inboxDir, outboxDir, taskFactory, taskEventService, enqueuingService);
     }

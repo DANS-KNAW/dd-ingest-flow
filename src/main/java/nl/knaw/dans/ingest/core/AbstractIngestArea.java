@@ -25,15 +25,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class AbstractInbox {
-    private static final Logger log = LoggerFactory.getLogger(AbstractInbox.class);
+public class AbstractIngestArea {
+    private static final Logger log = LoggerFactory.getLogger(AbstractIngestArea.class);
     protected final Path inboxDir;
     protected final Path outboxDir;
     protected final DepositIngestTaskFactoryWrapper taskFactory;
     protected final TaskEventService taskEventService;
     protected final EnqueuingService enqueuingService;
 
-    public AbstractInbox(Path inboxDir, Path outboxDir,
+    public AbstractIngestArea(Path inboxDir, Path outboxDir,
         DepositIngestTaskFactoryWrapper taskFactory, TaskEventService taskEventService, EnqueuingService enqueuingService) {
         this.inboxDir = inboxDir.toAbsolutePath();
         this.outboxDir = outboxDir.toAbsolutePath();
@@ -66,7 +66,7 @@ public class AbstractInbox {
             Files.createDirectories(failedDir);
             Files.createDirectories(rejectedDir);
 
-            if (!allowNonEmpty && (AbstractInbox.nonEmpty(processedDir) || AbstractInbox.nonEmpty(failedDir) || AbstractInbox.nonEmpty(rejectedDir))) {
+            if (!allowNonEmpty && (AbstractIngestArea.nonEmpty(processedDir) || AbstractIngestArea.nonEmpty(failedDir) || AbstractIngestArea.nonEmpty(rejectedDir))) {
                 throw new IllegalArgumentException("outbox is not empty; start with empty outbox at " + outbox + ", or use the 'continue' option");
             }
         }

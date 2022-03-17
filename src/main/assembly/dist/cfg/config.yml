@@ -13,12 +13,16 @@ server:
 
 ingestFlow:
   import:
+    inbox: /var/opt/dans.knaw.nl/tmp/import/inbox
+    outbox: /var/opt/dans.knaw.nl/tmp/import/outbox
+
+  migration:
     inbox: /var/opt/dans.knaw.nl/tmp/migration/deposits
     outbox: /var/opt/dans.knaw.nl/tmp/migration/out
 
   autoIngest:
-    inbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/in
-    outbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/out
+    inbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/inbox
+    outbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/outbox
 
   #
   # Filtering. Files with a path matching the pattern will not be added to the dataset. Renaming/moving files is not affected.
@@ -31,6 +35,7 @@ ingestFlow:
   deduplicate: true
   zipWrappingTempDir: /var/opt/dans.knaw.nl/tmp/zip-wrapping
   mappingDefsDir: /etc/opt/dans.knaw.nl/dd-ingest-flow
+  retryStalledAfter: 1 minute
   taskQueue:
     nameFormat: "ingest-worker-%d"
     maxQueueSize: 5000

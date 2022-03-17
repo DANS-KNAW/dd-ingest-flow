@@ -22,7 +22,6 @@ import java.nio.file.Path;
 public class StartImport {
     private Path batch;
     private boolean continuePrevious = false;
-    private boolean isMigration = false;
 
     public Path getBatch() {
         return batch;
@@ -40,14 +39,6 @@ public class StartImport {
     @JsonProperty("continue")
     public void setContinue(boolean continuePrevious) {
         this.continuePrevious = continuePrevious;
-    }
-
-    public boolean isMigration() {
-        return isMigration;
-    }
-
-    public void setMigration(boolean migration) {
-        isMigration = migration;
     }
 
     @Override

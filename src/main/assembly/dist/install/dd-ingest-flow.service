@@ -1,5 +1,6 @@
 [Unit]
 Description=Dd Ingest Flow Service
+After=payara.service easy-validate-dans-bag.service
 
 [Service]
 ExecStart=/opt/dans.knaw.nl/dd-ingest-flow/bin/dd-ingest-flow server /etc/opt/dans.knaw.nl/dd-ingest-flow/config.yml

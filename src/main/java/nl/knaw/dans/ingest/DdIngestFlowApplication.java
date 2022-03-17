@@ -22,9 +22,9 @@ import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import nl.knaw.dans.ingest.core.AutoIngestInbox;
+import nl.knaw.dans.ingest.core.AutoIngestArea;
 import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
-import nl.knaw.dans.ingest.core.ImportInbox;
+import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
@@ -35,6 +35,7 @@ import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
 import nl.knaw.dans.ingest.resources.EventsResource;
 import nl.knaw.dans.ingest.resources.ImportsResource;
+import nl.knaw.dans.ingest.resources.MigrationsResource;
 
 import java.util.concurrent.ExecutorService;
 
@@ -79,11 +80,11 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getManagePrestaging(),
             configuration.getValidateDansBag());
 
-        final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 2 /* Must support both importInbox and autoIngestInbox */);
+        final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
 
-        final ImportInbox importInbox = new ImportInbox(
+        final ImportArea importArea = new ImportArea(
             configuration.getIngestFlow().getImportConfig().getInbox(),
             configuration.getIngestFlow().getImportConfig().getOutbox(),
             ingestTaskFactoryWrapper,
@@ -91,7 +92,15 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             taskEventService,
             enqueuingService);
 
-        final AutoIngestInbox autoIngestInbox = new AutoIngestInbox(
+        final ImportArea migrationArea = new ImportArea(
+            configuration.getIngestFlow().getMigration().getInbox(),
+            configuration.getIngestFlow().getMigration().getOutbox(),
+            ingestTaskFactoryWrapper,
+            migrationTaskFactoryWrapper, // Only necessary during migration. Can be phased out after that.
+            taskEventService,
+            enqueuingService);
+
+        final AutoIngestArea autoIngestArea = new AutoIngestArea(
             configuration.getIngestFlow().getAutoIngest().getInbox(),
             configuration.getIngestFlow().getAutoIngest().getOutbox(),
             ingestTaskFactoryWrapper,
@@ -99,8 +108,9 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             enqueuingService
         );
 
-        environment.lifecycle().manage(autoIngestInbox);
-        environment.jersey().register(new ImportsResource(importInbox));
+        environment.lifecycle().manage(autoIngestArea);
+        environment.jersey().register(new ImportsResource(importArea));
+        environment.jersey().register(new MigrationsResource(migrationArea));
         environment.jersey().register(new EventsResource(taskEventDAO));
         environment.jersey().register(new CsvMessageBodyWriter());
     }

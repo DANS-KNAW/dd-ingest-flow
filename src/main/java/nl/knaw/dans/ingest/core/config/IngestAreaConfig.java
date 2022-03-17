@@ -17,7 +17,7 @@ package nl.knaw.dans.ingest.core.config;
 
 import java.nio.file.Path;
 
-public class InOutConfig {
+public class IngestAreaConfig {
     private Path inbox;
     private Path outbox;
 

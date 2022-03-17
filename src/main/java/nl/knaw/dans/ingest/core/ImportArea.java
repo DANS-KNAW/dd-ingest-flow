@@ -29,12 +29,12 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ImportInbox extends AbstractInbox {
-    private static final Logger log = LoggerFactory.getLogger(ImportInbox.class);
+public class ImportArea extends AbstractIngestArea {
+    private static final Logger log = LoggerFactory.getLogger(ImportArea.class);
     private final DepositIngestTaskFactoryWrapper migrationTaskFactory;
     private final Map<String, TargetedTaskSource<DepositImportTaskWrapper>> batches = new HashMap<>();
 
-    public ImportInbox(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory, DepositIngestTaskFactoryWrapper migrationTaskFactory,
+    public ImportArea(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory, DepositIngestTaskFactoryWrapper migrationTaskFactory,
         TaskEventService taskEventService, EnqueuingService enqueuingService) {
         super(inboxDir, outboxDir, taskFactory, taskEventService, enqueuingService);
         this.migrationTaskFactory = migrationTaskFactory;

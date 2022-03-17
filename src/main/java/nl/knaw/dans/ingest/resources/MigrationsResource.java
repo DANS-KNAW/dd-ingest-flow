@@ -29,15 +29,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("/imports")
+@Path("/migrations")
 @Produces(MediaType.APPLICATION_JSON)
-public class ImportsResource {
-    private static final Logger log = LoggerFactory.getLogger(ImportsResource.class);
+public class MigrationsResource {
+    private static final Logger log = LoggerFactory.getLogger(MigrationsResource.class);
 
-    private final ImportArea importArea;
+    private final ImportArea migrationArea;
 
-    public ImportsResource(ImportArea importArea) {
-        this.importArea = importArea;
+    public MigrationsResource(ImportArea migrationArea) {
+        this.migrationArea = migrationArea;
     }
 
     @POST
@@ -47,14 +47,14 @@ public class ImportsResource {
         log.trace("Received command = {}", start);
         String batchName;
         try {
-            batchName = importArea.startBatch(start.getBatch(), start.isContinue(), false);
+            batchName = migrationArea.startBatch(start.getBatch(), start.isContinue(), true);
         }
         catch (IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());
         }
         return Response.accepted(
                 new ResponseMessage(Response.Status.ACCEPTED.getStatusCode(),
-                    String.format("import request was received (batch = %s, continue = %s", batchName, start.isContinue())))
+                    String.format("migration request was received (batch = %s, continue = %s", batchName, start.isContinue())))
             .build();
     }
 }

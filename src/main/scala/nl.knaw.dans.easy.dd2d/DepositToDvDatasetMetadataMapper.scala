@@ -53,7 +53,7 @@ class DepositToDvDatasetMetadataMapper(deduplicate: Boolean,
   lazy val temporalSpatialFields = new mutable.HashMap[String, AbstractFieldBuilder]()
   lazy val dataVaultFields = new mutable.HashMap[String, AbstractFieldBuilder]()
 
-  def toDataverseDataset(ddm: Node, optAgreements: Option[Node], optDateOfDeposit: Option[String], contactData: List[JsonObject], vaultMetadata: VaultMetadata): Try[Dataset] = Try {
+  def toDataverseDataset(ddm: Node, optOtherDoiId: Option[String], optAgreements: Option[Node], optDateOfDeposit: Option[String], contactData: List[JsonObject], vaultMetadata: VaultMetadata): Try[Dataset] = Try {
     // Please, keep ordered by order in Dataverse UI as much as possible!
 
     if (activeMetadataBlocks.contains("citation")) {
@@ -66,6 +66,7 @@ class DepositToDvDatasetMetadataMapper(deduplicate: Boolean,
       addPrimitiveFieldSingleValue(citationFields, ALTERNATIVE_TITLE, alternativeTitles)
       addCompoundFieldMultipleValues(citationFields, OTHER_ID, DepositPropertiesVaultMetadata.toOtherIdValue(vaultMetadata.dataverseOtherId).toList)
       addCompoundFieldMultipleValues(citationFields, OTHER_ID, (ddm \ "dcmiMetadata" \ "identifier").filter(Identifier canBeMappedToOtherId), Identifier toOtherIdValue)
+      addCompoundFieldMultipleValues(citationFields, OTHER_ID, optOtherDoiId.map(DepositPropertiesOtherDoi.toOtherIdValue).toList)
 
       // Loop over all creators to preserve the order in which they were entered
       val creators = (ddm \ "profile" \ "_").filter(n => n.label == "creatorDetails" || n.label == "creator")

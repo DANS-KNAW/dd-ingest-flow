@@ -152,7 +152,7 @@ case class DepositIngestTask(deposit: Deposit,
       ddm <- deposit.tryDdm
       optAgreements <- deposit.tryOptAgreementsXml
       _ <- checkPersonalDataPresent(optAgreements)
-      dataverseDataset <- datasetMetadataMapper.toDataverseDataset(ddm, optAgreements, optDateOfDeposit, datasetContacts, deposit.vaultMetadata)
+      dataverseDataset <- datasetMetadataMapper.toDataverseDataset(ddm, deposit.getOptOtherDoiId, optAgreements, optDateOfDeposit, datasetContacts, deposit.vaultMetadata)
     } yield dataverseDataset
   }
 

@@ -43,7 +43,7 @@ class DepositToDataverseMapperSpec extends TestSupportFixture {
         </ddm:dcmiMetadata>
       </ddm:DDM>
 
-    val result = mapper.toDataverseDataset(ddm, optAgreements, None, contactData, vaultMetadata)
+    val result = mapper.toDataverseDataset(ddm, None, optAgreements, None, contactData, vaultMetadata)
     result shouldBe a[Success[_]]
     inside(result) {
       case Success(Dataset(dsv)) =>
@@ -67,7 +67,7 @@ class DepositToDataverseMapperSpec extends TestSupportFixture {
         </ddm:dcmiMetadata>
       </ddm:DDM>
 
-    val result = mapper.toDataverseDataset(ddm, optAgreements, None, contactData, vaultMetadata)
+    val result = mapper.toDataverseDataset(ddm, None, optAgreements, None, contactData, vaultMetadata)
     result shouldBe a[Success[_]]
     inside(result) {
       case Success(Dataset(dsv)) =>
@@ -114,7 +114,7 @@ class DepositToDataverseMapperSpec extends TestSupportFixture {
           </ddm:dcmiMetadata>
       </ddm:DDM>
 
-    val result = mapper.toDataverseDataset(ddm, optAgreements, None, contactData, vaultMetadata)
+    val result = mapper.toDataverseDataset(ddm, None, optAgreements, None, contactData, vaultMetadata)
     result shouldBe a[Success[_]]
     inside(result) {
       case Success(Dataset(dsv)) =>
@@ -128,6 +128,32 @@ class DepositToDataverseMapperSpec extends TestSupportFixture {
           Map(
             "authorName" -> PrimitiveSingleValueField("authorName", "T Zonnebloem"),
             "authorAffiliation" -> PrimitiveSingleValueField("authorAffiliation", "Uitvindersgilde")
+          ))
+    }
+  }
+
+  it should "map other DOI to Other ID" in {
+    val otherDoi = "10.123/other-doi"
+    val ddm = <ddm:DDM>
+      <ddm:profile>
+          <dc:title>A title</dc:title>
+          <dc:description>Descr 1</dc:description>
+          <dc:description>Descr 2</dc:description>
+          <ddm:audience>D10000</ddm:audience>
+        </ddm:profile>
+        <ddm:dcmiMetadata>
+          <dct:rightsHolder>Mrs Rights</dct:rightsHolder>
+        </ddm:dcmiMetadata>
+      </ddm:DDM>
+    val result = mapper.toDataverseDataset(ddm, Option(otherDoi), optAgreements, None, contactData, vaultMetadata)
+    result shouldBe a[Success[_]]
+    inside(result) {
+      case Success(Dataset(dsv)) =>
+        val valueObjectsOfCompoundFields = dsv.metadataBlocks("citation").fields.filter(_.isInstanceOf[CompoundField]).map(_.asInstanceOf[CompoundField]).flatMap(_.value)
+        valueObjectsOfCompoundFields should contain(
+          Map(
+            "otherIdAgency" -> PrimitiveSingleValueField("otherIdAgency", ""),
+            "otherIdValue" -> PrimitiveSingleValueField("otherIdValue", otherDoi)
           ))
     }
   }

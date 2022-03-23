@@ -61,4 +61,19 @@ class DepositSpec extends TestSupportFixture {
       )
     )
   }
+
+  "getOptOtherDoiId" should "be other doi if identifier.doi different from dataversePid" in {
+    val deposit = Deposit(testDirValid / "doi-and-other-doi")
+    deposit.getOptOtherDoiId shouldBe Option("doi:10.17026/OTHER-DOI")
+  }
+
+  it should "be None if identifier.doi equals dataversePid" in {
+    val deposit = Deposit(testDirValid / "doi-and-no-other-doi")
+    deposit.getOptOtherDoiId shouldBe empty
+  }
+
+  it should "be None if dataversePid was not provided in vault metadata" in {
+    val deposit = Deposit(testDirValid / "no-doi-in-vault-metadata")
+    deposit.getOptOtherDoiId shouldBe empty
+  }
 }

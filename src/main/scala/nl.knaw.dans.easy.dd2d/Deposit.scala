@@ -129,8 +129,8 @@ case class Deposit(dir: File) extends DebugEnhancedLogging {
    * See https://drivenbydata.atlassian.net/browse/DD-825
    */
   def getOptOtherDoiId: Option[String] = {
-    if (dataverseId.nonEmpty && dataversePid != doi) {
-      Option(doi)
+    if (dataverseId.nonEmpty && dataversePid != s"doi:$doi") {
+      Option(s"doi:$doi")
     } else Option.empty
   }
 

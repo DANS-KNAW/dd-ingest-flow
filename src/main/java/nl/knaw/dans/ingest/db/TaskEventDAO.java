@@ -18,6 +18,7 @@ package nl.knaw.dans.ingest.db;
 import io.dropwizard.hibernate.AbstractDAO;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Order;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -48,7 +49,11 @@ public class TaskEventDAO extends AbstractDAO<TaskEvent> {
         if (depositId != null) {
             predicates.add(cb.equal(r.get("depositId"), depositId));
         }
-        crit.select(r).where(cb.and(predicates.toArray(new Predicate[0])));
+        crit
+            .select(r)
+            .where(cb.and(predicates.toArray(new Predicate[0])))
+            .orderBy(cb.asc(r.get("timestamp")));
+
         return currentSession().createQuery(crit).list();
     }
 

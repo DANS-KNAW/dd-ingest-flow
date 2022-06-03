@@ -35,7 +35,7 @@ import scala.xml.{ Elem, XML }
  * @param isMigrated                                   is this a migrated dataset?
  * @param activeMetadataBlocks                         the metadata blocks enabled in the target dataverse
  * @param optDansBagValidator                          interface to the easy-validate-dans-bag service
- * @param instance                                     interface to the target Dataverse instance
+ * @param dataverseInstance                                     interface to the target Dataverse instance
  * @param migrationInfo                                optional interface to a migration info service
  * @param publishAwaitUnlockMaxNumberOfRetries         maximum number of times to poll for unlock after publish is called after ingest of the deposit
  * @param publishAwaitUnlockMillisecondsBetweenRetries number of milliseconds to wait between retries of unlock polling after publish
@@ -51,7 +51,7 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
                                deduplicateImport: Boolean,
                                activeMetadataBlocks: List[String],
                                optDansBagValidator: Option[DansBagValidator],
-                               instance: DataverseInstance,
+                               dataverseInstance: DataverseInstance,
                                migrationInfo: Option[MigrationInfo],
                                publishAwaitUnlockMaxNumberOfRetries: Int,
                                publishAwaitUnlockMillisecondsBetweenRetries: Int,
@@ -72,7 +72,7 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
         deduplicateImport,
         activeMetadataBlocks,
         optDansBagValidator,
-        instance,
+        dataverseInstance,
         migrationInfo,
         publishAwaitUnlockMaxNumberOfRetries,
         publishAwaitUnlockMillisecondsBetweenRetries,
@@ -92,7 +92,7 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
         deduplicateService,
         activeMetadataBlocks,
         optDansBagValidator,
-        instance,
+        dataverseInstance,
         Option.empty,
         publishAwaitUnlockMaxNumberOfRetries,
         publishAwaitUnlockMillisecondsBetweenRetries,

@@ -36,8 +36,8 @@ class DatasetCreator(deposit: Deposit,
                      dataverseDataset: Dataset,
                      variantToLicense: Map[String, String],
                      supportedLicenses: List[URI],
-                     instance: DataverseInstance,
-                     optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(instance, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
+                     dataverseInstance: DataverseInstance,
+                     optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseInstance, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
   trace(deposit)
 
   override def performEdit(): Try[PersistentId] = {
@@ -45,28 +45,28 @@ class DatasetCreator(deposit: Deposit,
       for {
         // autoPublish is false, because it seems there is a bug with it in Dataverse (most of the time?)
         response <- if (isMigration)
-                      instance
+                      dataverseInstance
                         .dataverse("root")
                         .importDataset(dataverseDataset, Some(s"doi:${ deposit.doi }"), autoPublish = false)
-                    else instance.dataverse("root").createDataset(dataverseDataset)
+                    else dataverseInstance.dataverse("root").createDataset(dataverseDataset)
         persistentId <- getPersistentId(response)
       } yield persistentId
     } match {
       case Failure(e) => Failure(FailedDepositException(deposit, "Could not import/create dataset", e))
       case Success(persistentId) => {
         for {
-          _ <- setLicense(supportedLicenses)(variantToLicense)(deposit, instance.dataset(persistentId))
-          _ <- instance.dataset(persistentId).awaitUnlock()
+          _ <- setLicense(supportedLicenses)(variantToLicense)(deposit, dataverseInstance.dataset(persistentId))
+          _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
           pathToFileInfo <- getPathToFileInfo(deposit)
           prestagedFiles <- optMigrationInfoService.map(_.getPrestagedDataFilesFor(s"doi:${ deposit.doi }", 1)).getOrElse(Success(Set.empty[BasicFileMeta]))
           databaseIdsToFileInfo <- addFiles(persistentId, pathToFileInfo.values.toList, prestagedFiles)
           _ <- updateFileMetadata(databaseIdsToFileInfo.mapValues(_.metadata))
-          _ <- instance.dataset(persistentId).awaitUnlock()
+          _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
           _ <- configureEnableAccessRequests(deposit, persistentId, canEnable = true)
-          _ <- instance.dataset(persistentId).awaitUnlock()
+          _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
           _ = debug(s"Assigning role $depositorRole to ${ deposit.depositorUserId }")
-          _ <- instance.dataset(persistentId).assignRole(RoleAssignment(s"@${ deposit.depositorUserId }", depositorRole))
-          _ <- instance.dataset(persistentId).awaitUnlock()
+          _ <- dataverseInstance.dataset(persistentId).assignRole(RoleAssignment(s"@${ deposit.depositorUserId }", depositorRole))
+          _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
           dateAvailable <- deposit.getDateAvailable
           _ <- if (isEmbargo(dateAvailable)) embargoFiles(persistentId, dateAvailable)
                else {
@@ -91,7 +91,7 @@ class DatasetCreator(deposit: Deposit,
     for {
       files <- getFilesToEmbargo(persistentId)
       _ <- embargoFiles(persistentId, dateAvailable, files.map(_.dataFile.get.id))
-      _ <- instance.dataset(persistentId).awaitUnlock()
+      _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
     } yield ()
   }
 }

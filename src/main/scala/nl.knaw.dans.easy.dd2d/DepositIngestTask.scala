@@ -42,7 +42,7 @@ import scala.xml.{ Elem, Node }
  * Checks one deposit and then ingests it into Dataverse.
  *
  * @param deposit  the deposit to ingest
- * @param instance the Dataverse instance to ingest in
+ * @param dataverseInstance the Dataverse instance to ingest in
  */
 case class DepositIngestTask(deposit: Deposit,
                              optFileExclusionPattern: Option[Pattern],
@@ -51,7 +51,7 @@ case class DepositIngestTask(deposit: Deposit,
                              deduplicate: Boolean,
                              activeMetadataBlocks: List[String],
                              optDansBagValidator: Option[DansBagValidator],
-                             instance: DataverseInstance,
+                             dataverseInstance: DataverseInstance,
                              migrationInfo: Option[MigrationInfo],
                              publishAwaitUnlockMaxNumberOfRetries: Int,
                              publishAwaitUnlockMillisecondsBetweenRetries: Int,
@@ -169,7 +169,7 @@ case class DepositIngestTask(deposit: Deposit,
 
   private def getDatasetContacts: Try[List[JsonObject]] = {
     for {
-      response <- instance.admin().getSingleUser(deposit.depositorUserId)
+      response <- dataverseInstance.admin().getSingleUser(deposit.depositorUserId)
       user <- response.data
       datasetContacts <- createDatasetContacts(user.displayName, user.email, user.affiliation)
     } yield datasetContacts
@@ -184,18 +184,18 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   protected def newDatasetUpdater(dataverseDataset: Dataset): DatasetUpdater = {
-    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = false, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, instance, Option.empty)
+    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = false, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, dataverseInstance, Option.empty)
   }
 
   protected def newDatasetCreator(dataverseDataset: Dataset, depositorRole: String): DatasetCreator = {
-    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = false, dataverseDataset, variantToLicense, supportedLicenses, instance, Option.empty)
+    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = false, dataverseDataset, variantToLicense, supportedLicenses, dataverseInstance, Option.empty)
   }
 
   protected def publishDataset(persistentId: String): Try[Unit] = {
     trace(persistentId)
     for {
-      _ <- instance.dataset(persistentId).publish(major)
-      _ <- instance.dataset(persistentId).awaitUnlock(
+      _ <- dataverseInstance.dataset(persistentId).publish(major)
+      _ <- dataverseInstance.dataset(persistentId).awaitUnlock(
         maxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries,
         waitTimeInMilliseconds = publishAwaitUnlockMillisecondsBetweenRetries)
     } yield ()
@@ -215,7 +215,7 @@ case class DepositIngestTask(deposit: Deposit,
 
     def getDatasetState: Try[String] = {
       for {
-        response <- instance.dataset(persistentId).viewLatestVersion()
+        response <- dataverseInstance.dataset(persistentId).viewLatestVersion()
         ds <- response.data
         state = ds.latestVersion.versionState
       } yield state.get
@@ -241,10 +241,10 @@ case class DepositIngestTask(deposit: Deposit,
   private def savePersistentIdentifiersInDepositProperties(persistentId: String): Try[Unit] = {
     implicit val jsonFormats: Formats = DefaultFormats
     for {
-      _ <- instance.dataset(persistentId).awaitUnlock()
+      _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
       _ = debug(s"Dataset $persistentId is not locked")
       _ <- deposit.setDoi(persistentId)
-      r <- instance.dataset(persistentId).view()
+      r <- dataverseInstance.dataset(persistentId).view()
       _ = if (logger.underlying.isDebugEnabled) debug(Serialization.writePretty(r.json))
       d <- r.data
       v = d.metadataBlocks("dansDataVaultMetadata")

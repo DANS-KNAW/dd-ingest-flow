@@ -36,7 +36,7 @@ class DepositMigrationTask(deposit: Deposit,
                            deduplicate: Boolean,
                            activeMetadataBlocks: List[String],
                            optDansBagValidator: Option[DansBagValidator],
-                           instance: DataverseInstance,
+                           dataverseInstance: DataverseInstance,
                            migrationInfo: Option[MigrationInfo],
                            publishAwaitUnlockMaxNumberOfRetries: Int,
                            publishAwaitUnlockMillisecondsBetweenRetries: Int,
@@ -54,7 +54,7 @@ class DepositMigrationTask(deposit: Deposit,
     deduplicate,
     activeMetadataBlocks,
     optDansBagValidator,
-    instance,
+    dataverseInstance,
     migrationInfo: Option[MigrationInfo],
     publishAwaitUnlockMaxNumberOfRetries,
     publishAwaitUnlockMillisecondsBetweenRetries,
@@ -76,11 +76,11 @@ class DepositMigrationTask(deposit: Deposit,
   }
 
   override def newDatasetUpdater(dataverseDataset: Dataset): DatasetUpdater = {
-    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = true, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, instance, migrationInfo)
+    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = true, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, dataverseInstance, migrationInfo)
   }
 
   override def newDatasetCreator(dataverseDataset: Dataset, depositorRole: String): DatasetCreator = {
-    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = true, dataverseDataset, variantToLicense, supportedLicenses, instance, migrationInfo)
+    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = true, dataverseDataset, variantToLicense, supportedLicenses, dataverseInstance, migrationInfo)
   }
 
   override protected def checkPersonalDataPresent(optAgreements: Option[Node]): Try[Unit] = {
@@ -102,8 +102,8 @@ class DepositMigrationTask(deposit: Deposit,
       amd = optAmd.getOrElse(throw new Exception(s"no AMD found for $persistentId"))
       optPublicationDate <- getJsonLdPublicationdate(amd)
       publicationDate = optPublicationDate.getOrElse(throw new IllegalArgumentException(s"no publication date found in AMD for $persistentId"))
-      _ <- instance.dataset(persistentId).releaseMigrated(publicationDate)
-      _ <- instance.dataset(persistentId).awaitUnlock(
+      _ <- dataverseInstance.dataset(persistentId).releaseMigrated(publicationDate)
+      _ <- dataverseInstance.dataset(persistentId).awaitUnlock(
         maxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries,
         waitTimeInMilliseconds = publishAwaitUnlockMillisecondsBetweenRetries)
     } yield ()

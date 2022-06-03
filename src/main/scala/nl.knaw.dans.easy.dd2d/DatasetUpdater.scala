@@ -38,8 +38,8 @@ class DatasetUpdater(deposit: Deposit,
                      metadataBlocks: MetadataBlocks,
                      variantToLicense: Map[String, String],
                      supportedLicenses: List[URI],
-                     instance: DataverseInstance,
-                     optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(instance, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
+                     dataverseInstance: DataverseInstance,
+                     optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseInstance, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
   trace(deposit)
 
   override def performEdit(): Try[PersistentId] = {
@@ -52,7 +52,7 @@ class DatasetUpdater(deposit: Deposit,
       case Failure(e) => Failure(FailedDepositException(deposit, "Could not find persistentId of existing dataset", e))
       case Success(doi) => {
         for {
-          dataset <- Try { instance.dataset(doi) }
+          dataset <- Try { dataverseInstance.dataset(doi) }
           _ <- dataset.awaitUnlock()
           /*
            * Temporary fix. If we do not wait a couple of seconds here, the first version never gets properly published, and the second version
@@ -182,7 +182,7 @@ class DatasetUpdater(deposit: Deposit,
     trace(())
     debug(s"dansSwordToken = ${ deposit.vaultMetadata.dataverseSwordToken }")
     for {
-      r <- instance.search().find(s"""dansSwordToken:"${ deposit.vaultMetadata.dataverseSwordToken }"""")
+      r <- dataverseInstance.search().find(s"""dansSwordToken:"${ deposit.vaultMetadata.dataverseSwordToken }"""")
       searchResult <- r.data
       items = searchResult.items
       _ = if (items.size != 1) throw FailedDepositException(deposit, s"Deposit is update of ${ items.size } datasets; should always be 1!")
@@ -196,7 +196,7 @@ class DatasetUpdater(deposit: Deposit,
     for {
       isVersionOf <- deposit.getIsVersionOf
       _ = debug(s"Is-Version-Of = $isVersionOf")
-      r <- instance.search().find(s"""dansBagId:"$isVersionOf"""")
+      r <- dataverseInstance.search().find(s"""dansBagId:"$isVersionOf"""")
       searchResult <- r.data
       items = searchResult.items
       _ = if (items.size != 1) throw FailedDepositException(deposit, s"Deposit is update of ${ items.size } datasets; should always be 1!")
@@ -280,7 +280,7 @@ class DatasetUpdater(deposit: Deposit,
   private def deleteFiles(dataset: DatasetApi, databaseIds: List[DatabaseId]): Try[Unit] = {
     databaseIds.map(id => {
       debug(s"Deleting file, databaseId = $id")
-      instance.sword().deleteFile(id)
+      dataverseInstance.sword().deleteFile(id)
       dataset.awaitUnlock()
     }).collectResults.map(_ => ())
   }
@@ -289,7 +289,7 @@ class DatasetUpdater(deposit: Deposit,
     trace(databaseIdToNewFile, prestagedFiles)
     databaseIdToNewFile.map {
       case (id, fileInfo) =>
-        val fileApi = instance.file(id)
+        val fileApi = dataverseInstance.file(id)
 
         for {
           (replacementId, replacementMeta) <- replaceFile(fileApi, fileInfo, prestagedFiles)

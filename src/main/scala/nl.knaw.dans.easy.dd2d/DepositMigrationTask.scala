@@ -16,7 +16,8 @@
 package nl.knaw.dans.easy.dd2d
 
 import better.files.File
-import nl.knaw.dans.easy.dd2d.dansbag.DansBagValidator
+import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidator, InformationPackageType }
+import nl.knaw.dans.easy.dd2d.dansbag.InformationPackageType.InformationPackageType
 import nl.knaw.dans.easy.dd2d.mapping.Amd
 import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
 import nl.knaw.dans.lib.dataverse.{ DataverseClient, DataverseInstance }
@@ -66,6 +67,7 @@ class DepositMigrationTask(deposit: Deposit,
     supportedLicenses,
     repordIdToTerm,
     outboxDir) {
+  override protected val informationPackageType: InformationPackageType = InformationPackageType.AIP
 
   override protected def checkDepositType(): Try[Unit] = {
     for {

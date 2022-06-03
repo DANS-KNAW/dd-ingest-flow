@@ -32,7 +32,6 @@ object Description extends BlockCitation {
   def toDescriptionValueObject(node: Node): JsonObject = {
     val m = FieldMap()
     m.addPrimitiveField(DESCRIPTION_VALUE, newlineToHtml(node.text))
-    // TODO: add date subfield?
     m.toJsonObject
   }
 

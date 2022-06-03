@@ -20,7 +20,7 @@ import nl.knaw.dans.easy.dd2d.OutboxSubdir.{ FAILED, OutboxSubdir, PROCESSED, RE
 import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidationResult, DansBagValidator }
 import nl.knaw.dans.easy.dd2d.mapping.JsonObject
 import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
-import nl.knaw.dans.lib.dataverse.DataverseInstance
+import nl.knaw.dans.lib.dataverse.{ DataverseClient, DataverseInstance }
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.major
 import nl.knaw.dans.lib.dataverse.model.dataset.{ Dataset, PrimitiveSingleValueField, toFieldMap }
 import nl.knaw.dans.lib.error._
@@ -52,6 +52,7 @@ case class DepositIngestTask(deposit: Deposit,
                              activeMetadataBlocks: List[String],
                              optDansBagValidator: Option[DansBagValidator],
                              dataverseInstance: DataverseInstance,
+                             dataverseClient: DataverseClient,
                              migrationInfo: Option[MigrationInfo],
                              publishAwaitUnlockMaxNumberOfRetries: Int,
                              publishAwaitUnlockMillisecondsBetweenRetries: Int,
@@ -168,6 +169,9 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   private def getDatasetContacts: Try[List[JsonObject]] = {
+    val adminApi = dataverseClient.admin()
+    // TODO https://www.michaelpollmeier.com/2014/10/12/calling-java-8-functions-from-scala
+    // val newResponse = adminApi.listSingleUser(deposit.depositorUserId)
     for {
       response <- dataverseInstance.admin().getSingleUser(deposit.depositorUserId)
       user <- response.data

@@ -19,7 +19,7 @@ import better.files.File
 import nl.knaw.dans.easy.dd2d.dansbag.DansBagValidator
 import nl.knaw.dans.easy.dd2d.mapping.Amd
 import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
-import nl.knaw.dans.lib.dataverse.DataverseInstance
+import nl.knaw.dans.lib.dataverse.{ DataverseClient, DataverseInstance }
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset
 
 import java.net.URI
@@ -36,6 +36,7 @@ class DepositMigrationTask(deposit: Deposit,
                            activeMetadataBlocks: List[String],
                            optDansBagValidator: Option[DansBagValidator],
                            dataverseInstance: DataverseInstance,
+                           dataverseClient: DataverseClient,
                            migrationInfo: Option[MigrationInfo],
                            publishAwaitUnlockMaxNumberOfRetries: Int,
                            publishAwaitUnlockMillisecondsBetweenRetries: Int,
@@ -54,6 +55,7 @@ class DepositMigrationTask(deposit: Deposit,
     activeMetadataBlocks,
     optDansBagValidator,
     dataverseInstance,
+    dataverseClient,
     migrationInfo: Option[MigrationInfo],
     publishAwaitUnlockMaxNumberOfRetries,
     publishAwaitUnlockMillisecondsBetweenRetries,

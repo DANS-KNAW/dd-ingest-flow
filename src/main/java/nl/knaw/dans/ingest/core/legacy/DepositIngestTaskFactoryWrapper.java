@@ -26,13 +26,13 @@ import nl.knaw.dans.ingest.core.config.DataverseConfigScala;
 import nl.knaw.dans.ingest.core.config.HttpServiceConfig;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.service.EventWriter;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseInstance;
 import nl.knaw.dans.lib.dataverse.DataverseInstanceConfig;
+import nl.knaw.dans.lib.util.DataverseClientFactory;
 import scala.Option;
 import scala.collection.immutable.List;
 import scala.collection.immutable.Map;
-import scala.runtime.BoxedUnit;
-import scala.util.Try;
 import scala.xml.Elem;
 
 import java.net.URI;
@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 public class DepositIngestTaskFactoryWrapper {
     private final DepositIngestTaskFactory factory;
     private final DataverseInstance dataverseInstance;
+    private final DataverseClient dataverseClient;
     private final DansBagValidator validator;
 
     public DepositIngestTaskFactoryWrapper(
@@ -53,6 +54,11 @@ public class DepositIngestTaskFactoryWrapper {
         DataverseConfigScala dataverseConfigScala,
         HttpServiceConfig migrationInfoConfig,
         HttpServiceConfig validationDansBagConfig) {
+
+        DataverseClientFactory dataverseClientFactory = new DataverseClientFactory();
+        dataverseClientFactory.setBaseUrl(dataverseConfigScala.getHttp().getBaseUrl());
+        dataverseClientFactory.setApiKey(dataverseConfigScala.getApi().getApiKey());
+        dataverseClient = dataverseClientFactory.build(); // TODO other config not yet in library.
 
         dataverseInstance = new DataverseInstance(new DataverseInstanceConfig(
             DepositIngestTaskFactory.appendSlash(dataverseConfigScala.getHttp().getBaseUrl()),
@@ -94,6 +100,7 @@ public class DepositIngestTaskFactoryWrapper {
             DepositIngestTaskFactory.getActiveMetadataBlocks(dataverseInstance).get(),
             Option.apply(validator),
             dataverseInstance,
+            dataverseClient,
             Option.apply(migrationInfo),
             dataverseConfigScala.getApi().getPublishAwaitUnlockMaxRetries(),
             dataverseConfigScala.getApi().getPublishAwaitUnlockWaitTimeMs(),
@@ -124,6 +131,10 @@ public class DepositIngestTaskFactoryWrapper {
 
     public DataverseInstance getDataverseInstance() {
         return dataverseInstance;
+    }
+
+    public DataverseClient getDataverseClient() {
+        return dataverseClient;
     }
 
     public DansBagValidator getDansBagValidatorInstance() {

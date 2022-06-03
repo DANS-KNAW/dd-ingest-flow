@@ -96,6 +96,7 @@ public class DepositStartImportTaskWrapperTest {
             null,
             Option.empty(),
             null,
+            null,
             Option.empty(),
             0,
             0,

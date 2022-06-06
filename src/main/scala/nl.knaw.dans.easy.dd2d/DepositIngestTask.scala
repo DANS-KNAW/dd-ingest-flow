@@ -21,7 +21,8 @@ import nl.knaw.dans.easy.dd2d.dansbag.InformationPackageType.InformationPackageT
 import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidationResult, DansBagValidator, InformationPackageType }
 import nl.knaw.dans.easy.dd2d.mapping.JsonObject
 import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
-import nl.knaw.dans.lib.dataverse.{ DataverseClient, DataverseInstance }
+import nl.knaw.dans.lib.dataverse.model.AuthenticatedUser
+import nl.knaw.dans.lib.dataverse.{ AdminApi, DataverseClient, DataverseInstance, DataverseResponse }
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.major
 import nl.knaw.dans.lib.dataverse.model.dataset.{ Dataset, PrimitiveSingleValueField, toFieldMap }
 import nl.knaw.dans.lib.error._
@@ -172,9 +173,7 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   private def getDatasetContacts: Try[List[JsonObject]] = {
-    val adminApi = dataverseClient.admin()
-    // TODO https://www.michaelpollmeier.com/2014/10/12/calling-java-8-functions-from-scala
-    // val newResponse = adminApi.listSingleUser(deposit.depositorUserId)
+// TODO dataverseClient.admin().listSingleUser
     for {
       response <- dataverseInstance.admin().getSingleUser(deposit.depositorUserId)
       user <- response.data

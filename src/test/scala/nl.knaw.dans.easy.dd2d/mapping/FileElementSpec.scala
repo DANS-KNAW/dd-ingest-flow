@@ -16,7 +16,7 @@
 package nl.knaw.dans.easy.dd2d.mapping
 
 import nl.knaw.dans.easy.dd2d.TestSupportFixture
-import nl.knaw.dans.lib.dataverse.model.file.FileMeta
+import nl.knaw.dans.lib.scaladv.model.file.FileMeta
 
 class FileElementSpec extends TestSupportFixture {
   "toFileMetadata" should "strip data/ prefix from path to get directoryLabel" in {

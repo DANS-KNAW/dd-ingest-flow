@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.dd2d.fieldbuilders
 
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField
+import nl.knaw.dans.lib.scaladv.model.dataset.MetadataField
 
 abstract class AbstractFieldBuilder {
 

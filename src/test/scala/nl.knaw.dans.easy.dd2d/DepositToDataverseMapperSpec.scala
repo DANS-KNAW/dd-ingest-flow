@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.dd2d
 
-import nl.knaw.dans.lib.dataverse.model.dataset.{ CompoundField, Dataset, PrimitiveSingleValueField, toFieldMap }
+import nl.knaw.dans.lib.scaladv.model.dataset.{ CompoundField, Dataset, PrimitiveSingleValueField, toFieldMap }
 import org.json4s.DefaultFormats
 
 import scala.util.Success

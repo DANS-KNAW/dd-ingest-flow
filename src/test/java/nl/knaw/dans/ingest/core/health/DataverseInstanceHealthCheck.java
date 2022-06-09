@@ -17,7 +17,7 @@ package nl.knaw.dans.ingest.core.health;
 
 import com.codahale.metrics.health.HealthCheck.Result;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
-import nl.knaw.dans.lib.dataverse.DataverseInstance;
+import nl.knaw.dans.lib.scaladv.DataverseInstance;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

@@ -18,7 +18,7 @@ package nl.knaw.dans.easy.dd2d
 import better.files.File
 import nl.knaw.dans.easy.dd2d.dansbag.DansBagValidator
 import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
-import nl.knaw.dans.lib.dataverse.DataverseInstance
+import nl.knaw.dans.lib.scaladv.DataverseInstance
 import org.apache.commons.csv.{ CSVFormat, CSVParser }
 import org.apache.commons.io.FileUtils
 

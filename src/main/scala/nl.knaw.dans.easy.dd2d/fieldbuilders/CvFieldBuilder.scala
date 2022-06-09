@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.dd2d.fieldbuilders
 
-import nl.knaw.dans.lib.dataverse.model.dataset.{ ControlledMultipleValueField, ControlledSingleValueField, MetadataField }
+import nl.knaw.dans.lib.scaladv.model.dataset.{ ControlledMultipleValueField, ControlledSingleValueField, MetadataField }
 
 import scala.collection.mutable
 

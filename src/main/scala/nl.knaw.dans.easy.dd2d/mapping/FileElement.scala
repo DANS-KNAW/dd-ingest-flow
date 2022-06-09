@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.dd2d.mapping
 
-import nl.knaw.dans.lib.dataverse.model.file.FileMeta
+import nl.knaw.dans.lib.scaladv.model.file.FileMeta
 
 import java.nio.file.Paths
 import scala.collection.mutable

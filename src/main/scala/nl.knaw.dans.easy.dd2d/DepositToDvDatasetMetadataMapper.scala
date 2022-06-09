@@ -17,7 +17,7 @@ package nl.knaw.dans.easy.dd2d
 
 import nl.knaw.dans.easy.dd2d.fieldbuilders.{ AbstractFieldBuilder, CompoundFieldBuilder, CvFieldBuilder, PrimitiveFieldBuilder }
 import nl.knaw.dans.easy.dd2d.mapping._
-import nl.knaw.dans.lib.dataverse.model.dataset.{ Dataset, DatasetVersion, MetadataBlock }
+import nl.knaw.dans.lib.scaladv.model.dataset.{ Dataset, DatasetVersion, MetadataBlock }
 import org.apache.commons.lang.StringUtils
 
 import scala.collection.mutable

@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.dd2d
 
-import nl.knaw.dans.lib.dataverse.model.dataset.{ CompoundField, ControlledSingleValueField, MetadataField, PrimitiveSingleValueField }
+import nl.knaw.dans.lib.scaladv.model.dataset.{ CompoundField, ControlledSingleValueField, MetadataField, PrimitiveSingleValueField }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.collection.mutable

@@ -16,7 +16,7 @@
 package nl.knaw.dans.ingest.core.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.lib.dataverse.DataverseInstance;
+import nl.knaw.dans.lib.scaladv.DataverseInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

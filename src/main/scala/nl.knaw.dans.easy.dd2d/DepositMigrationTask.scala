@@ -20,8 +20,8 @@ import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidator, InformationPackageType
 import nl.knaw.dans.easy.dd2d.dansbag.InformationPackageType.InformationPackageType
 import nl.knaw.dans.easy.dd2d.mapping.Amd
 import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
-import nl.knaw.dans.lib.dataverse.DataverseInstance
-import nl.knaw.dans.lib.dataverse.model.dataset.Dataset
+import nl.knaw.dans.lib.scaladv.DataverseInstance
+import nl.knaw.dans.lib.scaladv.model.dataset.Dataset
 
 import java.net.URI
 import java.util.regex.Pattern

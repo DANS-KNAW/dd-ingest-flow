@@ -16,9 +16,9 @@
 package nl.knaw.dans.easy.dd2d
 
 import nl.knaw.dans.easy.dd2d.migrationinfo.{ BasicFileMeta, MigrationInfo }
-import nl.knaw.dans.lib.dataverse.model.dataset.{ Dataset, DatasetCreationResult }
-import nl.knaw.dans.lib.dataverse.model.{ DefaultRole, RoleAssignment }
-import nl.knaw.dans.lib.dataverse.{ DataverseInstance, DataverseResponse }
+import nl.knaw.dans.lib.scaladv.model.dataset.{ Dataset, DatasetCreationResult }
+import nl.knaw.dans.lib.scaladv.model.{ DefaultRole, RoleAssignment }
+import nl.knaw.dans.lib.scaladv.{ DataverseInstance, DataverseResponse }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 

@@ -16,10 +16,10 @@
 package nl.knaw.dans.easy.dd2d
 
 import nl.knaw.dans.easy.dd2d.migrationinfo.{ BasicFileMeta, MigrationInfo }
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlocks
-import nl.knaw.dans.lib.dataverse.model.file.FileMeta
-import nl.knaw.dans.lib.dataverse.model.search.DatasetResultItem
-import nl.knaw.dans.lib.dataverse.{ DatasetApi, DataverseInstance, FileApi, Version }
+import nl.knaw.dans.lib.scaladv.model.dataset.MetadataBlocks
+import nl.knaw.dans.lib.scaladv.model.file.FileMeta
+import nl.knaw.dans.lib.scaladv.model.search.DatasetResultItem
+import nl.knaw.dans.lib.scaladv.{ DatasetApi, DataverseInstance, FileApi, Version }
 import nl.knaw.dans.lib.error.{ TraversableTryExtensions, TryExtensions }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization

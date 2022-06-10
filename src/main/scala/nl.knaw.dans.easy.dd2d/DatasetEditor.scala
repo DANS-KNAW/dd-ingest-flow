@@ -34,7 +34,7 @@ import scala.util.{ Failure, Success, Try }
 /**
  * Object that edits a dataset, a new draft.
  */
-abstract class DatasetEditor(instance: DataverseInstance, optFileExclusionPattern: Option[Pattern], zipFileHandler: ZipFileHandler) extends DebugEnhancedLogging {
+abstract class DatasetEditor(dataverseInstance: DataverseInstance, optFileExclusionPattern: Option[Pattern], zipFileHandler: ZipFileHandler) extends DebugEnhancedLogging {
   type PersistentId = String
   type DatasetId = Int
 
@@ -51,7 +51,7 @@ abstract class DatasetEditor(instance: DataverseInstance, optFileExclusionPatter
     for (f <- files) {
       debug(s"Adding file, directoryLabel = ${ f.metadata.directoryLabel }, label = ${ f.metadata.label }")
       val id = addFile(persistentId, f, prestagedFiles).get
-      instance.dataset(persistentId).awaitUnlock().unsafeGetOrThrow
+      dataverseInstance.dataset(persistentId).awaitUnlock().unsafeGetOrThrow
       result(id) = f
     }
     result.toMap
@@ -61,12 +61,12 @@ abstract class DatasetEditor(instance: DataverseInstance, optFileExclusionPatter
     val result = for {
       r <- getPrestagedFileFor(fileInfo, prestagedFiles).map { prestagedFile =>
         debug(s"Adding prestaged file: $fileInfo")
-        instance.dataset(doi).addPrestagedFile(prestagedFile)
+        dataverseInstance.dataset(doi).addPrestagedFile(prestagedFile)
       }.getOrElse {
         debug(s"Uploading file: $fileInfo")
         val optWrappedZip = zipFileHandler
           .wrapIfZipFile(fileInfo.file)
-        val r = instance.dataset(doi).addFile(Option(
+        val r = dataverseInstance.dataset(doi).addFile(Option(
           optWrappedZip
             .getOrElse(fileInfo.file)), Option(fileInfo.metadata))
         optWrappedZip.foreach(_.delete(swallowIOExceptions = true))
@@ -74,7 +74,7 @@ abstract class DatasetEditor(instance: DataverseInstance, optFileExclusionPatter
       }
       files <- r.data
       id = files.files.headOption.flatMap(_.dataFile.map(_.id))
-      _ <- instance.dataset(doi).awaitUnlock()
+      _ <- dataverseInstance.dataset(doi).awaitUnlock()
     } yield id
     debug(s"Result = $result")
     result.map(_.getOrElse(throw new IllegalStateException("Could not get DataFile ID from response")))
@@ -113,7 +113,7 @@ abstract class DatasetEditor(instance: DataverseInstance, optFileExclusionPatter
   protected def updateFileMetadata(databaseIdToFileInfo: Map[Int, FileMeta]): Try[Unit] = {
     trace(databaseIdToFileInfo)
     databaseIdToFileInfo.map { case (id, fileMeta) => {
-      val r = instance.file(id).updateMetadata(fileMeta)
+      val r = dataverseInstance.file(id).updateMetadata(fileMeta)
       debug(s"id = $id, result = $r")
       r
     }
@@ -125,9 +125,9 @@ abstract class DatasetEditor(instance: DataverseInstance, optFileExclusionPatter
       ddm <- deposit.tryDdm
       files <- deposit.tryFilesXml
       enable = AccessRights.isEnableRequests((ddm \ "profile" \ "accessRights").head, files)
-      _ <- if (enable && canEnable) instance.accessRequests(persistendId).enable()
+      _ <- if (enable && canEnable) dataverseInstance.accessRequests(persistendId).enable()
            else Success(())
-      _ <- if (!enable) instance.accessRequests(persistendId).disable()
+      _ <- if (!enable) dataverseInstance.accessRequests(persistendId).disable()
            else Success(())
     } yield ()
   }
@@ -147,7 +147,7 @@ abstract class DatasetEditor(instance: DataverseInstance, optFileExclusionPatter
 
   protected def getFilesToEmbargo(persistendId: PersistentId): Try[List[FileMeta]] = {
     for {
-      r <- instance.dataset(persistendId).listFiles()
+      r <- dataverseInstance.dataset(persistendId).listFiles()
       files <- r.data
       filesToEmbargo = files.filter(f => f.directoryLabel.getOrElse("") != "easy-migration")
     } yield filesToEmbargo
@@ -159,12 +159,12 @@ abstract class DatasetEditor(instance: DataverseInstance, optFileExclusionPatter
 
   protected def embargoFiles(persistendId: PersistentId, dateAvailable: Date, fileIds: List[Int]): Try[Unit] = {
     trace(persistendId, fileIds)
-    instance.dataset(persistendId).setEmbargo(Embargo(dateAvailableFormat.format(dateAvailable), "", fileIds)).map(_ => ())
+    dataverseInstance.dataset(persistendId).setEmbargo(Embargo(dateAvailableFormat.format(dateAvailable), "", fileIds)).map(_ => ())
   }
 
   protected def deleteDraftIfExists(persistentId: String): Unit = {
     val result = for {
-      r <- instance.dataset(persistentId).viewLatestVersion()
+      r <- dataverseInstance.dataset(persistentId).viewLatestVersion()
       v <- r.data
       _ <- if (v.latestVersion.versionState.contains("DRAFT"))
              deleteDraft(persistentId)
@@ -177,7 +177,7 @@ abstract class DatasetEditor(instance: DataverseInstance, optFileExclusionPatter
 
   private def deleteDraft(persistentId: PersistentId): Try[Unit] = {
     for {
-      r <- instance.dataset(persistentId).deleteDraft()
+      r <- dataverseInstance.dataset(persistentId).deleteDraft()
       _ = logger.info(s"DRAFT deleted")
     } yield ()
   }

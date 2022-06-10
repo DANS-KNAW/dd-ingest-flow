@@ -19,6 +19,7 @@ import better.files.File
 import nl.knaw.dans.easy.dd2d.dansbag.DansBagValidator
 import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
 import nl.knaw.dans.lib.scaladv.DataverseInstance
+import nl.knaw.dans.lib.dataverse.DataverseClient
 import org.apache.commons.csv.{ CSVFormat, CSVParser }
 import org.apache.commons.io.FileUtils
 
@@ -52,6 +53,7 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
                                activeMetadataBlocks: List[String],
                                optDansBagValidator: Option[DansBagValidator],
                                dataverseInstance: DataverseInstance,
+                               dataverseClient: DataverseClient,
                                migrationInfo: Option[MigrationInfo],
                                publishAwaitUnlockMaxNumberOfRetries: Int,
                                publishAwaitUnlockMillisecondsBetweenRetries: Int,
@@ -73,6 +75,7 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
         activeMetadataBlocks,
         optDansBagValidator,
         dataverseInstance,
+        dataverseClient,
         migrationInfo,
         publishAwaitUnlockMaxNumberOfRetries,
         publishAwaitUnlockMillisecondsBetweenRetries,
@@ -93,6 +96,7 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
         activeMetadataBlocks,
         optDansBagValidator,
         dataverseInstance,
+        dataverseClient,
         Option.empty,
         publishAwaitUnlockMaxNumberOfRetries,
         publishAwaitUnlockMillisecondsBetweenRetries,

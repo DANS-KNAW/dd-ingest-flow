@@ -16,6 +16,7 @@
 package nl.knaw.dans.easy.dd2d
 
 import nl.knaw.dans.easy.dd2d.migrationinfo.{ BasicFileMeta, MigrationInfo }
+import nl.knaw.dans.lib.dataverse.DataverseClient
 import nl.knaw.dans.lib.scaladv.model.dataset.{ Dataset, DatasetCreationResult }
 import nl.knaw.dans.lib.scaladv.model.{ DefaultRole, RoleAssignment }
 import nl.knaw.dans.lib.scaladv.{ DataverseInstance, DataverseResponse }
@@ -37,6 +38,7 @@ class DatasetCreator(deposit: Deposit,
                      variantToLicense: Map[String, String],
                      supportedLicenses: List[URI],
                      dataverseInstance: DataverseInstance,
+                     dataverseClient: DataverseClient,
                      optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseInstance, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
   trace(deposit)
 
@@ -56,17 +58,17 @@ class DatasetCreator(deposit: Deposit,
       case Success(persistentId) => {
         for {
           _ <- setLicense(supportedLicenses)(variantToLicense)(deposit, dataverseInstance.dataset(persistentId))
-          _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
+          _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
           pathToFileInfo <- getPathToFileInfo(deposit)
           prestagedFiles <- optMigrationInfoService.map(_.getPrestagedDataFilesFor(s"doi:${ deposit.doi }", 1)).getOrElse(Success(Set.empty[BasicFileMeta]))
           databaseIdsToFileInfo <- addFiles(persistentId, pathToFileInfo.values.toList, prestagedFiles)
           _ <- updateFileMetadata(databaseIdsToFileInfo.mapValues(_.metadata))
-          _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
+          _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
           _ <- configureEnableAccessRequests(deposit, persistentId, canEnable = true)
-          _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
+          _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
           _ = debug(s"Assigning role $depositorRole to ${ deposit.depositorUserId }")
           _ <- dataverseInstance.dataset(persistentId).assignRole(RoleAssignment(s"@${ deposit.depositorUserId }", depositorRole))
-          _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
+          _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
           dateAvailable <- deposit.getDateAvailable
           _ <- if (isEmbargo(dateAvailable)) embargoFiles(persistentId, dateAvailable)
                else {

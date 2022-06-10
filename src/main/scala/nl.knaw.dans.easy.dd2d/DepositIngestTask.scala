@@ -21,11 +21,12 @@ import nl.knaw.dans.easy.dd2d.dansbag.InformationPackageType.InformationPackageT
 import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidationResult, DansBagValidator, InformationPackageType }
 import nl.knaw.dans.easy.dd2d.mapping.JsonObject
 import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
+import nl.knaw.dans.lib.dataverse.DataverseClient
+import nl.knaw.dans.lib.error._
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.scaladv.DataverseInstance
 import nl.knaw.dans.lib.scaladv.model.dataset.UpdateType.major
 import nl.knaw.dans.lib.scaladv.model.dataset.{ Dataset, PrimitiveSingleValueField, toFieldMap }
-import nl.knaw.dans.lib.error._
-import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.taskqueue.Task
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
@@ -53,6 +54,7 @@ case class DepositIngestTask(deposit: Deposit,
                              activeMetadataBlocks: List[String],
                              optDansBagValidator: Option[DansBagValidator],
                              dataverseInstance: DataverseInstance,
+                             dataverseClient: DataverseClient,
                              migrationInfo: Option[MigrationInfo],
                              publishAwaitUnlockMaxNumberOfRetries: Int,
                              publishAwaitUnlockMillisecondsBetweenRetries: Int,
@@ -191,7 +193,7 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   protected def newDatasetCreator(dataverseDataset: Dataset, depositorRole: String): DatasetCreator = {
-    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = false, dataverseDataset, variantToLicense, supportedLicenses, dataverseInstance, Option.empty)
+    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = false, dataverseDataset, variantToLicense, supportedLicenses, dataverseInstance, dataverseClient, Option.empty)
   }
 
   protected def publishDataset(persistentId: String): Try[Unit] = {

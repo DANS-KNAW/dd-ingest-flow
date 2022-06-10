@@ -26,13 +26,13 @@ import nl.knaw.dans.ingest.core.config.DataverseConfigScala;
 import nl.knaw.dans.ingest.core.config.HttpServiceConfig;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.service.EventWriter;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.scaladv.DataverseInstance;
 import nl.knaw.dans.lib.scaladv.DataverseInstanceConfig;
+import nl.knaw.dans.lib.util.DataverseClientFactory;
 import scala.Option;
 import scala.collection.immutable.List;
 import scala.collection.immutable.Map;
-import scala.runtime.BoxedUnit;
-import scala.util.Try;
 import scala.xml.Elem;
 
 import java.net.URI;
@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 public class DepositIngestTaskFactoryWrapper {
     private final DepositIngestTaskFactory factory;
     private final DataverseInstance dataverseInstance;
+    private final DataverseClient dataverseClient;
     private final DansBagValidator validator;
 
     public DepositIngestTaskFactoryWrapper(
@@ -54,6 +55,7 @@ public class DepositIngestTaskFactoryWrapper {
         HttpServiceConfig migrationInfoConfig,
         HttpServiceConfig validationDansBagConfig) {
 
+        dataverseClient = buildDataverseClient(dataverseConfigScala);
         dataverseInstance = new DataverseInstance(new DataverseInstanceConfig(
             DepositIngestTaskFactory.appendSlash(dataverseConfigScala.getHttp().getBaseUrl()),
             dataverseConfigScala.getApi().getApiKey(),
@@ -94,6 +96,7 @@ public class DepositIngestTaskFactoryWrapper {
             DepositIngestTaskFactory.getActiveMetadataBlocks(dataverseInstance).get(),
             Option.apply(validator),
             dataverseInstance,
+            dataverseClient,
             Option.apply(migrationInfo),
             dataverseConfigScala.getApi().getPublishAwaitUnlockMaxRetries(),
             dataverseConfigScala.getApi().getPublishAwaitUnlockWaitTimeMs(),
@@ -103,6 +106,16 @@ public class DepositIngestTaskFactoryWrapper {
             variantToLicense,
             supportedLicenses,
             reportIdToTerm);
+    }
+
+    private DataverseClient buildDataverseClient(DataverseConfigScala dataverseConfigScala) {
+        DataverseClientFactory dataverseClientFactory = new DataverseClientFactory();
+        dataverseClientFactory.setBaseUrl(dataverseConfigScala.getHttp().getBaseUrl());
+        dataverseClientFactory.setApiKey(dataverseConfigScala.getApi().getApiKey());
+        dataverseClientFactory.setUnblockKey(dataverseConfigScala.getApi().getUnblockKey());
+        dataverseClientFactory.setAwaitLockStateMaxNumberOfRetries(dataverseConfigScala.getApi().getAwaitUnlockMaxRetries());
+        dataverseClientFactory.setAwaitLockStateMillisecondsBetweenRetries(dataverseConfigScala.getApi().getAwaitUnlockWaitTimeMs());
+        return dataverseClientFactory.build();
     }
 
     private Map<String, String> getMap(IngestFlowConfig ingestFlowConfig, String mappingCsv, String keyColumn, String valueColumn) {
@@ -124,6 +137,10 @@ public class DepositIngestTaskFactoryWrapper {
 
     public DataverseInstance getDataverseInstance() {
         return dataverseInstance;
+    }
+
+    public DataverseClient buildDataverseClient() {
+        return dataverseClient;
     }
 
     public DansBagValidator getDansBagValidatorInstance() {

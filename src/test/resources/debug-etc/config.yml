@@ -13,6 +13,10 @@ server:
 
 ingestFlow:
   import:
+    inbox: data/import/deposits
+    outbox: data/import/out
+
+  migration:
     inbox: data/migration/deposits
     outbox: data/migration/out
 
@@ -30,7 +34,7 @@ ingestFlow:
   depositorRole: contributor
   deduplicate: true
   zipWrappingTempDir: data/tmp
-  mappingDefsDir: src/main/assembly/dist/cfg
+  mappingDefsDir: etc
   taskQueue:
     nameFormat: "ingest-worker-%d"
     maxQueueSize: 5000
@@ -89,6 +93,8 @@ logging:
     "nl.knaw.dans.ingest.core.sequencing.DepositSequenceManager":
       level: TRACE
       additive: true
+    "nl.knaw.dans.ingest.core.service.UnboundedDepositsImportTaskIterator":
+      level: INFO
   appenders:
     - type: console
       logFormat: "%-5p [%d{ISO8601}] [%t] %c: %m%n%rEx"

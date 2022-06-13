@@ -22,6 +22,8 @@ import nl.knaw.dans.lib.scaladv.model.{ DefaultRole, RoleAssignment }
 import nl.knaw.dans.lib.scaladv.{ DataverseInstance, DataverseResponse }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.json4s.{ DefaultFormats, Formats }
+import org.json4s.native.Serialization
 
 import java.net.URI
 import java.util.Date
@@ -41,23 +43,25 @@ class DatasetCreator(deposit: Deposit,
                      dataverseClient: DataverseClient,
                      optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseInstance, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
   trace(deposit)
+  private implicit val jsonFormats: Formats = DefaultFormats
 
   override def performEdit(): Try[PersistentId] = {
     {
+      val dataverseApi = dataverseInstance.dataverse("root")
       for {
         // autoPublish is false, because it seems there is a bug with it in Dataverse (most of the time?)
         response <- if (isMigration)
-                      dataverseInstance
-                        .dataverse("root")
-                        .importDataset(dataverseDataset, Some(s"doi:${ deposit.doi }"), autoPublish = false)
-                    else dataverseInstance.dataverse("root").createDataset(dataverseDataset)
-        persistentId <- getPersistentId(response)
+                      dataverseApi.importDataset(dataverseDataset, Some(s"doi:${ deposit.doi }"), autoPublish = false)
+                    else dataverseApi.createDataset(dataverseDataset)
+        persistentId <- response.data.map(_.persistentId)
       } yield persistentId
     } match {
       case Failure(e) => Failure(FailedDepositException(deposit, "Could not import/create dataset", e))
       case Success(persistentId) => {
         for {
-          _ <- setLicense(supportedLicenses)(variantToLicense)(deposit, dataverseInstance.dataset(persistentId))
+          licenseAsJson <- licenseAsJson(supportedLicenses)(variantToLicense)(deposit)
+          //          _ <- dataverseClient.dataset(persistentId).updateMetadataFromJsonLd(licenseAsJson, replace = true)
+          _ <- dataverseInstance.dataset(persistentId).updateMetadataFromJsonLd(licenseAsJson, replace = true)
           _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
           pathToFileInfo <- getPathToFileInfo(deposit)
           prestagedFiles <- optMigrationInfoService.map(_.getPrestagedDataFilesFor(s"doi:${ deposit.doi }", 1)).getOrElse(Success(Set.empty[BasicFileMeta]))
@@ -67,7 +71,9 @@ class DatasetCreator(deposit: Deposit,
           _ <- configureEnableAccessRequests(deposit, persistentId, canEnable = true)
           _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
           _ = debug(s"Assigning role $depositorRole to ${ deposit.depositorUserId }")
-          _ <- dataverseInstance.dataset(persistentId).assignRole(RoleAssignment(s"@${ deposit.depositorUserId }", depositorRole))
+          scalaRoleAssignment = RoleAssignment(s"@${ deposit.depositorUserId }", depositorRole)
+          jsonRoleAssignment = Serialization.write(scalaRoleAssignment)
+          _ <- Try(dataverseClient.dataset(persistentId).assignRole(jsonRoleAssignment))
           _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
           dateAvailable <- deposit.getDateAvailable
           _ <- if (isEmbargo(dateAvailable)) embargoFiles(persistentId, dateAvailable)
@@ -82,10 +88,6 @@ class DatasetCreator(deposit: Deposit,
           deleteDraftIfExists(persistentId)
       }
     }
-  }
-
-  private def getPersistentId(response: DataverseResponse[DatasetCreationResult]): Try[String] = {
-    response.data.map(_.persistentId)
   }
 
   private def embargoFiles(persistentId: PersistentId, dateAvailable: Date): Try[Unit] = {

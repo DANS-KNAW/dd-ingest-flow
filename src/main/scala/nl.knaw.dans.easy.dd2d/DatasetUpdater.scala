@@ -65,7 +65,8 @@ class DatasetUpdater(deposit: Deposit,
           _ <- dataset.updateMetadata(metadataBlocks)
           _ <- dataset.awaitUnlock()
 
-          _ <- setLicense(supportedLicenses)(variantToLicense)(deposit, dataset)
+          licenseAsJson <- licenseAsJson(supportedLicenses)(variantToLicense)(deposit)
+          _ <- dataverseInstance.dataset(doi).updateMetadataFromJsonLd(licenseAsJson, replace = true)
           _ <- dataset.awaitUnlock()
           pathToFileInfo <- getPathToFileInfo(deposit)
           _ = debug(s"pathToFileInfo = $pathToFileInfo")

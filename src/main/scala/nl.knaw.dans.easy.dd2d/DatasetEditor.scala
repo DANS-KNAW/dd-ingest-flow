@@ -132,17 +132,15 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, optFileExclus
     } yield ()
   }
 
-  protected def setLicense(supportedLicenses: List[URI])(variantToNormalized: Map[String, String])(deposit: Deposit, dataset: DatasetApi): Try[Unit] = {
+  protected def licenseAsJson(supportedLicenses: List[URI])(variantToNormalized: Map[String, String])(deposit: Deposit): Try[String] = {
     trace(deposit)
     for {
       ddm <- deposit.tryDdm
-      optLicense = (ddm \ "dcmiMetadata" \ "license").find(License.isLicenseUri)
-      _ <- if (optLicense.isEmpty) Failure(RejectedDepositException(deposit, "No license specified"))
-           else dataset.updateMetadataFromJsonLd(
-             s"""
-                |{ "http://schema.org/license": "${ License.getLicenseUri(supportedLicenses)(variantToNormalized)(optLicense.get).toASCIIString }" }
-                |""".stripMargin, replace = true)
-    } yield ()
+      license <- (ddm \ "dcmiMetadata" \ "license").find(License.isLicenseUri).map(Success(_)).getOrElse(Failure(RejectedDepositException(deposit, "No license specified")))
+      uri = License.getLicenseUri(supportedLicenses)(variantToNormalized)(license).toASCIIString
+    } yield s"""
+                |{ "http://schema.org/license": "$uri" }
+                |""".stripMargin
   }
 
   protected def getFilesToEmbargo(persistendId: PersistentId): Try[List[FileMeta]] = {

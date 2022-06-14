@@ -17,12 +17,15 @@ package nl.knaw.dans.easy.dd2d
 
 import nl.knaw.dans.easy.dd2d.mapping.{ AccessRights, License }
 import nl.knaw.dans.easy.dd2d.migrationinfo.BasicFileMeta
+import nl.knaw.dans.lib.dataverse.DataverseClient
+import nl.knaw.dans.lib.error.{ TraversableTryExtensions, TryExtensions }
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import nl.knaw.dans.lib.scaladv.DataverseInstance
 import nl.knaw.dans.lib.scaladv.model.dataset.Embargo
 import nl.knaw.dans.lib.scaladv.model.file.FileMeta
 import nl.knaw.dans.lib.scaladv.model.file.prestaged.PrestagedFile
-import nl.knaw.dans.lib.scaladv.{ DatasetApi, DataverseInstance }
-import nl.knaw.dans.lib.error.{ TraversableTryExtensions, TryExtensions }
-import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.json4s.native.Serialization
+import org.json4s.{ DefaultFormats, Formats }
 
 import java.net.URI
 import java.nio.file.{ Path, Paths }
@@ -34,9 +37,10 @@ import scala.util.{ Failure, Success, Try }
 /**
  * Object that edits a dataset, a new draft.
  */
-abstract class DatasetEditor(dataverseInstance: DataverseInstance, optFileExclusionPattern: Option[Pattern], zipFileHandler: ZipFileHandler) extends DebugEnhancedLogging {
+abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClient: DataverseClient, optFileExclusionPattern: Option[Pattern], zipFileHandler: ZipFileHandler) extends DebugEnhancedLogging {
   type PersistentId = String
   type DatasetId = Int
+  implicit val jsonFormats: Formats = DefaultFormats
 
   /**
    * Performs the task.
@@ -83,7 +87,7 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, optFileExclus
   protected def getPathToFileInfo(deposit: Deposit): Try[Map[Path, FileInfo]] = {
     for {
       bagPathToFileInfo <- deposit.getPathToFileInfo
-      pathToFileInfo = bagPathToFileInfo.map { case (bagPath, fileInfo) => (Paths.get("data").relativize(bagPath) -> fileInfo) }
+      pathToFileInfo = bagPathToFileInfo.map { case (bagPath, fileInfo) => Paths.get("data").relativize(bagPath) -> fileInfo }
       filteredPathToFileInfo = excludeFiles(pathToFileInfo)
     } yield filteredPathToFileInfo
   }
@@ -112,11 +116,10 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, optFileExclus
 
   protected def updateFileMetadata(databaseIdToFileInfo: Map[Int, FileMeta]): Try[Unit] = {
     trace(databaseIdToFileInfo)
-    databaseIdToFileInfo.map { case (id, fileMeta) => {
+    databaseIdToFileInfo.map { case (id, fileMeta) =>
       val r = dataverseInstance.file(id).updateMetadata(fileMeta)
       debug(s"id = $id, result = $r")
       r
-    }
     }.collectResults.map(_ => ())
   }
 
@@ -143,21 +146,15 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, optFileExclus
                 |""".stripMargin
   }
 
-  protected def getFilesToEmbargo(persistendId: PersistentId): Try[List[FileMeta]] = {
-    for {
-      r <- dataverseInstance.dataset(persistendId).listFiles()
-      files <- r.data
-      filesToEmbargo = files.filter(f => f.directoryLabel.getOrElse("") != "easy-migration")
-    } yield filesToEmbargo
-  }
-
   protected def isEmbargo(date: Date): Boolean = {
     date.compareTo(new Date()) > 0
   }
 
   protected def embargoFiles(persistendId: PersistentId, dateAvailable: Date, fileIds: List[Int]): Try[Unit] = {
     trace(persistendId, fileIds)
-    dataverseInstance.dataset(persistendId).setEmbargo(Embargo(dateAvailableFormat.format(dateAvailable), "", fileIds)).map(_ => ())
+    val embargo = Embargo(dateAvailableFormat.format(dateAvailable), "", fileIds)
+    val json = Serialization.write(embargo)
+    Try(dataverseClient.dataset(persistendId).setEmbargo(json))
   }
 
   protected def deleteDraftIfExists(persistentId: String): Unit = {
@@ -175,7 +172,7 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, optFileExclus
 
   private def deleteDraft(persistentId: PersistentId): Try[Unit] = {
     for {
-      r <- dataverseInstance.dataset(persistentId).deleteDraft()
+      _ <- dataverseInstance.dataset(persistentId).deleteDraft()
       _ = logger.info(s"DRAFT deleted")
     } yield ()
   }

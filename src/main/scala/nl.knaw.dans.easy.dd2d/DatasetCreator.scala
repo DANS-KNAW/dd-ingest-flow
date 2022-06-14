@@ -22,8 +22,8 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.scaladv.DataverseInstance
 import nl.knaw.dans.lib.scaladv.model.RoleAssignment
 import nl.knaw.dans.lib.scaladv.model.dataset.Dataset
+import nl.knaw.dans.lib.scaladv.model.file.FileMeta
 import org.json4s.native.Serialization
-import org.json4s.{ DefaultFormats, Formats }
 
 import java.net.URI
 import java.util.Date
@@ -41,9 +41,8 @@ class DatasetCreator(deposit: Deposit,
                      supportedLicenses: List[URI],
                      dataverseInstance: DataverseInstance,
                      dataverseClient: DataverseClient,
-                     optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseInstance, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
+                     optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseInstance, dataverseClient, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
   trace(deposit)
-  private implicit val jsonFormats: Formats = DefaultFormats
 
   override def performEdit(): Try[PersistentId] = {
     {
@@ -92,9 +91,12 @@ class DatasetCreator(deposit: Deposit,
   private def embargoFiles(persistentId: PersistentId, dateAvailable: Date): Try[Unit] = {
     logger.info(s"Putting embargo on files until: $dateAvailable")
     for {
-      files <- getFilesToEmbargo(persistentId)
-      _ <- embargoFiles(persistentId, dateAvailable, files.map(_.dataFile.get.id))
-      _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
+      response <- dataverseInstance.dataset(persistentId).listFiles()
+      files <- response.data
+      filesToEmbargo = files.filter(f => f.directoryLabel.getOrElse("") != "easy-migration")
+      fileIds = filesToEmbargo.map(_.dataFile.get.id)
+      _ <- embargoFiles(persistentId, dateAvailable, fileIds)
+      _ <- Try(dataverseInstance.dataset(persistentId).awaitUnlock())
     } yield ()
   }
 }

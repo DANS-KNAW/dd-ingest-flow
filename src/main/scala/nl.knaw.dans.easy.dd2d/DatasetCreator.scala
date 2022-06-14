@@ -60,8 +60,7 @@ class DatasetCreator(deposit: Deposit,
       case Success(persistentId) => {
         for {
           licenseAsJson <- licenseAsJson(supportedLicenses)(variantToLicense)(deposit)
-          //          _ <- dataverseClient.dataset(persistentId).updateMetadataFromJsonLd(licenseAsJson, replace = true)
-          _ <- dataverseInstance.dataset(persistentId).updateMetadataFromJsonLd(licenseAsJson, replace = true)
+          _ <- Try(dataverseClient.dataset(persistentId).updateMetadataFromJsonLd(licenseAsJson, true))
           _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
           pathToFileInfo <- getPathToFileInfo(deposit)
           prestagedFiles <- optMigrationInfoService.map(_.getPrestagedDataFilesFor(s"doi:${ deposit.doi }", 1)).getOrElse(Success(Set.empty[BasicFileMeta]))

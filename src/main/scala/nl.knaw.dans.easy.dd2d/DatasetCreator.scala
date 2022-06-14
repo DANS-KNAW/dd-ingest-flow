@@ -17,13 +17,13 @@ package nl.knaw.dans.easy.dd2d
 
 import nl.knaw.dans.easy.dd2d.migrationinfo.{ BasicFileMeta, MigrationInfo }
 import nl.knaw.dans.lib.dataverse.DataverseClient
-import nl.knaw.dans.lib.scaladv.model.dataset.{ Dataset, DatasetCreationResult }
-import nl.knaw.dans.lib.scaladv.model.{ DefaultRole, RoleAssignment }
-import nl.knaw.dans.lib.scaladv.{ DataverseInstance, DataverseResponse }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.{ DefaultFormats, Formats }
+import nl.knaw.dans.lib.scaladv.DataverseInstance
+import nl.knaw.dans.lib.scaladv.model.RoleAssignment
+import nl.knaw.dans.lib.scaladv.model.dataset.Dataset
 import org.json4s.native.Serialization
+import org.json4s.{ DefaultFormats, Formats }
 
 import java.net.URI
 import java.util.Date

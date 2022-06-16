@@ -19,10 +19,9 @@ import nl.knaw.dans.easy.dd2d.migrationinfo.{ BasicFileMeta, MigrationInfo }
 import nl.knaw.dans.lib.dataverse.DataverseClient
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import nl.knaw.dans.lib.scaladv.{ DataverseInstance, Version }
 import nl.knaw.dans.lib.scaladv.model.RoleAssignment
 import nl.knaw.dans.lib.scaladv.model.dataset.Dataset
-import nl.knaw.dans.lib.scaladv.model.file.FileMeta
+import nl.knaw.dans.lib.scaladv.{ DataverseInstance, Version }
 import org.json4s.native.Serialization
 
 import java.net.URI
@@ -75,11 +74,7 @@ class DatasetCreator(deposit: Deposit,
           _ <- Try(dataverseClient.dataset(persistentId).assignRole(jsonRoleAssignment))
           _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
           dateAvailable <- deposit.getDateAvailable
-          _ <- if (isEmbargo(dateAvailable)) embargoFiles(persistentId, dateAvailable)
-               else {
-                 logger.debug(s"Date available in the past, no embargo: $dateAvailable")
-                 Success(())
-               }
+          _ <- embargoFiles(persistentId, dateAvailable)
         } yield persistentId
       }.doIfFailure {
         case NonFatal(e) =>
@@ -89,14 +84,19 @@ class DatasetCreator(deposit: Deposit,
     }
   }
 
-  private def embargoFiles(persistentId: PersistentId, dateAvailable: Date): Try[Unit] = {
-    logger.info(s"Putting embargo on files until: $dateAvailable")
-    for {
-      response <- Try(dataverseClient.dataset(persistentId).getFiles(Version.LATEST.toString()).getData)
-      ids = response.filter(f => "easy-migration" != f.getDirectoryLabel)
-        .map(f => f.getDataFile.getId).toList
-      _ <- embargoFiles(persistentId, dateAvailable, ids)
-      _ <- Try(dataverseInstance.dataset(persistentId).awaitUnlock())
-    } yield ()
-  }
+  private def embargoFiles(persistentId: PersistentId, dateAvailable: Date): Try[Unit] =
+    if (!isEmbargo(dateAvailable)) {
+      logger.debug(s"Date available in the past, no embargo: $dateAvailable")
+      Success(())
+    }
+    else {
+      logger.info(s"Putting embargo on files until: $dateAvailable")
+      for {
+        response <- Try(dataverseClient.dataset(persistentId).getFiles(Version.LATEST.toString()).getData)
+        ids = response.filter(f => "easy-migration" != f.getDirectoryLabel)
+          .map(f => f.getDataFile.getId).toList
+        _ <- embargoFiles(persistentId, dateAvailable, ids)
+        _ <- Try(dataverseInstance.dataset(persistentId).awaitUnlock())
+      } yield ()
+    }
 }

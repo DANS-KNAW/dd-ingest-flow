@@ -47,6 +47,7 @@ class DatasetUpdater(deposit: Deposit,
   override def performEdit(): Try[PersistentId] = {
     {
       for {
+        - <- Try { Thread.sleep(4000) }
         doi <- if (isMigration) getDoiByIsVersionOf // using deposit.dataversePid may lead to confusing situations when the DOI is present but erroneously so.
                else getDoiBySwordToken
       } yield doi
@@ -60,7 +61,7 @@ class DatasetUpdater(deposit: Deposit,
            * Temporary fix. If we do not wait a couple of seconds here, the first version never gets properly published, and the second version
            * just overwrites it, becoming V1.
            */
-          - <- Try { Thread.sleep(3000) }
+          - <- Try { Thread.sleep(6000) }
           // TODO: library should provide function waitForIndexing that uses the @Path("{identifier}/timestamps") endpoint on Datasets
           _ <- dataset.awaitUnlock()
           _ <- checkDatasetInPublishedState(dataset)

@@ -46,12 +46,12 @@ class DatasetCreator(deposit: Deposit,
 
   override def performEdit(): Try[PersistentId] = {
     {
-      val dataverseApi = dataverseInstance.dataverse("root")
+      val scalaDataverseApi = dataverseInstance.dataverse("root")
       for {
         // autoPublish is false, because it seems there is a bug with it in Dataverse (most of the time?)
         response <- if (isMigration)
-                      dataverseApi.importDataset(dataverseDataset, Some(s"doi:${ deposit.doi }"), autoPublish = false)
-                    else dataverseApi.createDataset(dataverseDataset)
+                      scalaDataverseApi.importDataset(dataverseDataset, Some(s"doi:${ deposit.doi }"), autoPublish = false)
+                    else scalaDataverseApi.createDataset(dataverseDataset)
         persistentId <- response.data.map(_.persistentId)
       } yield persistentId
     } match {
@@ -59,20 +59,21 @@ class DatasetCreator(deposit: Deposit,
       case Success(persistentId) => {
         for {
           licenseAsJson <- licenseAsJson(supportedLicenses)(variantToLicense)(deposit)
-          _ <- Try(dataverseClient.dataset(persistentId).updateMetadataFromJsonLd(licenseAsJson, true))
-          _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
+          javaDatasetApi <- Try(dataverseClient.dataset(persistentId))
+          _ <- Try(javaDatasetApi.updateMetadataFromJsonLd(licenseAsJson, true))
+          _ <- Try(javaDatasetApi.awaitUnlock())
           pathToFileInfo <- getPathToFileInfo(deposit)
           prestagedFiles <- optMigrationInfoService.map(_.getPrestagedDataFilesFor(s"doi:${ deposit.doi }", 1)).getOrElse(Success(Set.empty[BasicFileMeta]))
           databaseIdsToFileInfo <- addFiles(persistentId, pathToFileInfo.values.toList, prestagedFiles)
           _ <- updateFileMetadata(databaseIdsToFileInfo.mapValues(_.metadata))
-          _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
+          _ <- Try(javaDatasetApi.awaitUnlock())
           _ <- configureEnableAccessRequests(deposit, persistentId, canEnable = true)
-          _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
+          _ <- Try(javaDatasetApi.awaitUnlock())
           _ = debug(s"Assigning role $depositorRole to ${ deposit.depositorUserId }")
           scalaRoleAssignment = RoleAssignment(s"@${ deposit.depositorUserId }", depositorRole)
           jsonRoleAssignment = Serialization.write(scalaRoleAssignment)
-          _ <- Try(dataverseClient.dataset(persistentId).assignRole(jsonRoleAssignment))
-          _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
+          _ <- Try(javaDatasetApi.assignRole(jsonRoleAssignment))
+          _ <- Try(javaDatasetApi.awaitUnlock())
           dateAvailable <- deposit.getDateAvailable
           _ <- embargoFiles(persistentId, dateAvailable)
         } yield persistentId
@@ -96,7 +97,7 @@ class DatasetCreator(deposit: Deposit,
         ids = response.filter(f => "easy-migration" != f.getDirectoryLabel)
           .map(f => f.getDataFile.getId).toList
         _ <- embargoFiles(persistentId, dateAvailable, ids)
-        _ <- Try(dataverseInstance.dataset(persistentId).awaitUnlock())
+        _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
       } yield ()
     }
 }

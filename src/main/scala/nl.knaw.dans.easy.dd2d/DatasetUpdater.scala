@@ -46,7 +46,7 @@ class DatasetUpdater(deposit: Deposit,
   override def performEdit(): Try[PersistentId] = {
     {
       for {
-        - <- Try { Thread.sleep(4000) } // TODO wait for the doi to become available
+        _ <- Try { Thread.sleep(4000) } // TODO wait for the doi to become available
         doi <- if (isMigration) getDoiByIsVersionOf // using deposit.dataversePid may lead to confusing situations when the DOI is present but erroneously so.
                else getDoiBySwordToken
       } yield doi
@@ -66,18 +66,18 @@ class DatasetUpdater(deposit: Deposit,
           // TODO: library should provide function waitForIndexing that uses the @Path("{identifier}/timestamps") endpoint on Datasets
           _ <-  Try(javaDatasetApi.awaitUnlock())
           state <- Try(javaDatasetApi.viewLatestVersion().getData.getLatestVersion.getVersionState)
-          //_ = if (state.contains("DRAFT")) throw CannotUpdateDraftDatasetException(deposit)
-          scalaDatasetApi <- Try { dataverseInstance.dataset(doi) }
-          _ <- checkDatasetInPublishedState(scalaDatasetApi)
+          _ = if (state.contains("DRAFT")) throw CannotUpdateDraftDatasetException(deposit)
+
           jsonBlocks = Serialization.write(metadataBlocks)
           _ <- Try(javaDatasetApi.updateMetadataFromJsonLd(jsonBlocks, true))
           _ <- Try(javaDatasetApi.awaitUnlock())
-
           licenseAsJson <- licenseAsJson(supportedLicenses)(variantToLicense)(deposit)
           _ <- Try(javaDatasetApi.updateMetadataFromJsonLd(licenseAsJson, true))
           _ <- Try(javaDatasetApi.awaitUnlock())
+
           pathToFileInfo <- getPathToFileInfo(deposit)
           _ = debug(s"pathToFileInfo = $pathToFileInfo")
+          scalaDatasetApi <- Try { dataverseInstance.dataset(doi) }
           pathToFileMetaInLatestVersion <- getFilesInLatestVersion(scalaDatasetApi)
           _ = debug(s"pathToFileMetaInLatestVersion = $pathToFileMetaInLatestVersion")
           _ <- validateFileMetas(pathToFileMetaInLatestVersion.values.toList)
@@ -172,18 +172,6 @@ class DatasetUpdater(deposit: Deposit,
           deleteDraftIfExists(doi)
       }
     }
-  }
-
-  private def checkDatasetInPublishedState(datasetApi: DatasetApi): Try[Unit] = {
-    for {
-      r <- datasetApi.viewLatestVersion()
-      v <- r.data
-      _ <- if (v.latestVersion.versionState.contains("DRAFT")) {
-        logger.error(s"v = ${ Serialization.writePretty(v) }")
-        Failure(CannotUpdateDraftDatasetException(deposit))
-      }
-           else Success(())
-    } yield ()
   }
 
   private def getDoiBySwordToken: Try[String] = {

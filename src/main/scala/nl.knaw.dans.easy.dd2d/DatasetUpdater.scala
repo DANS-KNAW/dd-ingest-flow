@@ -28,6 +28,7 @@ import org.json4s.native.Serialization
 import java.net.URI
 import java.nio.file.{ Path, Paths }
 import java.util.regex.Pattern
+import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
 
@@ -82,7 +83,8 @@ class DatasetUpdater(deposit: Deposit,
           _ = debug(s"pathToFileMetaInLatestVersion = $pathToFileMetaInLatestVersion")
           _ <- validateFileMetas(pathToFileMetaInLatestVersion.values.toList)
 
-          numPub <- getNumberOfPublishedVersions(scalaDatasetApi)
+          versions <- Try(javaDatasetApi.getAllVersions.getData)
+          numPub = versions.count(v => "RELEASED" == v.getVersionState)
           _ = debug(s"Number of published versions so far: $numPub")
           prestagedFiles <- optMigrationInfoService.map(_.getPrestagedDataFilesFor(doi, numPub + 1)).getOrElse(Success(Set.empty[BasicFileMeta]))
 
@@ -217,13 +219,6 @@ class DatasetUpdater(deposit: Deposit,
     if (files.map(_.dataFile).exists(_.isEmpty)) Failure(new IllegalArgumentException("Found file metadata without dataFile element"))
     else if (files.map(_.dataFile.get).exists(_.checksum.`type` != "SHA-1")) Failure(new IllegalArgumentException("Not all file checksums are of type SHA-1"))
          else Success(())
-  }
-
-  private def getNumberOfPublishedVersions(datasetApi: DatasetApi): Try[Int] = {
-    for {
-      r <- datasetApi.viewAllVersions()
-      vs <- r.data
-    } yield vs.count(v => v.versionState.isDefined && v.versionState.get == "RELEASED")
   }
 
   private def getFilesToReplace(pathToFileInfo: Map[Path, FileInfo], pathToFileMetaInLatestVersion: Map[Path, FileMeta]): Try[Map[Int, FileInfo]] = Try {

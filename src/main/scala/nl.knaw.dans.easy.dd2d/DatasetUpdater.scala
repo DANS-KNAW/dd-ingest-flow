@@ -17,11 +17,11 @@ package nl.knaw.dans.easy.dd2d
 
 import nl.knaw.dans.easy.dd2d.migrationinfo.{ BasicFileMeta, MigrationInfo }
 import nl.knaw.dans.lib.dataverse.DataverseClient
+import nl.knaw.dans.lib.dataverse.model.search
 import nl.knaw.dans.lib.error.{ TraversableTryExtensions, TryExtensions }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.scaladv.model.dataset.MetadataBlocks
 import nl.knaw.dans.lib.scaladv.model.file.FileMeta
-import nl.knaw.dans.lib.scaladv.model.search.DatasetResultItem
 import nl.knaw.dans.lib.scaladv.{ DatasetApi, DataverseInstance, FileApi, Version }
 import org.json4s.native.Serialization
 
@@ -48,8 +48,11 @@ class DatasetUpdater(deposit: Deposit,
     {
       for {
         _ <- Try { Thread.sleep(4000) } // TODO wait for the doi to become available
-        doi <- if (isMigration) getDoiByIsVersionOf // using deposit.dataversePid may lead to confusing situations when the DOI is present but erroneously so.
-               else getDoiBySwordToken
+        doi <- if (!isMigration) getDoi(s"""dansSwordToken:"${ deposit.vaultMetadata.dataverseSwordToken }"""")
+               else {
+                 // using deposit.dataversePid may lead to confusing situations when the DOI is present but erroneously so.
+                 getDoiByIsVersionOf
+               }
       } yield doi
     } match {
       case Failure(e) =>
@@ -176,30 +179,21 @@ class DatasetUpdater(deposit: Deposit,
     }
   }
 
-  private def getDoiBySwordToken: Try[String] = {
-    trace(())
-    debug(s"dansSwordToken = ${ deposit.vaultMetadata.dataverseSwordToken }")
+  private def getDoi(q: String) = {
+    logger.debug(q)
     for {
-      r <- dataverseInstance.search().find(s"""dansSwordToken:"${ deposit.vaultMetadata.dataverseSwordToken }"""")
-      searchResult <- r.data
-      items = searchResult.items
+      searchResult <- Try(dataverseClient.search().find(q).getData)
+      items = searchResult.getItems
       _ = if (items.size != 1) throw FailedDepositException(deposit, s"Deposit is update of ${ items.size } datasets; should always be 1!")
-      doi = items.head.asInstanceOf[DatasetResultItem].globalId
+      doi = items.head.asInstanceOf[search.DatasetResultItem].getGlobalId
       _ = debug(s"Deposit is update of dataset $doi")
     } yield doi
   }
 
   private def getDoiByIsVersionOf: Try[String] = {
-    trace(())
     for {
       isVersionOf <- deposit.getIsVersionOf
-      _ = debug(s"Is-Version-Of = $isVersionOf")
-      r <- dataverseInstance.search().find(s"""dansBagId:"$isVersionOf"""")
-      searchResult <- r.data
-      items = searchResult.items
-      _ = if (items.size != 1) throw FailedDepositException(deposit, s"Deposit is update of ${ items.size } datasets; should always be 1!")
-      doi = items.head.asInstanceOf[DatasetResultItem].globalId
-      _ = debug(s"Deposit is update of dataset $doi")
+      doi <- getDoi(s"""dansBagId:"$isVersionOf"""")
     } yield doi
   }
 

@@ -95,6 +95,12 @@ logging:
       additive: true
     "nl.knaw.dans.ingest.core.service.UnboundedDepositsImportTaskIterator":
       level: INFO
+    "nl.knaw.dans.easy.dd2d":
+      level: TRACE
+    "nl.knaw.dans.scaladv.DatasetApi":
+      level: TRACE
+    "nl.knaw.dans.dataverse.DatasetApi":
+      level: TRACE
   appenders:
     - type: console
       logFormat: "%-5p [%d{ISO8601}] [%t] %c: %m%n%rEx"

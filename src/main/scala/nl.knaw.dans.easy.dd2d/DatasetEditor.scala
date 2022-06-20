@@ -31,7 +31,6 @@ import java.net.URI
 import java.nio.file.{ Path, Paths }
 import java.util.Date
 import java.util.regex.Pattern
-import scala.collection.mutable
 import scala.util.{ Failure, Success, Try }
 
 /**
@@ -51,14 +50,12 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
 
   protected def addFiles(persistentId: String, files: List[FileInfo], prestagedFiles: Set[BasicFileMeta] = Set.empty): Try[Map[Int, FileInfo]] = Try {
     trace(persistentId, files)
-    val result = mutable.Map[Int, FileInfo]()
-    for (f <- files) {
+    files.map { f =>
       debug(s"Adding file, directoryLabel = ${ f.metadata.directoryLabel }, label = ${ f.metadata.label }")
-      val id = addFile(persistentId, f, prestagedFiles).get
-      dataverseInstance.dataset(persistentId).awaitUnlock().unsafeGetOrThrow
-      result(id) = f
-    }
-    result.toMap
+      val id = addFile(persistentId, f, prestagedFiles).unsafeGetOrThrow
+      dataverseClient.dataset(persistentId).awaitUnlock()
+      id -> f
+    }.toMap
   }
 
   private def addFile(doi: String, fileInfo: FileInfo, prestagedFiles: Set[BasicFileMeta]): Try[Int] = {
@@ -78,7 +75,7 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
       }
       files <- r.data
       id = files.files.headOption.flatMap(_.dataFile.map(_.id))
-      _ <- dataverseInstance.dataset(doi).awaitUnlock()
+      _ <- Try(dataverseClient.dataset(doi).awaitUnlock())
     } yield id
     debug(s"Result = $result")
     result.map(_.getOrElse(throw new IllegalStateException("Could not get DataFile ID from response")))
@@ -128,6 +125,7 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
       ddm <- deposit.tryDdm
       files <- deposit.tryFilesXml
       enable = AccessRights.isEnableRequests((ddm \ "profile" \ "accessRights").head, files)
+      _ = logger.trace("AccessRequests enable "+ enable + " can " +canEnable)
       _ <- if (enable && canEnable) dataverseInstance.accessRequests(persistendId).enable()
            else Success(())
       _ <- if (!enable) dataverseInstance.accessRequests(persistendId).disable()
@@ -159,9 +157,8 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
 
   protected def deleteDraftIfExists(persistentId: String): Unit = {
     val result = for {
-      r <- dataverseInstance.dataset(persistentId).viewLatestVersion()
-      v <- r.data
-      _ <- if (v.latestVersion.versionState.contains("DRAFT"))
+      v <- Try(dataverseClient.dataset(persistentId).viewLatestVersion().getData)
+      _ <- if (v.getLatestVersion.getVersionState.contains("DRAFT"))
              deleteDraft(persistentId)
            else Success(())
     } yield ()

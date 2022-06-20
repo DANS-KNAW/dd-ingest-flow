@@ -173,7 +173,7 @@ class DatasetUpdater(deposit: Deposit,
       }.doIfFailure {
         case _: CannotUpdateDraftDatasetException => // Don't delete the draft that caused the failure
         case NonFatal(e) =>
-          logger.error("Dataset update failed, deleting draft", e)
+          logger.error(s"Dataset update failed, deleting draft $e", e)
           deleteDraftIfExists(doi)
       }
     }
@@ -263,11 +263,11 @@ class DatasetUpdater(deposit: Deposit,
   }
 
   private def deleteFiles(dataset: DatasetApi, databaseIds: List[DatabaseId]): Try[Unit] = {
-    databaseIds.map(id => {
+    databaseIds.map { id =>
       debug(s"Deleting file, databaseId = $id")
-      dataverseInstance.sword().deleteFile(id)
+      dataverseClient.sword().deleteFile(id)
       dataset.awaitUnlock()
-    }).collectResults.map(_ => ())
+    }.collectResults.map(_ => ())
   }
 
   private def replaceFiles(dataset: DatasetApi, databaseIdToNewFile: Map[Int, FileInfo], prestagedFiles: Set[BasicFileMeta] = Set.empty): Try[Map[Int, FileMeta]] = {

@@ -126,10 +126,9 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
       files <- deposit.tryFilesXml
       enable = AccessRights.isEnableRequests((ddm \ "profile" \ "accessRights").head, files)
       _ = logger.trace("AccessRequests enable "+ enable + " can " +canEnable)
-      _ <- if (enable && canEnable) dataverseInstance.accessRequests(persistendId).enable()
-           else Success(())
-      _ <- if (!enable) dataverseInstance.accessRequests(persistendId).disable()
-           else Success(())
+      _ <- if (!enable) Try(dataverseClient.accessRequests(persistendId).disable())
+           else if (canEnable) Try(dataverseClient.accessRequests(persistendId).enable())
+                else Success(())
     } yield ()
   }
 

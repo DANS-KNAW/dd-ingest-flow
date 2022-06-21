@@ -173,7 +173,7 @@ class DatasetUpdater(deposit: Deposit,
       }.doIfFailure {
         case _: CannotUpdateDraftDatasetException => // Don't delete the draft that caused the failure
         case NonFatal(e) =>
-          logger.error(s"Dataset update failed, deleting draft $e", e)
+          logger.error(s"Dataset update failed, deleting draft", e)
           deleteDraftIfExists(doi)
       }
     }

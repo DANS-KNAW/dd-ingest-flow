@@ -174,9 +174,8 @@ case class DepositIngestTask(deposit: Deposit,
 
   private def getDatasetContacts: Try[List[JsonObject]] = {
     for {
-      response <- dataverseInstance.admin().getSingleUser(deposit.depositorUserId)
-      user <- response.data
-      datasetContacts <- createDatasetContacts(user.displayName, user.email, user.affiliation)
+      user <- Try(dataverseClient.admin().listSingleUser(deposit.depositorUserId).getData)
+      datasetContacts <- createDatasetContacts(user.getDisplayName, user.getEmail, Option(user.getAffiliation))
     } yield datasetContacts
   }
 
@@ -246,7 +245,7 @@ case class DepositIngestTask(deposit: Deposit,
   private def savePersistentIdentifiersInDepositProperties(persistentId: String): Try[Unit] = {
     implicit val jsonFormats: Formats = DefaultFormats
     for {
-      _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
+      _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
       _ = debug(s"Dataset $persistentId is not locked")
       _ <- deposit.setDoi(persistentId)
       r <- dataverseInstance.dataset(persistentId).view()

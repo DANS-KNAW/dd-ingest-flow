@@ -245,7 +245,7 @@ case class DepositIngestTask(deposit: Deposit,
   private def savePersistentIdentifiersInDepositProperties(persistentId: String): Try[Unit] = {
     implicit val jsonFormats: Formats = DefaultFormats
     for {
-      _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
+      _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
       _ = debug(s"Dataset $persistentId is not locked")
       _ <- deposit.setDoi(persistentId)
       r <- dataverseInstance.dataset(persistentId).view()

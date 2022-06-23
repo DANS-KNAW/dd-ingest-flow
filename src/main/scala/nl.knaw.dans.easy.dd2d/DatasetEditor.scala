@@ -114,7 +114,9 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
   protected def updateFileMetadata(databaseIdToFileInfo: Map[Int, FileMeta]): Try[Unit] = {
     trace(databaseIdToFileInfo)
     databaseIdToFileInfo.map { case (id, fileMeta) =>
-      val r = dataverseInstance.file(id).updateMetadata(fileMeta)
+      val json = Serialization.write(fileMeta)
+      debug(s"id = $id, json = $json")
+      val r = Try(dataverseClient.file(id).updateMetadata(json))
       debug(s"id = $id, result = $r")
       r
     }.collectResults.map(_ => ())

@@ -174,8 +174,9 @@ case class DepositIngestTask(deposit: Deposit,
 
   private def getDatasetContacts: Try[List[JsonObject]] = {
     for {
-      user <- Try(dataverseClient.admin().listSingleUser(deposit.depositorUserId).getData)
-      datasetContacts <- createDatasetContacts(user.getDisplayName, user.getEmail, Option(user.getAffiliation))
+      response <- dataverseInstance.admin().getSingleUser(deposit.depositorUserId)
+      user <- response.data
+      datasetContacts <- createDatasetContacts(user.displayName, user.email, user.affiliation)
     } yield datasetContacts
   }
 

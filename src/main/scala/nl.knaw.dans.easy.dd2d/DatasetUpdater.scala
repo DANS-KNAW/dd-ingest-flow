@@ -22,7 +22,7 @@ import nl.knaw.dans.lib.error.{ TraversableTryExtensions, TryExtensions }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.scaladv.model.dataset.MetadataBlocks
 import nl.knaw.dans.lib.scaladv.model.file.FileMeta
-import nl.knaw.dans.lib.scaladv.{ DatasetApi, DataverseInstance, FileApi, Version }
+import nl.knaw.dans.lib.scaladv.{ DatasetApi, DataverseInstance, Version }
 import org.json4s.native.Serialization
 
 import java.net.URI
@@ -276,30 +276,29 @@ class DatasetUpdater(deposit: Deposit,
       case (id, fileInfo) =>
         val fileApi = dataverseInstance.file(id)
 
+        def replaceFile(prestagedFiles: Set[BasicFileMeta]): Try[(Int, FileMeta)] = {
+          /*
+           * Note, forceReplace = true is used, so that the action does not fail if the replacement has a different MIME-type than
+           * the replaced file. The only way to pass forceReplace is through the FileMeta. This means we are deleting any existing
+           * metadata with the below call. This is not a problem, because the metadata will be made up-to-date at the end of the
+           * update process.
+           */
+          for {
+            r <- getPrestagedFileFor(fileInfo, prestagedFiles).map { prestagedFile =>
+              debug(s"Replacing with prestaged file: $fileInfo")
+              fileApi.replaceWithPrestagedFile(prestagedFile.copy(forceReplace = true))
+            }.getOrElse {
+              debug(s"Uploading replacement file: $fileInfo")
+              fileApi.replace(Option(fileInfo.file), Option(FileMeta(forceReplace = true)))
+            }
+            fileList <- r.data
+            id = fileList.files.head.dataFile.map(_.id).getOrElse(throw new IllegalStateException("Could not get ID of replacement file after replace action"))
+          } yield (id, fileInfo.metadata)
+        }
         for {
-          (replacementId, replacementMeta) <- replaceFile(fileApi, fileInfo, prestagedFiles)
+          (replacementId, replacementMeta) <- replaceFile(prestagedFiles)
           _ <- dataset.awaitUnlock()
         } yield (replacementId, replacementMeta)
     }.toList.collectResults.map(_.toMap)
-  }
-
-  private def replaceFile(fileApi: FileApi, fileInfo: FileInfo, prestagedFiles: Set[BasicFileMeta]): Try[(Int, FileMeta)] = {
-    /*
-     * Note, forceReplace = true is used, so that the action does not fail if the replacement has a different MIME-type than
-     * the replaced file. The only way to pass forceReplace is through the FileMeta. This means we are deleting any existing
-     * metadata with the below call. This is not a problem, because the metadata will be made up-to-date at the end of the
-     * update process.
-     */
-    for {
-      r <- getPrestagedFileFor(fileInfo, prestagedFiles).map { prestagedFile =>
-        debug(s"Replacing with prestaged file: $fileInfo")
-        fileApi.replaceWithPrestagedFile(prestagedFile.copy(forceReplace = true))
-      }.getOrElse {
-        debug(s"Uploading replacement file: $fileInfo")
-        fileApi.replace(Option(fileInfo.file), Option(FileMeta(forceReplace = true)))
-      }
-      fileList <- r.data
-      id = fileList.files.head.dataFile.map(_.id).getOrElse(throw new IllegalStateException("Could not get ID of replacement file after replace action"))
-    } yield (id, fileInfo.metadata)
   }
 }

@@ -62,14 +62,14 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
     val result = for {
       r <- getPrestagedFileFor(fileInfo, prestagedFiles).map { prestagedFile =>
         debug(s"Adding prestaged file: $fileInfo")
-        dataverseInstance.dataset(doi).addPrestagedFile(prestagedFile)
+        dataverseInstance.dataset(doi).addFileItem(Option.empty, Option(Serialization.write(prestagedFile)))
       }.getOrElse {
         debug(s"Uploading file: $fileInfo")
         val optWrappedZip = zipFileHandler
           .wrapIfZipFile(fileInfo.file)
-        val r = dataverseInstance.dataset(doi).addFile(Option(
+        val r = dataverseInstance.dataset(doi).addFileItem(Option(
           optWrappedZip
-            .getOrElse(fileInfo.file)), Option(fileInfo.metadata))
+            .getOrElse(fileInfo.file)), Option(Serialization.write(fileInfo.metadata)))
         optWrappedZip.foreach(_.delete(swallowIOExceptions = true))
         r
       }

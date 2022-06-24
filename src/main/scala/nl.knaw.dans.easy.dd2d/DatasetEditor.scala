@@ -36,7 +36,7 @@ import scala.util.{ Failure, Success, Try }
 /**
  * Object that edits a dataset, a new draft.
  */
-abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClient: DataverseClient, optFileExclusionPattern: Option[Pattern], zipFileHandler: ZipFileHandler) extends DebugEnhancedLogging {
+abstract class DatasetEditor(dataverseClient: DataverseClient, optFileExclusionPattern: Option[Pattern], zipFileHandler: ZipFileHandler) extends DebugEnhancedLogging {
   type PersistentId = String
   type DatasetId = Int
   implicit val jsonFormats: Formats = DefaultFormats

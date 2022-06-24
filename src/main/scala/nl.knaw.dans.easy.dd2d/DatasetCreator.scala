@@ -41,7 +41,7 @@ class DatasetCreator(deposit: Deposit,
                      supportedLicenses: List[URI],
                      dataverseInstance: DataverseInstance,
                      dataverseClient: DataverseClient,
-                     optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseInstance, dataverseClient, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
+                     optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseClient, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
   trace(deposit)
 
   override def performEdit(): Try[PersistentId] = {

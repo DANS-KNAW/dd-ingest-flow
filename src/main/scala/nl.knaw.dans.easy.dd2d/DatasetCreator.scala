@@ -21,12 +21,12 @@ import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.scaladv.model.RoleAssignment
 import nl.knaw.dans.lib.scaladv.model.dataset.Dataset
-import nl.knaw.dans.lib.scaladv.{ DataverseInstance, Version }
+import nl.knaw.dans.lib.scaladv.{ DataverseInstance, Version, serializeAsJson }
 import org.json4s.native.Serialization
 
 import java.net.URI
-import java.util.Date
 import java.util.regex.Pattern
+import java.util.{ Date, Optional }
 import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
@@ -46,13 +46,15 @@ class DatasetCreator(deposit: Deposit,
 
   override def performEdit(): Try[PersistentId] = {
     {
-      val scalaDataverseApi = dataverseInstance.dataverse("root")
+      val javaDataverseApi = dataverseClient.dataverse("root")
       for {
+        jsonString <- serializeAsJson(dataverseDataset, logger.underlying.isDebugEnabled)
         // autoPublish is false, because it seems there is a bug with it in Dataverse (most of the time?)
-        response <- if (isMigration)
-                      scalaDataverseApi.importDataset(dataverseDataset, Some(s"doi:${ deposit.doi }"), autoPublish = false)
-                    else scalaDataverseApi.createDataset(dataverseDataset)
-        persistentId <- response.data.map(_.persistentId)
+        response <- Try(if (isMigration)
+                          javaDataverseApi.importDataset(jsonString, Optional.of(s"doi:${ deposit.doi }"), false)
+                        else javaDataverseApi.createDataset(jsonString)
+        )
+        persistentId <- Try(response.getData).map(_.getPersistentId)
       } yield persistentId
     } match {
       case Failure(e) => Failure(FailedDepositException(deposit, "Could not import/create dataset", e))

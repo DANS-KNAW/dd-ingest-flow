@@ -63,7 +63,7 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
   private def addFile(doi: String, fileInfo: FileInfo, prestagedFiles: Set[BasicFileMeta]): Try[Int] = {
     val result = for {
       r <- getPrestagedFileFor(fileInfo, prestagedFiles).map { prestagedFile =>
-        logger.info(s"Adding prestaged file (not tested): $fileInfo") // TODO
+        logger.info(s"Adding prestaged file (scala -> java change not tested): $fileInfo") // TODO
         Try(dataverseClient.dataset(doi).addFileItem(
           Optional.of(noFile),
           Optional.of(Serialization.write(prestagedFile))
@@ -164,6 +164,7 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
   protected def deleteDraftIfExists(persistentId: String): Unit = {
     val result = for {
       v <- Try(dataverseClient.dataset(persistentId).viewLatestVersion().getData)
+      _ = logger.trace("deleting draft")
       _ <- if (v.getLatestVersion.getVersionState.contains("DRAFT"))
              deleteDraft(persistentId)
            else Success(())
@@ -175,7 +176,7 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
 
   private def deleteDraft(persistentId: PersistentId): Try[Unit] = {
     for {
-      _ <- dataverseInstance.dataset(persistentId).deleteDraft()
+      _ <- Try(dataverseClient.dataset(persistentId).deleteDraft())
       _ = logger.info(s"DRAFT deleted")
     } yield ()
   }

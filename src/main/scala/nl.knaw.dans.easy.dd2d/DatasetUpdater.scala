@@ -149,6 +149,7 @@ class DatasetUpdater(deposit: Deposit,
           pathsToAdd = pathToFileInfo.keySet diff occupiedPaths
           filesToAdd = pathsToAdd.map(pathToFileInfo).toList
           _ = debug(s"filesToAdd = $filesToAdd")
+          _ <- Failure(new Exception("force a problem to test delete draft"))
           fileAdditions <- addFiles(doi, filesToAdd, prestagedFiles).map(_.mapValues(_.metadata))
 
           // TODO: check that only updating the file metadata works

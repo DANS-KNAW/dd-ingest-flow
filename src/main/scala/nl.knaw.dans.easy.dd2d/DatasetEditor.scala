@@ -29,8 +29,8 @@ import org.json4s.{ DefaultFormats, Formats }
 
 import java.net.URI
 import java.nio.file.{ Path, Paths }
-import java.util.Date
 import java.util.regex.Pattern
+import java.util.{ Date, Optional }
 import scala.util.{ Failure, Success, Try }
 
 /**
@@ -58,25 +58,30 @@ abstract class DatasetEditor(dataverseInstance: DataverseInstance, dataverseClie
     }.toMap
   }
 
+  private val noFile: java.io.File = null
+
   private def addFile(doi: String, fileInfo: FileInfo, prestagedFiles: Set[BasicFileMeta]): Try[Int] = {
     val result = for {
       r <- getPrestagedFileFor(fileInfo, prestagedFiles).map { prestagedFile =>
-        debug(s"Adding prestaged file: $fileInfo")
-        dataverseInstance.dataset(doi).addFileItem(Option.empty, Option(Serialization.write(prestagedFile)))
+        logger.info(s"Adding prestaged file (not tested): $fileInfo") // TODO
+        Try(dataverseClient.dataset(doi).addFileItem(
+          Optional.of(noFile),
+          Optional.of(Serialization.write(prestagedFile))
+        ))
       }.getOrElse {
         debug(s"Uploading file: $fileInfo")
-        val optWrappedZip = zipFileHandler
-          .wrapIfZipFile(fileInfo.file)
-        val r = dataverseInstance.dataset(doi).addFileItem(Option(
-          optWrappedZip
-            .getOrElse(fileInfo.file)), Option(Serialization.write(fileInfo.metadata)))
+        val optWrappedZip = zipFileHandler.wrapIfZipFile(fileInfo.file)
+        val r = Try(dataverseClient.dataset(doi).addFileItem(
+          Optional.of(optWrappedZip.getOrElse(fileInfo.file).toJava), // TODO what about closing files?
+          Optional.of(Serialization.write(fileInfo.metadata))
+        ))
         optWrappedZip.foreach(_.delete(swallowIOExceptions = true))
         r
       }
-      files <- r.data
-      id = files.files.headOption.flatMap(_.dataFile.map(_.id))
+      files <- Try(r.getData)
+      triedId = Try(files.getFiles.get(0).getDataFile.getId)
       _ <- Try(dataverseClient.dataset(doi).awaitUnlock())
-    } yield id
+    } yield triedId
     debug(s"Result = $result")
     result.map(_.getOrElse(throw new IllegalStateException("Could not get DataFile ID from response")))
   }

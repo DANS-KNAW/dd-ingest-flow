@@ -193,7 +193,7 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   protected def newDatasetCreator(dataverseDataset: Dataset, depositorRole: String): DatasetCreator = {
-    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = false, dataverseDataset, variantToLicense, supportedLicenses, dataverseInstance, dataverseClient, Option.empty)
+    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = false, dataverseDataset, variantToLicense, supportedLicenses, dataverseClient, Option.empty)
   }
 
   protected def publishDataset(persistentId: String): Try[Unit] = {

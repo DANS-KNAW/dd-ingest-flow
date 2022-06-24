@@ -20,7 +20,6 @@ import nl.knaw.dans.easy.dd2d.migrationinfo.BasicFileMeta
 import nl.knaw.dans.lib.dataverse.DataverseClient
 import nl.knaw.dans.lib.error.{ TraversableTryExtensions, TryExtensions }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import nl.knaw.dans.lib.scaladv.DataverseInstance
 import nl.knaw.dans.lib.scaladv.model.dataset.Embargo
 import nl.knaw.dans.lib.scaladv.model.file.FileMeta
 import nl.knaw.dans.lib.scaladv.model.file.prestaged.PrestagedFile

@@ -83,7 +83,7 @@ class DepositMigrationTask(deposit: Deposit,
   }
 
   override def newDatasetCreator(dataverseDataset: Dataset, depositorRole: String): DatasetCreator = {
-    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = true, dataverseDataset, variantToLicense, supportedLicenses, dataverseInstance, dataverseClient, migrationInfo)
+    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = true, dataverseDataset, variantToLicense, supportedLicenses, dataverseClient, migrationInfo)
   }
 
   override protected def checkPersonalDataPresent(optAgreements: Option[Node]): Try[Unit] = {

@@ -21,7 +21,7 @@ import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.scaladv.model.RoleAssignment
 import nl.knaw.dans.lib.scaladv.model.dataset.Dataset
-import nl.knaw.dans.lib.scaladv.{ DataverseInstance, Version, serializeAsJson }
+import nl.knaw.dans.lib.scaladv.{ Version, serializeAsJson }
 import org.json4s.native.Serialization
 
 import java.net.URI
@@ -39,7 +39,6 @@ class DatasetCreator(deposit: Deposit,
                      dataverseDataset: Dataset,
                      variantToLicense: Map[String, String],
                      supportedLicenses: List[URI],
-                     dataverseInstance: DataverseInstance,
                      dataverseClient: DataverseClient,
                      optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseClient, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
   trace(deposit)

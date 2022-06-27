@@ -16,13 +16,15 @@
 package nl.knaw.dans.easy.dd2d
 
 import nl.knaw.dans.easy.dd2d.migrationinfo.{ BasicFileMeta, MigrationInfo }
-import nl.knaw.dans.lib.dataverse.DataverseClient
+import nl.knaw.dans.ingest.core.legacy.MapperForScala
+import nl.knaw.dans.lib.dataverse._
+import nl.knaw.dans.lib.dataverse.model.file.{ FileMeta => JavaFileMeta }
 import nl.knaw.dans.lib.dataverse.model.search
 import nl.knaw.dans.lib.error.{ TraversableTryExtensions, TryExtensions }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.scaladv.model.dataset.MetadataBlocks
-import nl.knaw.dans.lib.scaladv.model.file.FileMeta
-import nl.knaw.dans.lib.scaladv.{ DatasetApi, DataverseInstance, Version }
+import nl.knaw.dans.lib.scaladv.model.file.{ FileMeta => ScalaFileMeta }
+import nl.knaw.dans.lib.scaladv.{ DataverseInstance, Version }
 import org.json4s.native.Serialization
 
 import java.net.URI
@@ -81,8 +83,7 @@ class DatasetUpdater(deposit: Deposit,
 
           pathToFileInfo <- getPathToFileInfo(deposit)
           _ = debug(s"pathToFileInfo = $pathToFileInfo")
-          scalaDatasetApi <- Try { dataverseInstance.dataset(doi) }
-          pathToFileMetaInLatestVersion <- getFilesInLatestVersion(scalaDatasetApi)
+          pathToFileMetaInLatestVersion <- getFilesInLatestVersion(javaDatasetApi)
           _ = debug(s"pathToFileMetaInLatestVersion = $pathToFileMetaInLatestVersion")
           _ <- validateFileMetas(pathToFileMetaInLatestVersion.values.toList)
 
@@ -109,7 +110,7 @@ class DatasetUpdater(deposit: Deposit,
             .filterNot { case (path, _) => oldToNewPathMovedFiles.keySet.contains(path) } // remove old paths of moved files
             .filterNot { case (path, _) => oldToNewPathMovedFiles.values.toSet.contains(path) } // remove new paths of moved files
           filesToReplace <- getFilesToReplace(pathToFileInfo, fileReplacementCandidates)
-          fileReplacements <- replaceFiles(scalaDatasetApi, filesToReplace, prestagedFiles)
+          fileReplacements <- replaceFiles(javaDatasetApi, filesToReplace, prestagedFiles)
           _ = debug(s"fileReplacements = $fileReplacements")
 
           /*
@@ -128,7 +129,7 @@ class DatasetUpdater(deposit: Deposit,
           _ = debug(s"pathsToDelete = $pathsToDelete")
           fileDeletions <- getFileDeletions(pathsToDelete, pathToFileMetaInLatestVersion)
           _ = debug(s"fileDeletions = $fileDeletions")
-          _ <- deleteFiles(scalaDatasetApi, fileDeletions.toList)
+          _ <- deleteFiles(javaDatasetApi, fileDeletions.toList)
 
           /*
            * After the movements have been performed, which paths are occupied? We start from the paths of the latest version (pathToFileMetaInLatestVersion.keySet)
@@ -197,25 +198,29 @@ class DatasetUpdater(deposit: Deposit,
     } yield doi
   }
 
-  private def getFilesInLatestVersion(dataset: DatasetApi): Try[Map[Path, FileMeta]] = {
+  private def getFilesInLatestVersion(dataset: DatasetApi): Try[Map[Path, ScalaFileMeta]] = {
     for {
-      response <- dataset.listFiles(Version.LATEST_PUBLISHED) // N.B. If LATEST_PUBLISHED is not specified, it almost works, but the directoryLabel is not picked up somehow.
-      files <- response.data
-      pathToFileMeta = files.map(f => (getPathFromFileMeta(f), f)).toMap
+      response <- Try(dataset.getFiles(Version.LATEST_PUBLISHED.toString())) // N.B. If LATEST_PUBLISHED is not specified, it almost works, but the directoryLabel is not picked up somehow.
+      files <- Try(response.getData)
+      pathToFileMeta = files.map { javaFileMeta =>
+        val str = MapperForScala.get().writeValueAsString(javaFileMeta)
+        val scalaFileMeta: ScalaFileMeta = Serialization.read[ScalaFileMeta](str)
+        (getPathFromFileMeta(javaFileMeta), scalaFileMeta)
+      }.toMap
     } yield pathToFileMeta
   }
 
-  private def getPathFromFileMeta(fileMeta: FileMeta): Path = {
-    Paths.get(fileMeta.directoryLabel.getOrElse(""), fileMeta.label.getOrElse(""))
+  private def getPathFromFileMeta(fileMeta: JavaFileMeta): Path = {
+    Paths.get(fileMeta.getDirectoryLabel, fileMeta.getLabel)
   }
 
-  private def validateFileMetas(files: List[FileMeta]): Try[Unit] = {
+  private def validateFileMetas(files: List[ScalaFileMeta]): Try[Unit] = {
     if (files.map(_.dataFile).exists(_.isEmpty)) Failure(new IllegalArgumentException("Found file metadata without dataFile element"))
     else if (files.map(_.dataFile.get).exists(_.checksum.`type` != "SHA-1")) Failure(new IllegalArgumentException("Not all file checksums are of type SHA-1"))
          else Success(())
   }
 
-  private def getFilesToReplace(pathToFileInfo: Map[Path, FileInfo], pathToFileMetaInLatestVersion: Map[Path, FileMeta]): Try[Map[Int, FileInfo]] = Try {
+  private def getFilesToReplace(pathToFileInfo: Map[Path, FileInfo], pathToFileMetaInLatestVersion: Map[Path, ScalaFileMeta]): Try[Map[Int, FileInfo]] = Try {
     trace(())
     val intersection = pathToFileInfo.keySet intersect pathToFileMetaInLatestVersion.keySet
     debug(s"The following files are in both deposit and latest published version: ${ intersection.mkString(", ") }")
@@ -234,7 +239,7 @@ class DatasetUpdater(deposit: Deposit,
    * @param pathToFileInfo                map from path to file info in the new version (i.e. the deposit).
    * @return
    */
-  private def getOldToNewPathOfFilesToMove(pathToFileMetaInLatestVersion: Map[Path, FileMeta], pathToFileInfo: Map[Path, FileInfo]): Try[Map[Path, Path]] = {
+  private def getOldToNewPathOfFilesToMove(pathToFileMetaInLatestVersion: Map[Path, ScalaFileMeta], pathToFileInfo: Map[Path, FileInfo]): Try[Map[Path, Path]] = {
     for {
       checksumsToPathNonDuplicatedFilesInDeposit <- getChecksumsToPathOfNonDuplicateFiles(pathToFileInfo.mapValues(_.checksum))
       checksumsToPathNonDuplicatedFilesInLatestVersion <- getChecksumsToPathOfNonDuplicateFiles(pathToFileMetaInLatestVersion.mapValues(_.dataFile.get.checksum.value))
@@ -258,7 +263,7 @@ class DatasetUpdater(deposit: Deposit,
       .map { case (c, m) => (c, m.head._1) }
   }
 
-  private def getFileDeletions(paths: Set[Path], pathToFileMeta: Map[Path, FileMeta]): Try[Set[Int]] = Try {
+  private def getFileDeletions(paths: Set[Path], pathToFileMeta: Map[Path, ScalaFileMeta]): Try[Set[Int]] = Try {
     paths.map(path => pathToFileMeta(path).dataFile.get.id)
   }
 
@@ -266,17 +271,17 @@ class DatasetUpdater(deposit: Deposit,
     databaseIds.map { id =>
       debug(s"Deleting file, databaseId = $id")
       dataverseClient.sword().deleteFile(id)
-      dataset.awaitUnlock()
+      Try(dataset.awaitUnlock())
     }.collectResults.map(_ => ())
   }
 
-  private def replaceFiles(dataset: DatasetApi, databaseIdToNewFile: Map[Int, FileInfo], prestagedFiles: Set[BasicFileMeta] = Set.empty): Try[Map[Int, FileMeta]] = {
+  private def replaceFiles(dataset: DatasetApi, databaseIdToNewFile: Map[Int, FileInfo], prestagedFiles: Set[BasicFileMeta] = Set.empty): Try[Map[Int, ScalaFileMeta]] = {
     trace(databaseIdToNewFile, prestagedFiles)
     databaseIdToNewFile.map {
       case (id, fileInfo) =>
         val fileApi = dataverseInstance.file(id)
 
-        def replaceFile(prestagedFiles: Set[BasicFileMeta]): Try[(Int, FileMeta)] = {
+        def replaceFile(prestagedFiles: Set[BasicFileMeta]): Try[(Int, ScalaFileMeta)] = {
           /*
            * Note, forceReplace = true is used, so that the action does not fail if the replacement has a different MIME-type than
            * the replaced file. The only way to pass forceReplace is through the FileMeta. This means we are deleting any existing
@@ -289,7 +294,7 @@ class DatasetUpdater(deposit: Deposit,
               fileApi.replaceWithPrestagedFile(prestagedFile.copy(forceReplace = true))
             }.getOrElse {
               debug(s"Uploading replacement file: $fileInfo")
-              fileApi.replace(Option(fileInfo.file), Option(FileMeta(forceReplace = true)))
+              fileApi.replace(Option(fileInfo.file), Option(ScalaFileMeta(forceReplace = true)))
             }
             fileList <- r.data
             id = fileList.files.head.dataFile.map(_.id).getOrElse(throw new IllegalStateException("Could not get ID of replacement file after replace action"))
@@ -297,7 +302,7 @@ class DatasetUpdater(deposit: Deposit,
         }
         for {
           (replacementId, replacementMeta) <- replaceFile(prestagedFiles)
-          _ <- dataset.awaitUnlock()
+          _ <- Try(dataset.awaitUnlock())
         } yield (replacementId, replacementMeta)
     }.toList.collectResults.map(_.toMap)
   }

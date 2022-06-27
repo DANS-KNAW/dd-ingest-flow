@@ -29,6 +29,7 @@ import org.json4s.native.Serialization
 
 import java.net.URI
 import java.nio.file.{ Path, Paths }
+import java.util.Optional
 import java.util.regex.Pattern
 import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.util.control.NonFatal
@@ -279,7 +280,7 @@ class DatasetUpdater(deposit: Deposit,
     trace(databaseIdToNewFile, prestagedFiles)
     databaseIdToNewFile.map {
       case (id, fileInfo) =>
-        val fileApi = dataverseInstance.file(id)
+        val fileApi = dataverseClient.file(id)
 
         def replaceFile(prestagedFiles: Set[BasicFileMeta]): Try[(Int, ScalaFileMeta)] = {
           /*
@@ -291,14 +292,17 @@ class DatasetUpdater(deposit: Deposit,
           for {
             r <- getPrestagedFileFor(fileInfo, prestagedFiles).map { prestagedFile =>
               debug(s"Replacing with prestaged file: $fileInfo")
-              fileApi.replaceWithPrestagedFile(prestagedFile.copy(forceReplace = true))
+              Failure(new NotImplementedError("fileApi.replaceWithPrestagedFile"))
+              //fileApi.replaceWithPrestagedFile(prestagedFile.copy(forceReplace = true))
             }.getOrElse {
-              debug(s"Uploading replacement file: $fileInfo")
-              val jsonStr = Serialization.writePretty(ScalaFileMeta(forceReplace = true))
-              fileApi.replaceFileItem(Option(fileInfo.file), Option(jsonStr))
+              val meta = ScalaFileMeta(forceReplace = true)
+              val json = Serialization.writePretty(meta)
+              debug(s"Uploading replacement file: $fileInfo $json")
+              Try(fileApi.replaceFileItem(Optional.of(fileInfo.file.toJava), Optional.of(json)))
             }
-            fileList <- r.data
-            id = fileList.files.head.dataFile.map(_.id).getOrElse(throw new IllegalStateException("Could not get ID of replacement file after replace action"))
+            fileList <- Try(r.getData)
+            id = Try(fileList.getFiles.get(0).getDataFile.getId)
+              .getOrElse(throw new IllegalStateException("Could not get ID of replacement file after replace action"))
           } yield (id, fileInfo.metadata)
         }
         for {

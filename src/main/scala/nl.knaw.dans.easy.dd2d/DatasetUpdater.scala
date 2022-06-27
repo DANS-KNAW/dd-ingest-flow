@@ -294,7 +294,8 @@ class DatasetUpdater(deposit: Deposit,
               fileApi.replaceWithPrestagedFile(prestagedFile.copy(forceReplace = true))
             }.getOrElse {
               debug(s"Uploading replacement file: $fileInfo")
-              fileApi.replace(Option(fileInfo.file), Option(ScalaFileMeta(forceReplace = true)))
+              val jsonStr = Serialization.writePretty(ScalaFileMeta(forceReplace = true))
+              fileApi.replaceFileItem(Option(fileInfo.file), Option(jsonStr))
             }
             fileList <- r.data
             id = fileList.files.head.dataFile.map(_.id).getOrElse(throw new IllegalStateException("Could not get ID of replacement file after replace action"))

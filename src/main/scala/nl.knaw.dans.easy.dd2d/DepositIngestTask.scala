@@ -189,7 +189,7 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   protected def newDatasetUpdater(dataverseDataset: Dataset): DatasetUpdater = {
-    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = false, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, dataverseInstance, dataverseClient, Option.empty)
+    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = false, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, dataverseClient, Option.empty)
   }
 
   protected def newDatasetCreator(dataverseDataset: Dataset, depositorRole: String): DatasetCreator = {

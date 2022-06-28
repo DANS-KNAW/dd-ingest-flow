@@ -22,9 +22,9 @@ import nl.knaw.dans.lib.dataverse.model.file.{ FileMeta => JavaFileMeta }
 import nl.knaw.dans.lib.dataverse.model.search
 import nl.knaw.dans.lib.error.{ TraversableTryExtensions, TryExtensions }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import nl.knaw.dans.lib.scaladv.Version
 import nl.knaw.dans.lib.scaladv.model.dataset.MetadataBlocks
 import nl.knaw.dans.lib.scaladv.model.file.{ FileMeta => ScalaFileMeta }
-import nl.knaw.dans.lib.scaladv.{ DataverseInstance, Version }
 import org.json4s.native.Serialization
 
 import java.net.URI
@@ -42,7 +42,6 @@ class DatasetUpdater(deposit: Deposit,
                      metadataBlocks: MetadataBlocks,
                      variantToLicense: Map[String, String],
                      supportedLicenses: List[URI],
-                     dataverseInstance: DataverseInstance,
                      dataverseClient: DataverseClient,
                      optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseClient, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
   trace(deposit)

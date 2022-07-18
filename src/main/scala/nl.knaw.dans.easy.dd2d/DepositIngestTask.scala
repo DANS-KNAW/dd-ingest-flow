@@ -20,12 +20,11 @@ import nl.knaw.dans.easy.dd2d.OutboxSubdir.{ FAILED, OutboxSubdir, PROCESSED, RE
 import nl.knaw.dans.easy.dd2d.dansbag.InformationPackageType.InformationPackageType
 import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidationResult, DansBagValidator, InformationPackageType }
 import nl.knaw.dans.easy.dd2d.mapping.JsonObject
-import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
 import nl.knaw.dans.lib.dataverse.DataverseClient
+import nl.knaw.dans.lib.dataverse.model.dataset
+import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.major
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import nl.knaw.dans.lib.scaladv.DataverseInstance
-import nl.knaw.dans.lib.scaladv.model.dataset.UpdateType.major
 import nl.knaw.dans.lib.scaladv.model.dataset.{ Dataset, PrimitiveSingleValueField, toFieldMap }
 import nl.knaw.dans.lib.taskqueue.Task
 import org.json4s.native.Serialization
@@ -34,6 +33,7 @@ import org.json4s.{ DefaultFormats, Formats }
 import java.lang.Thread.sleep
 import java.net.URI
 import java.util.regex.Pattern
+import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 import scala.util.control.NonFatal
@@ -44,7 +44,6 @@ import scala.xml.{ Elem, Node }
  * Checks one deposit and then ingests it into Dataverse.
  *
  * @param deposit  the deposit to ingest
- * @param dataverseInstance the Dataverse instance to ingest in
  */
 case class DepositIngestTask(deposit: Deposit,
                              optFileExclusionPattern: Option[Pattern],
@@ -53,9 +52,7 @@ case class DepositIngestTask(deposit: Deposit,
                              deduplicate: Boolean,
                              activeMetadataBlocks: List[String],
                              optDansBagValidator: Option[DansBagValidator],
-                             dataverseInstance: DataverseInstance,
                              dataverseClient: DataverseClient,
-                             migrationInfo: Option[MigrationInfo],
                              publishAwaitUnlockMaxNumberOfRetries: Int,
                              publishAwaitUnlockMillisecondsBetweenRetries: Int,
                              narcisClassification: Elem,
@@ -173,10 +170,11 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   private def getDatasetContacts: Try[List[JsonObject]] = {
+    logger.trace("DepositIngestTask.getDatasetContacts")
     for {
-      response <- dataverseInstance.admin().getSingleUser(deposit.depositorUserId)
-      user <- response.data
-      datasetContacts <- createDatasetContacts(user.displayName, user.email, user.affiliation)
+      response <- Try(dataverseClient.admin().listSingleUser(deposit.depositorUserId))
+      user <- Try(response.getData)
+      datasetContacts <- createDatasetContacts(user.getDisplayName, user.getEmail, Option(user.getAffiliation))
     } yield datasetContacts
   }
 
@@ -189,20 +187,20 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   protected def newDatasetUpdater(dataverseDataset: Dataset): DatasetUpdater = {
-    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = false, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, dataverseClient, Option.empty)
+    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = false, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, dataverseClient)
   }
 
   protected def newDatasetCreator(dataverseDataset: Dataset, depositorRole: String): DatasetCreator = {
-    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = false, dataverseDataset, variantToLicense, supportedLicenses, dataverseClient, Option.empty)
+    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = false, dataverseDataset, variantToLicense, supportedLicenses, dataverseClient)
   }
 
   protected def publishDataset(persistentId: String): Try[Unit] = {
     trace(persistentId)
     for {
-      _ <- dataverseInstance.dataset(persistentId).publish(major)
-      _ <- dataverseInstance.dataset(persistentId).awaitUnlock(
-        maxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries,
-        waitTimeInMilliseconds = publishAwaitUnlockMillisecondsBetweenRetries)
+      _ <- Try(dataverseClient.dataset(persistentId).publish(major, true))
+      _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock(
+        publishAwaitUnlockMaxNumberOfRetries,
+        publishAwaitUnlockMillisecondsBetweenRetries))
     } yield ()
   }
 
@@ -220,10 +218,10 @@ case class DepositIngestTask(deposit: Deposit,
 
     def getDatasetState: Try[String] = {
       for {
-        response <- dataverseInstance.dataset(persistentId).viewLatestVersion()
-        ds <- response.data
-        state = ds.latestVersion.versionState
-      } yield state.get
+        response <- Try(dataverseClient.dataset(persistentId).viewLatestVersion())
+        ds <- Try(response.getData)
+        state = ds.getLatestVersion.getVersionState
+      } yield state
     }
 
     def slept(): Boolean = {
@@ -244,18 +242,18 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   private def savePersistentIdentifiersInDepositProperties(persistentId: String): Try[Unit] = {
+    logger.trace("ENTER")
     implicit val jsonFormats: Formats = DefaultFormats
     for {
-      _ <- dataverseInstance.dataset(persistentId).awaitUnlock()
+      _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock())
       _ = debug(s"Dataset $persistentId is not locked")
       _ <- deposit.setDoi(persistentId)
-      r <- dataverseInstance.dataset(persistentId).view()
-      _ = if (logger.underlying.isDebugEnabled) debug(Serialization.writePretty(r.json))
-      d <- r.data
-      v = d.metadataBlocks("dansDataVaultMetadata")
-      optUrn = v.fields.find(_.typeName == "dansNbn")
-        .map(_.asInstanceOf[PrimitiveSingleValueField])
-        .map(_.value)
+      r <- Try(dataverseClient.dataset(persistentId).view())
+      _ = if (logger.underlying.isDebugEnabled) debug(Serialization.writePretty(r.getEnvelopeAsJson))
+      d <- Try(r.getData)
+      v = d.getMetadataBlocks.get("dansDataVaultMetadata")
+      optUrn = v.getFields.find("dansNbn" == _.getTypeName)
+        .map(_.asInstanceOf[dataset.PrimitiveSingleValueField].getValue)
       _ = if (optUrn.isEmpty) throw new IllegalStateException(s"Dataset $persistentId did not obtain a URN:NBN")
       _ <- deposit.setUrn(optUrn.get)
     } yield ()
@@ -266,6 +264,6 @@ case class DepositIngestTask(deposit: Deposit,
   }
 
   override def toString: DepositName = {
-    s"DepositIngestTask for ${ deposit }"
+    s"DepositIngestTask for $deposit"
   }
 }

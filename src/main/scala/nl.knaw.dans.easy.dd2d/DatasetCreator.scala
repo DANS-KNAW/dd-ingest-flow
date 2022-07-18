@@ -15,14 +15,13 @@
  */
 package nl.knaw.dans.easy.dd2d
 
-import nl.knaw.dans.easy.dd2d.migrationinfo.{ BasicFileMeta, MigrationInfo }
-import nl.knaw.dans.lib.dataverse.DataverseClient
+import nl.knaw.dans.ingest.core.legacy.MapperForJava
+import nl.knaw.dans.lib.dataverse.model.RoleAssignment
+import nl.knaw.dans.lib.dataverse.{ DataverseClient, Version }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import nl.knaw.dans.lib.scaladv.model.RoleAssignment
 import nl.knaw.dans.lib.scaladv.model.dataset.Dataset
-import nl.knaw.dans.lib.scaladv.{ Version, serializeAsJson }
-import org.json4s.native.Serialization
+import nl.knaw.dans.lib.scaladv.serializeAsJson
 
 import java.net.URI
 import java.util.regex.Pattern
@@ -39,8 +38,7 @@ class DatasetCreator(deposit: Deposit,
                      dataverseDataset: Dataset,
                      variantToLicense: Map[String, String],
                      supportedLicenses: List[URI],
-                     dataverseClient: DataverseClient,
-                     optMigrationInfoService: Option[MigrationInfo]) extends DatasetEditor(dataverseClient, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
+                     dataverseClient: DataverseClient) extends DatasetEditor(dataverseClient, optFileExclusionPattern, zipFileHandler) with DebugEnhancedLogging {
   trace(deposit)
 
   override def performEdit(): Try[PersistentId] = {
@@ -64,16 +62,12 @@ class DatasetCreator(deposit: Deposit,
           _ <- Try(javaDatasetApi.updateMetadataFromJsonLd(licenseAsJson, true))
           _ <- Try(javaDatasetApi.awaitUnlock())
           pathToFileInfo <- getPathToFileInfo(deposit)
-          prestagedFiles <- optMigrationInfoService.map(_.getPrestagedDataFilesFor(s"doi:${ deposit.doi }", 1)).getOrElse(Success(Set.empty[BasicFileMeta]))
-          databaseIdsToFileInfo <- addFiles(persistentId, pathToFileInfo.values.toList, prestagedFiles)
-          _ <- updateFileMetadata(databaseIdsToFileInfo.mapValues(_.metadata))
+          databaseIdsToFileInfo <- addFiles(persistentId, pathToFileInfo.values.toList)
+          _ <- updateFileMetadata(databaseIdsToFileInfo.mapValues(_.javaFileMeta))
           _ <- Try(javaDatasetApi.awaitUnlock())
           _ <- configureEnableAccessRequests(deposit, persistentId, canEnable = true)
           _ <- Try(javaDatasetApi.awaitUnlock())
-          _ = debug(s"Assigning role $depositorRole to ${ deposit.depositorUserId }")
-          scalaRoleAssignment = RoleAssignment(s"@${ deposit.depositorUserId }", depositorRole)
-          jsonRoleAssignment = Serialization.write(scalaRoleAssignment)
-          _ <- Try(javaDatasetApi.assignRole(jsonRoleAssignment))
+          _ <- Try(javaDatasetApi.assignRole(jsonRoleAssignment()))
           _ <- Try(javaDatasetApi.awaitUnlock())
           dateAvailable <- deposit.getDateAvailable
           _ <- embargoFiles(persistentId, dateAvailable)
@@ -86,6 +80,15 @@ class DatasetCreator(deposit: Deposit,
     }
   }
 
+  private def jsonRoleAssignment() = {
+    val ra = new RoleAssignment
+    ra.setAssignee(s"@${ deposit.depositorUserId }")
+    ra.setRole(depositorRole)
+    val str = MapperForJava.get().writeValueAsString(ra)
+    debug(s"Assigning role $depositorRole to ${ deposit.depositorUserId }: $str ")
+    str
+  }
+
   private def embargoFiles(persistentId: PersistentId, dateAvailable: Date): Try[Unit] =
     if (!isEmbargo(dateAvailable)) {
       logger.debug(s"Date available in the past, no embargo: $dateAvailable")
@@ -94,7 +97,7 @@ class DatasetCreator(deposit: Deposit,
     else {
       logger.info(s"Putting embargo on files until: $dateAvailable")
       for {
-        response <- Try(dataverseClient.dataset(persistentId).getFiles(Version.LATEST.toString()).getData)
+        response <- Try(dataverseClient.dataset(persistentId).getFiles(Version.LATEST.toString).getData)
         ids = response.filter(f => "easy-migration" != f.getDirectoryLabel)
           .map(f => f.getDataFile.getId).toList
         _ <- embargoFiles(persistentId, dateAvailable, ids)

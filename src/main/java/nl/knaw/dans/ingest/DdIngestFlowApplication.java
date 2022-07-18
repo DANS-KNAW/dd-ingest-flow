@@ -119,7 +119,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             enqueuingService
         );
 
-        environment.healthChecks().register("Dataverse", new DataverseHealthCheck(ingestTaskFactoryWrapper.getDataverseInstance()));
+        environment.healthChecks().register("Dataverse", new DataverseHealthCheck(ingestTaskFactoryWrapper.getDataverseClient()));
         environment.healthChecks().register("DansBagValidator", new DansBagValidatorHealthCheck(ingestTaskFactoryWrapper.getDansBagValidatorInstance()));
 
         environment.lifecycle().manage(autoIngestArea);

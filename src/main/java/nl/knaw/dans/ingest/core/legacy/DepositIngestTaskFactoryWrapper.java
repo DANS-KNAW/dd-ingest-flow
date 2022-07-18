@@ -75,8 +75,7 @@ public class DepositIngestTaskFactoryWrapper {
             new MigrationInfoConfig(
                 DepositIngestTaskFactory.appendSlash(migrationInfoConfig.getBaseUrl()),
                 migrationInfoConfig.getConnectionTimeoutMs(),
-                migrationInfoConfig.getReadTimeoutMs()),
-            false // TODO: make configurable
+                migrationInfoConfig.getReadTimeoutMs())
         );
 
         final Elem narcisClassification = DepositIngestTaskFactory.readXml(ingestFlowConfig.getMappingDefsDir().resolve("narcis_classification.xml").toFile());
@@ -93,9 +92,8 @@ public class DepositIngestTaskFactoryWrapper {
             ingestFlowConfig.getDepositorRole(),
             false,
             ingestFlowConfig.isDeduplicate(),
-            DepositIngestTaskFactory.getActiveMetadataBlocks(dataverseInstance).get(),
+            DepositIngestTaskFactory.getActiveMetadataBlocks(dataverseClient).get(),
             Option.apply(validator),
-            dataverseInstance,
             dataverseClient,
             Option.apply(migrationInfo),
             dataverseConfigScala.getApi().getPublishAwaitUnlockMaxRetries(),
@@ -139,7 +137,7 @@ public class DepositIngestTaskFactoryWrapper {
         return dataverseInstance;
     }
 
-    public DataverseClient buildDataverseClient() {
+    public DataverseClient getDataverseClient() {
         return dataverseClient;
     }
 

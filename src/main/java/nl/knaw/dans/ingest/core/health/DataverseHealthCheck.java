@@ -16,28 +16,30 @@
 package nl.knaw.dans.ingest.core.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.lib.scaladv.DataverseInstance;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DataverseHealthCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(DataverseHealthCheck.class);
 
-    private final DataverseInstance dataverseInstance;
+    private final DataverseClient dataverseClient;
 
-    public DataverseHealthCheck(DataverseInstance dataverseInstance) {
-        this.dataverseInstance = dataverseInstance;
+    public DataverseHealthCheck(DataverseClient dataverseClient) {
+        this.dataverseClient = dataverseClient;
     }
 
     @Override
     protected Result check() {
         log.debug("Checking that Dataverse is available");
 
-        if (dataverseInstance.checkConnection().isSuccess()) {
-            return Result.healthy();
+        try {
+            dataverseClient.checkConnection();
         }
-        else {
+        catch (Exception e) {
+            log.error("Dataverse is not available",e);
             return Result.unhealthy("Dataverse is not available");
         }
+        return Result.healthy();
     }
 }

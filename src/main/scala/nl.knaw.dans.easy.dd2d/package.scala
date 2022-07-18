@@ -16,10 +16,14 @@
 package nl.knaw.dans.easy
 
 import better.files.File
+import nl.knaw.dans.ingest.core.legacy.MapperForJava
+import nl.knaw.dans.lib.dataverse.model.file.{ FileMeta => JavaFileMeta }
 import nl.knaw.dans.lib.scaladv.model.file.FileMeta
 import org.apache.commons.csv.{ CSVFormat, CSVParser }
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang.StringUtils
+import org.json4s.DefaultFormats
+import org.json4s.native.Serialization
 
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -46,7 +50,15 @@ package object dd2d {
     }
   }
 
-  case class FileInfo(file: File, checksum: String, metadata: FileMeta)
+  case class FileInfo(file: File, checksum: String, metadata: FileMeta) {
+    def javaFileMeta: JavaFileMeta = {
+      // TODO only during hybrid scala java phase
+      // inconsistency between scala/java lib, interpreted as truth:
+      // dans-dataverse-client-lib/lib/src/test/resources/model/dataset/DatasetLatestVersion.json
+      val jsonFileMeta = Serialization.write(metadata)(DefaultFormats).replace(""""restrict":""",""""restricted":""")
+      MapperForJava.get().readValue(jsonFileMeta, classOf[JavaFileMeta])
+    }
+  }
 
   case class CannotUpdateDraftDatasetException(deposit: Deposit)
     extends RuntimeException("Latest version must be published before update-deposit can be processed")

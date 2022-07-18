@@ -16,12 +16,10 @@
 package nl.knaw.dans.easy.dd2d
 
 import better.files.File
-import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidator, InformationPackageType }
 import nl.knaw.dans.easy.dd2d.dansbag.InformationPackageType.InformationPackageType
+import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidator, InformationPackageType }
 import nl.knaw.dans.easy.dd2d.mapping.Amd
-import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
 import nl.knaw.dans.lib.dataverse.DataverseClient
-import nl.knaw.dans.lib.scaladv.DataverseInstance
 import nl.knaw.dans.lib.scaladv.model.dataset.Dataset
 
 import java.net.URI
@@ -37,9 +35,7 @@ class DepositMigrationTask(deposit: Deposit,
                            deduplicate: Boolean,
                            activeMetadataBlocks: List[String],
                            optDansBagValidator: Option[DansBagValidator],
-                           dataverseInstance: DataverseInstance,
                            dataverseClient: DataverseClient,
-                           migrationInfo: Option[MigrationInfo],
                            publishAwaitUnlockMaxNumberOfRetries: Int,
                            publishAwaitUnlockMillisecondsBetweenRetries: Int,
                            narcisClassification: Elem,
@@ -47,7 +43,7 @@ class DepositMigrationTask(deposit: Deposit,
                            iso2ToDataverseLanguage: Map[String, String],
                            variantToLicense: Map[String, String],
                            supportedLicenses: List[URI],
-                           repordIdToTerm: Map[String, String],
+                           reportIdToTerm: Map[String, String],
                            outboxDir: File)
   extends DepositIngestTask(deposit,
     optFileExclusionPattern,
@@ -56,9 +52,7 @@ class DepositMigrationTask(deposit: Deposit,
     deduplicate,
     activeMetadataBlocks,
     optDansBagValidator,
-    dataverseInstance,
     dataverseClient,
-    migrationInfo: Option[MigrationInfo],
     publishAwaitUnlockMaxNumberOfRetries,
     publishAwaitUnlockMillisecondsBetweenRetries,
     narcisClassification,
@@ -66,7 +60,7 @@ class DepositMigrationTask(deposit: Deposit,
     iso2ToDataverseLanguage,
     variantToLicense,
     supportedLicenses,
-    repordIdToTerm,
+    reportIdToTerm,
     outboxDir) {
 //  override protected val informationPackageType: InformationPackageType = InformationPackageType.AIP
 
@@ -79,11 +73,11 @@ class DepositMigrationTask(deposit: Deposit,
   }
 
   override def newDatasetUpdater(dataverseDataset: Dataset): DatasetUpdater = {
-    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = true, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, dataverseClient, migrationInfo)
+    new DatasetUpdater(deposit, optFileExclusionPattern, zipFileHandler, isMigration = true, dataverseDataset.datasetVersion.metadataBlocks, variantToLicense, supportedLicenses, dataverseClient)
   }
 
   override def newDatasetCreator(dataverseDataset: Dataset, depositorRole: String): DatasetCreator = {
-    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = true, dataverseDataset, variantToLicense, supportedLicenses, dataverseClient, migrationInfo)
+    new DatasetCreator(deposit, optFileExclusionPattern, zipFileHandler, depositorRole, isMigration = true, dataverseDataset, variantToLicense, supportedLicenses, dataverseClient)
   }
 
   override protected def checkPersonalDataPresent(optAgreements: Option[Node]): Try[Unit] = {
@@ -105,10 +99,10 @@ class DepositMigrationTask(deposit: Deposit,
       amd = optAmd.getOrElse(throw new Exception(s"no AMD found for $persistentId"))
       optPublicationDate <- getJsonLdPublicationdate(amd)
       publicationDate = optPublicationDate.getOrElse(throw new IllegalArgumentException(s"no publication date found in AMD for $persistentId"))
-      _ <- dataverseInstance.dataset(persistentId).releaseMigrated(publicationDate)
-      _ <- dataverseInstance.dataset(persistentId).awaitUnlock(
-        maxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries,
-        waitTimeInMilliseconds = publishAwaitUnlockMillisecondsBetweenRetries)
+      _ <- Try(dataverseClient.dataset(persistentId).releaseMigrated(publicationDate, true))
+      _ <- Try(dataverseClient.dataset(persistentId).awaitUnlock(
+        publishAwaitUnlockMaxNumberOfRetries,
+        publishAwaitUnlockMillisecondsBetweenRetries))
     } yield ()
   }
 

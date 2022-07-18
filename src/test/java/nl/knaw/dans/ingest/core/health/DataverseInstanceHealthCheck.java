@@ -33,7 +33,7 @@ class DataverseInstanceHealthCheck {
         DataverseInstance dataverseInstance = Mockito.mock(DataverseInstance.class, RETURNS_DEEP_STUBS);
         Mockito.when(dataverseInstance.checkConnection().isSuccess()).thenReturn(true);
         Mockito.when(depositIngestTaskFactoryWrapper.getDataverseInstance()).thenReturn(dataverseInstance);
-        Result result = new DataverseHealthCheck(depositIngestTaskFactoryWrapper.getDataverseInstance()).check();
+        Result result = new DataverseHealthCheck(depositIngestTaskFactoryWrapper.getDataverseClient()).check();
         assertTrue(result.isHealthy());
     }
 
@@ -43,7 +43,7 @@ class DataverseInstanceHealthCheck {
         DataverseInstance dataverseInstance = Mockito.mock(DataverseInstance.class, RETURNS_DEEP_STUBS);
         Mockito.when(dataverseInstance.checkConnection().isSuccess()).thenReturn(false);
         Mockito.when(depositIngestTaskFactoryWrapper.getDataverseInstance()).thenReturn(dataverseInstance);
-        Result result = new DataverseHealthCheck(depositIngestTaskFactoryWrapper.getDataverseInstance()).check();
+        Result result = new DataverseHealthCheck(depositIngestTaskFactoryWrapper.getDataverseClient()).check();
         assertFalse(result.isHealthy());
     }
 }

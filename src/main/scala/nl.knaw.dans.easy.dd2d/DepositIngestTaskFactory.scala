@@ -18,8 +18,8 @@ package nl.knaw.dans.easy.dd2d
 import better.files.File
 import nl.knaw.dans.easy.dd2d.dansbag.DansBagValidator
 import nl.knaw.dans.easy.dd2d.migrationinfo.MigrationInfo
-import nl.knaw.dans.lib.scaladv.DataverseInstance
 import nl.knaw.dans.lib.dataverse.DataverseClient
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.csv.{ CSVFormat, CSVParser }
 import org.apache.commons.io.FileUtils
 
@@ -27,6 +27,7 @@ import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 import scala.collection.JavaConverters.{ asScalaBufferConverter, asScalaIteratorConverter }
+import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.util.Try
 import scala.xml.{ Elem, XML }
 
@@ -36,7 +37,6 @@ import scala.xml.{ Elem, XML }
  * @param isMigrated                                   is this a migrated dataset?
  * @param activeMetadataBlocks                         the metadata blocks enabled in the target dataverse
  * @param optDansBagValidator                          interface to the easy-validate-dans-bag service
- * @param dataverseInstance                                     interface to the target Dataverse instance
  * @param migrationInfo                                optional interface to a migration info service
  * @param publishAwaitUnlockMaxNumberOfRetries         maximum number of times to poll for unlock after publish is called after ingest of the deposit
  * @param publishAwaitUnlockMillisecondsBetweenRetries number of milliseconds to wait between retries of unlock polling after publish
@@ -52,7 +52,6 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
                                deduplicateImport: Boolean,
                                activeMetadataBlocks: List[String],
                                optDansBagValidator: Option[DansBagValidator],
-                               dataverseInstance: DataverseInstance,
                                dataverseClient: DataverseClient,
                                migrationInfo: Option[MigrationInfo],
                                publishAwaitUnlockMaxNumberOfRetries: Int,
@@ -74,9 +73,7 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
         deduplicateImport,
         activeMetadataBlocks,
         optDansBagValidator,
-        dataverseInstance,
         dataverseClient,
-        migrationInfo,
         publishAwaitUnlockMaxNumberOfRetries,
         publishAwaitUnlockMillisecondsBetweenRetries,
         narcisClassification,
@@ -95,9 +92,7 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
         deduplicateService,
         activeMetadataBlocks,
         optDansBagValidator,
-        dataverseInstance,
         dataverseClient,
-        Option.empty,
         publishAwaitUnlockMaxNumberOfRetries,
         publishAwaitUnlockMillisecondsBetweenRetries,
         narcisClassification,
@@ -110,12 +105,13 @@ class DepositIngestTaskFactory(isMigrated: Boolean = false,
   }
 }
 
-object DepositIngestTaskFactory {
-  def getActiveMetadataBlocks(dataverse: DataverseInstance): Try[List[String]] = {
+object DepositIngestTaskFactory extends DebugEnhancedLogging {
+  def getActiveMetadataBlocks(dataverseClient: DataverseClient): Try[List[String]] = {
     for {
-      result <- dataverse.dataverse("root").listMetadataBocks()
-      blocks <- result.data
-    } yield blocks.map(_.name)
+      result <- Try(dataverseClient.dataverse("root").listMetadataBlocks())
+      _ = logger.trace(result.getEnvelopeAsString)
+      blocks <- Try(result.getData)
+    } yield blocks.map(_.getName).toList
   }
 
   def readXml(file: java.io.File): Elem = {

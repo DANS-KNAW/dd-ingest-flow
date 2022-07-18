@@ -15,9 +15,6 @@
  */
 package nl.knaw.dans.easy.dd2d.migrationinfo
 
-import nl.knaw.dans.lib.scaladv.model.file.prestaged.PrestagedFile
-
 case class BasicFileMeta(label: String,
                          directoryLabel: Option[String],
-                         versionSequenceNumber: Int,
-                         prestagedFile: PrestagedFile)
+                         versionSequenceNumber: Int)

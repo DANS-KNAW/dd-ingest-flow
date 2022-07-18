@@ -24,7 +24,7 @@ import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.dataverse.DataverseItem;
 import nl.knaw.dans.lib.dataverse.model.search.ResultItem;
 
-public class MapperForScala {
+public class MapperForJava {
 
     public static ObjectMapper get() {
         return mapper;
@@ -35,7 +35,6 @@ public class MapperForScala {
     public static ObjectMapper init () {
         mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
-        // jsonSerializer.readValue(s,  classManifest[T].erasure).asInstanceOf[T]
         module.addDeserializer(MetadataField.class, new MetadataFieldDeserializer());
         module.addDeserializer(DataverseItem.class, new DataverseItemDeserializer());
         module.addDeserializer(ResultItem.class, new ResultItemDeserializer(mapper));

@@ -16,6 +16,8 @@
 package nl.knaw.dans.easy.dd2d
 
 import better.files.File
+import com.fasterxml.jackson.databind.ObjectMapper
+import nl.knaw.dans.ingest.core.MetadataObjectMapper
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{ Inside, OneInstancePerTest }
@@ -24,6 +26,8 @@ trait TestSupportFixture extends AnyFlatSpec with Matchers with Inside with Cust
 
   lazy val testDirValid: File = File("src/test/resources/examples")
   lazy val testDirNonValid: File = File("src/test/resources/no-deposit")
-  lazy val testDirUnorderedDeposits = File("src/test/resources/unordered-stub-deposits")
+  lazy val testDirUnorderedDeposits: File = File("src/test/resources/unordered-stub-deposits")
+
+  val objectMapper: ObjectMapper = MetadataObjectMapper.get()
 }
 

@@ -29,7 +29,7 @@ class DcxDaiOrganizationSpec extends TestSupportFixture with BlockCitation {
           <dcx-dai:name xml:lang="en">Anti-Vampire League</dcx-dai:name>
           <dcx-dai:role xml:lang="en">DataCurator</dcx-dai:role>
       </dcx-dai:organization>
-    val result = MetadataObjectMapper.get().writeValueAsString(DcxDaiOrganization.toContributorValueObject(organization))
+    val result = objectMapper.writeValueAsString(DcxDaiOrganization.toContributorValueObject(organization))
     debug(result)
     findString(result, s"$CONTRIBUTOR_NAME.value") shouldBe "Anti-Vampire League"
     findString(result, s"$CONTRIBUTOR_TYPE.value") shouldBe "Data Curator"
@@ -40,7 +40,7 @@ class DcxDaiOrganizationSpec extends TestSupportFixture with BlockCitation {
       <dcx-dai:organization>
           <dcx-dai:role xml:lang="en">ContactPerson</dcx-dai:role>
       </dcx-dai:organization>
-    val result = MetadataObjectMapper.get().writeValueAsString(DcxDaiOrganization.toContributorValueObject(organization))
+    val result = objectMapper.writeValueAsString(DcxDaiOrganization.toContributorValueObject(organization))
     debug(result)
     findString(result, s"$CONTRIBUTOR_TYPE.value") shouldBe "Other"
   }
@@ -50,7 +50,7 @@ class DcxDaiOrganizationSpec extends TestSupportFixture with BlockCitation {
       <dcx-dai:organization>
           <dcx-dai:name xml:lang="en">Anti-Vampire League</dcx-dai:name>
       </dcx-dai:organization>
-    val result = MetadataObjectMapper.get().writeValueAsString(DcxDaiOrganization.toAuthorValueObject(organization))
+    val result = objectMapper.writeValueAsString(DcxDaiOrganization.toAuthorValueObject(organization))
     debug(result)
     findString(result, s"$AUTHOR_NAME.value") shouldBe "Anti-Vampire League"
   }
@@ -61,7 +61,7 @@ class DcxDaiOrganizationSpec extends TestSupportFixture with BlockCitation {
           <dcx-dai:name xml:lang="en">Anti-Vampire League</dcx-dai:name>
           <dcx-dai:ISNI>http://isni.org/isni/0000000121032683</dcx-dai:ISNI>
       </dcx-dai:organization>
-    val result = MetadataObjectMapper.get().writeValueAsString(DcxDaiOrganization.toAuthorValueObject(organization))
+    val result = objectMapper.writeValueAsString(DcxDaiOrganization.toAuthorValueObject(organization))
     debug(result)
     findString(result, s"$AUTHOR_NAME.value") shouldBe "Anti-Vampire League"
     findString(result, s"$AUTHOR_IDENTIFIER_SCHEME.value") shouldBe "ISNI"
@@ -78,7 +78,7 @@ class DcxDaiOrganizationSpec extends TestSupportFixture with BlockCitation {
     DcxDaiOrganization.inAnyOfRoles(List("Funder"))(contributor) shouldBe true
 
     val result = DcxDaiOrganization.toGrantNumberValueObject(contributor)
-    val s = MetadataObjectMapper.get().writeValueAsString(result)
+    val s = objectMapper.writeValueAsString(result)
     debug(s)
     findString(s, s"$GRANT_NUMBER_VALUE.value") shouldBe ""
     findString(s, s"$GRANT_NUMBER_AGENCY.value") shouldBe "Anti-Vampire League"

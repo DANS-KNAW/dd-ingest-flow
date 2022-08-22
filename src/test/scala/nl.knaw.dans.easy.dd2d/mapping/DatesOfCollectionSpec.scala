@@ -25,21 +25,21 @@ class DatesOfCollectionSpec extends TestSupportFixture with BlockCitation {
 
   "toDateOfCollectionValue" should "split correctly formatted date range in start and end subfields" in {
     val datesOfCollection = <ddm:datesOfCollection>2022-01-01/2022-02-01</ddm:datesOfCollection>
-    val result = MetadataObjectMapper.get().writeValueAsString(DatesOfCollection.toDateOfCollectionValue(datesOfCollection))
+    val result = objectMapper.writeValueAsString(DatesOfCollection.toDateOfCollectionValue(datesOfCollection))
     findString(result, s"$DATE_OF_COLLECTION_START.value") shouldBe "2022-01-01"
     findString(result, s"$DATE_OF_COLLECTION_END.value") shouldBe "2022-02-01"
   }
 
   it should "handle ranges without start" in {
     val datesOfCollection = <ddm:datesOfCollection>/2022-02-01</ddm:datesOfCollection>
-    val result = MetadataObjectMapper.get().writeValueAsString(DatesOfCollection.toDateOfCollectionValue(datesOfCollection))
+    val result = objectMapper.writeValueAsString(DatesOfCollection.toDateOfCollectionValue(datesOfCollection))
     findString(result, s"$DATE_OF_COLLECTION_START.value") shouldBe ""
     findString(result, s"$DATE_OF_COLLECTION_END.value") shouldBe "2022-02-01"
   }
 
   it should "handle ranges without end" in {
     val datesOfCollection = <ddm:datesOfCollection>2022-01-01/</ddm:datesOfCollection>
-    val result = MetadataObjectMapper.get().writeValueAsString(DatesOfCollection.toDateOfCollectionValue(datesOfCollection))
+    val result = objectMapper.writeValueAsString(DatesOfCollection.toDateOfCollectionValue(datesOfCollection))
     findString(result, s"$DATE_OF_COLLECTION_START.value") shouldBe "2022-01-01"
     findString(result, s"$DATE_OF_COLLECTION_END.value") shouldBe ""
   }
@@ -48,7 +48,7 @@ class DatesOfCollectionSpec extends TestSupportFixture with BlockCitation {
     val datesOfCollection = <ddm:datesOfCollection>
       2022-01-01/2022-02-01
     </ddm:datesOfCollection>
-    val result = MetadataObjectMapper.get().writeValueAsString(DatesOfCollection.toDateOfCollectionValue(datesOfCollection))
+    val result = objectMapper.writeValueAsString(DatesOfCollection.toDateOfCollectionValue(datesOfCollection))
     findString(result, s"$DATE_OF_COLLECTION_START.value") shouldBe "2022-01-01"
     findString(result, s"$DATE_OF_COLLECTION_END.value") shouldBe "2022-02-01"
   }

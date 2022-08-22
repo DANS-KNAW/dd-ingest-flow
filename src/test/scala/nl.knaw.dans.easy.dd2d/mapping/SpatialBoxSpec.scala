@@ -33,7 +33,7 @@ class SpatialBoxSpec extends TestSupportFixture with BlockTemporalAndSpatial {
             <gml:upperCorner>90.0 179.999</gml:upperCorner>
           </gml:Envelope>
       </gml:boundedBy>
-    val result = MetadataObjectMapper.get().writeValueAsString(SpatialBox.toEasyTsmSpatialBoxValueObject(spatialBox))
+    val result = objectMapper.writeValueAsString(SpatialBox.toEasyTsmSpatialBoxValueObject(spatialBox))
     findString(result, s"$SPATIAL_BOX_SCHEME.value") shouldBe "longitude/latitude (degrees)"
     findString(result, s"$SPATIAL_BOX_NORTH.value") shouldBe "90.0"
     findString(result, s"$SPATIAL_BOX_EAST.value") shouldBe "179.999"
@@ -49,7 +49,7 @@ class SpatialBoxSpec extends TestSupportFixture with BlockTemporalAndSpatial {
             <gml:upperCorner>469890 209914</gml:upperCorner>
           </gml:Envelope>
       </gml:boundedBy>
-    val result = MetadataObjectMapper.get().writeValueAsString(SpatialBox.toEasyTsmSpatialBoxValueObject(spatialBox))
+    val result = objectMapper.writeValueAsString(SpatialBox.toEasyTsmSpatialBoxValueObject(spatialBox))
     findString(result, s"$SPATIAL_BOX_SCHEME.value") shouldBe "RD (in m.)"
   }
 

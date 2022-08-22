@@ -52,7 +52,7 @@ class DepositToDataverseMapperSpec extends TestSupportFixture {
       .find(_.getTypeName == "title").get
       .asInstanceOf[PrimitiveSingleValueField]
       .getValue shouldBe "A title"
-    val json = MetadataObjectMapper.get().writeValueAsString(result.get)
+    val json = objectMapper.writeValueAsString(result.get)
     json should include("""files":[""")
   }
 

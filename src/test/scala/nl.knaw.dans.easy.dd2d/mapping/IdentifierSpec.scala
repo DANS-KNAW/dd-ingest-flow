@@ -24,13 +24,13 @@ class IdentifierSpec extends TestSupportFixture with BlockCitation {
   private implicit val jsonFormats: Formats = DefaultFormats
 
   "toOtherIdValue" should "create OtherId Json object without agency for identifier without type attribute" in {
-    val result = MetadataObjectMapper.get().writeValueAsString(Identifier toOtherIdValue (<identifier xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">123</identifier>))
+    val result = objectMapper.writeValueAsString(Identifier toOtherIdValue (<identifier xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">123</identifier>))
     getPathAsString(result, "$.otherIdAgency.value") shouldBe ""
     getPathAsString(result, "$.otherIdValue.value") shouldBe "123"
   }
 
   it should "create OtherId Json object DANS-KNAW for identifier with EASY2 type attribute" in {
-    val result = MetadataObjectMapper.get().writeValueAsString(Identifier toOtherIdValue (<identifier xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="id-type:EASY2">easy-dataset:1234</identifier>))
+    val result = objectMapper.writeValueAsString(Identifier toOtherIdValue (<identifier xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="id-type:EASY2">easy-dataset:1234</identifier>))
     getPathAsString(result, "$.otherIdAgency.value") shouldBe "DANS-KNAW"
     getPathAsString(result, "$.otherIdValue.value") shouldBe "easy-dataset:1234"
   }
@@ -72,7 +72,7 @@ class IdentifierSpec extends TestSupportFixture with BlockCitation {
   }
 
   "toRelatedPublicationValue" should "map xsi:type to ID type and node text to ID number" in {
-    val result = MetadataObjectMapper.get().writeValueAsString(Identifier toRelatedPublicationValue <identifier xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ISSN">12345</identifier>)
+    val result = objectMapper.writeValueAsString(Identifier toRelatedPublicationValue <identifier xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ISSN">12345</identifier>)
     getPathAsString(result, "$.publicationCitation.value") shouldBe ""
     getPathAsString(result, "$.publicationIDType.value") shouldBe "issn"
     getPathAsString(result, "$.publicationIDNumber.value") shouldBe "12345"
@@ -84,7 +84,7 @@ class IdentifierSpec extends TestSupportFixture with BlockCitation {
   }
 
   "toNwoGrantNumber" should "fill in subfields correctly" in {
-    val result = MetadataObjectMapper.get().writeValueAsString(Identifier toNwoGrantNumberValue <identifier xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="id-type:NWO-PROJECTNR">12345</identifier>)
+    val result = objectMapper.writeValueAsString(Identifier toNwoGrantNumberValue <identifier xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="id-type:NWO-PROJECTNR">12345</identifier>)
     getPathAsString(result, "$.grantNumberAgency.value") shouldBe "NWO"
     getPathAsString(result, "$.grantNumberValue.value") shouldBe "12345"
   }

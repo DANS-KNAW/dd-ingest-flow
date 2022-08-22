@@ -25,7 +25,7 @@ class DescriptionSpec extends TestSupportFixture with BlockCitation {
 
   "toDescriptionValueObject" should "create Json object for the description value" in {
     val description = <dcterms:description>The poise of the head strikes me at once...</dcterms:description>
-    val result = MetadataObjectMapper.get().writeValueAsString(Description.toDescriptionValueObject(description))
+    val result = objectMapper.writeValueAsString(Description.toDescriptionValueObject(description))
     findObject(result, s"$DESCRIPTION_VALUE") shouldBe Map("typeName" -> "dsDescriptionValue", "multiple" -> false, "typeClass" -> "primitive", "value" -> "<p>The poise of the head strikes me at once...</p>")
   }
 
@@ -35,7 +35,7 @@ class DescriptionSpec extends TestSupportFixture with BlockCitation {
 
       This is the second paragraph</dcterms:description>
 
-    val result = MetadataObjectMapper.get().writeValueAsString(Description.toDescriptionValueObject(description))
+    val result = objectMapper.writeValueAsString(Description.toDescriptionValueObject(description))
     findObject(result, s"$DESCRIPTION_VALUE") shouldBe Map("typeName" -> "dsDescriptionValue", "multiple" -> false, "typeClass" -> "primitive", "value" -> "<p>This is the first paragraph<br>      with a newline.</p><p>      This is the second paragraph</p>")
   }
 }

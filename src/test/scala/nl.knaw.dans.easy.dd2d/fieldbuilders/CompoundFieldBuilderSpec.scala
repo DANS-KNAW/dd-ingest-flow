@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.easy.dd2d.fieldbuilders
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import nl.knaw.dans.easy.dd2d.JsonPathSupportFixture
 import nl.knaw.dans.easy.dd2d.mapping.FieldMapBuilder
 import nl.knaw.dans.ingest.core.legacy.MetadataObjectMapper
@@ -24,7 +25,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class CompoundFieldBuilderSpec extends AnyFlatSpec with Matchers with JsonPathSupportFixture with DebugEnhancedLogging {
-  private implicit val jsonFormats: Formats = DefaultFormats
+  val objectMapper: ObjectMapper = MetadataObjectMapper.get()
 
   "build" should "return None if no values are present" in {
     new CompoundFieldBuilder("test").build() shouldBe None
@@ -38,7 +39,7 @@ class CompoundFieldBuilderSpec extends AnyFlatSpec with Matchers with JsonPathSu
     val optField = c.build()
     optField.isDefined shouldBe true
     val field = optField.get
-    val json = MetadataObjectMapper.get().writeValueAsString(field)
+    val json = objectMapper.writeValueAsString(field)
     debug(json)
     getPathAsString(json, "$.typeClass") shouldBe "compound"
     getPathAsString(json, "$.typeName") shouldBe "test"
@@ -57,7 +58,7 @@ class CompoundFieldBuilderSpec extends AnyFlatSpec with Matchers with JsonPathSu
     val optField = c.build()
     optField.isDefined shouldBe true
     val field = optField.get
-    val json = MetadataObjectMapper.get().writeValueAsString(field)
+    val json = objectMapper.writeValueAsString(field)
     debug(json)
     getPathAsBoolean(json, "$.multiple") shouldBe false
   }
@@ -85,7 +86,7 @@ class CompoundFieldBuilderSpec extends AnyFlatSpec with Matchers with JsonPathSu
     val optField = c.build()
     optField.isDefined shouldBe true
     val field = optField.get
-    val json = MetadataObjectMapper.get().writeValueAsString(field)
+    val json = objectMapper.writeValueAsString(field)
     debug(json)
 
     getPathAsString(json, "$.typeClass") shouldBe "compound"
@@ -115,7 +116,7 @@ class CompoundFieldBuilderSpec extends AnyFlatSpec with Matchers with JsonPathSu
     val optField = c.build()
     optField.isDefined shouldBe true
     val field = optField.get
-    val json = MetadataObjectMapper.get().writeValueAsString(field)
+    val json = objectMapper.writeValueAsString(field)
     debug(json)
 
     getPathAsString(json, "$.typeClass") shouldBe "compound"

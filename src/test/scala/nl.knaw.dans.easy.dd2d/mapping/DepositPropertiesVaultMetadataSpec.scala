@@ -26,7 +26,7 @@ class DepositPropertiesVaultMetadataSpec extends TestSupportFixture with BlockCi
   "toOtherIdValue" should "create OtherId Json object for other ID if specified in correct format" in {
     val maybeMap = DepositPropertiesVaultMetadata.toOtherIdValue("PAN:123")
     maybeMap shouldBe defined
-    val result = MetadataObjectMapper.get().writeValueAsString(maybeMap.get)
+    val result = objectMapper.writeValueAsString(maybeMap.get)
     getPathAsString(result, "$.otherIdAgency.value") shouldBe "PAN"
     getPathAsString(result, "$.otherIdValue.value") shouldBe "123"
   }

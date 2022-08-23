@@ -44,11 +44,10 @@ class DatasetCreator(deposit: Deposit,
     {
       val javaDataverseApi = dataverseClient.dataverse("root")
       for {
-        jsonString <- Try(MetadataObjectMapper.get().writeValueAsString(dataverseDataset))
         // autoPublish is false, because it seems there is a bug with it in Dataverse (most of the time?)
         response <- Try(if (isMigration)
-                          javaDataverseApi.importDataset(jsonString, Optional.of(s"doi:${ deposit.doi }"), false)
-                        else javaDataverseApi.createDataset(jsonString)
+                          javaDataverseApi.importDataset(dataverseDataset, Optional.of(s"doi:${ deposit.doi }"), false)
+                        else javaDataverseApi.createDataset(dataverseDataset)
         )
         persistentId <- Try(response.getData).map(_.getPersistentId)
       } yield persistentId
@@ -66,7 +65,7 @@ class DatasetCreator(deposit: Deposit,
           _ <- Try(javaDatasetApi.awaitUnlock())
           _ <- configureEnableAccessRequests(deposit, persistentId, canEnable = true)
           _ <- Try(javaDatasetApi.awaitUnlock())
-          _ <- Try(javaDatasetApi.assignRole(jsonRoleAssignment()))
+          _ <- Try(javaDatasetApi.assignRole(roleAssignment()))
           _ <- Try(javaDatasetApi.awaitUnlock())
           dateAvailable <- deposit.getDateAvailable
           _ <- embargoFiles(persistentId, dateAvailable)
@@ -79,13 +78,11 @@ class DatasetCreator(deposit: Deposit,
     }
   }
 
-  private def jsonRoleAssignment() = {
+  private def roleAssignment() = {
     val ra = new RoleAssignment
     ra.setAssignee(s"@${ deposit.depositorUserId }")
     ra.setRole(depositorRole)
-    val str = MetadataObjectMapper.get().writeValueAsString(ra)
-    debug(s"Assigning role $depositorRole to ${ deposit.depositorUserId }: $str ")
-    str
+    ra
   }
 
   private def embargoFiles(persistentId: PersistentId, dateAvailable: Date): Try[Unit] =

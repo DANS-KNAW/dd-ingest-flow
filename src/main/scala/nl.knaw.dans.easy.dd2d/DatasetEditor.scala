@@ -135,8 +135,7 @@ abstract class DatasetEditor(dataverseClient: DataverseClient, optFileExclusionP
   protected def embargoFiles(persistendId: PersistentId, dateAvailable: Date, fileIds: List[Int]): Try[Unit] = {
     trace(persistendId, fileIds)
     val embargo = new Embargo(dateAvailableFormat.format(dateAvailable), "", fileIds.toArray)
-    val json = MetadataObjectMapper.get().writeValueAsString(embargo)
-    Try(dataverseClient.dataset(persistendId).setEmbargo(json))
+    Try(dataverseClient.dataset(persistendId).setEmbargo(embargo))
   }
 
   protected def deleteDraftIfExists(persistentId: String): Unit = {

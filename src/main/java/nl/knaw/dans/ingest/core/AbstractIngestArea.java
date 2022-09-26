@@ -16,12 +16,12 @@
 package nl.knaw.dans.ingest.core;
 
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
+import nl.knaw.dans.ingest.core.service.BlockedTargetService;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,13 +36,15 @@ public class AbstractIngestArea {
     protected final DepositIngestTaskFactoryWrapper taskFactory;
     protected final TaskEventService taskEventService;
     protected final EnqueuingService enqueuingService;
+    protected final BlockedTargetService blockedTargetService;
 
     public AbstractIngestArea(Path inboxDir, Path outboxDir,
-        DepositIngestTaskFactoryWrapper taskFactory, TaskEventService taskEventService, EnqueuingService enqueuingService) {
+        DepositIngestTaskFactoryWrapper taskFactory, TaskEventService taskEventService, BlockedTargetService blockedTargetService, EnqueuingService enqueuingService) {
         this.inboxDir = inboxDir.toAbsolutePath();
         this.outboxDir = outboxDir.toAbsolutePath();
         this.taskFactory = taskFactory;
         this.taskEventService = taskEventService;
+        this.blockedTargetService = blockedTargetService;
         this.enqueuingService = enqueuingService;
     }
 

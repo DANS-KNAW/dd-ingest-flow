@@ -25,9 +25,13 @@ import io.dropwizard.setup.Environment;
 import nl.knaw.dans.easy.dd2d.DepositIngestTaskFactory;
 import nl.knaw.dans.easy.dd2d.dansbag.DansBagValidator;
 import nl.knaw.dans.ingest.core.AutoIngestArea;
+import nl.knaw.dans.ingest.core.BlockedTarget;
 import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
+import nl.knaw.dans.ingest.core.service.BlockedTargetService;
+import nl.knaw.dans.ingest.core.service.BlockedTargetServiceImpl;
+import nl.knaw.dans.ingest.db.BlockedTargetDAO;
 import nl.knaw.dans.ingest.health.DansBagValidatorHealthCheck;
 import nl.knaw.dans.ingest.health.DataverseHealthCheck;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
@@ -37,6 +41,7 @@ import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
+import nl.knaw.dans.ingest.resources.BlockedTargetResource;
 import nl.knaw.dans.ingest.resources.EventsResource;
 import nl.knaw.dans.ingest.resources.ImportsResource;
 import nl.knaw.dans.ingest.resources.MigrationsResource;
@@ -50,7 +55,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         new DdIngestFlowApplication().run(args);
     }
 
-    private final HibernateBundle<DdIngestFlowConfiguration> hibernateBundle = new HibernateBundle<DdIngestFlowConfiguration>(TaskEvent.class) {
+    private final HibernateBundle<DdIngestFlowConfiguration> hibernateBundle = new HibernateBundle<DdIngestFlowConfiguration>(TaskEvent.class, BlockedTarget.class) {
 
         @Override
         public PooledDataSourceFactory getDataSourceFactory(DdIngestFlowConfiguration configuration) {
@@ -94,7 +99,9 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
+        final BlockedTargetDAO blockedTargetDAO = new BlockedTargetDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
+        final BlockedTargetService blockedTargetService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(BlockedTargetServiceImpl.class, BlockedTargetDAO.class, blockedTargetDAO);
 
         final ImportArea importArea = new ImportArea(
             configuration.getIngestFlow().getImportConfig().getInbox(),
@@ -102,6 +109,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             ingestTaskFactoryWrapper,
             migrationTaskFactoryWrapper, // Only necessary during migration. Can be phased out after that.
             taskEventService,
+            blockedTargetService,
             enqueuingService);
 
         final ImportArea migrationArea = new ImportArea(
@@ -110,6 +118,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             ingestTaskFactoryWrapper,
             migrationTaskFactoryWrapper, // Only necessary during migration. Can be phased out after that.
             taskEventService,
+            blockedTargetService,
             enqueuingService);
 
         final AutoIngestArea autoIngestArea = new AutoIngestArea(
@@ -117,6 +126,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getIngestFlow().getAutoIngest().getOutbox(),
             ingestTaskFactoryWrapper,
             taskEventService,
+            blockedTargetService,
             enqueuingService
         );
 
@@ -127,6 +137,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         environment.jersey().register(new ImportsResource(importArea));
         environment.jersey().register(new MigrationsResource(migrationArea));
         environment.jersey().register(new EventsResource(taskEventDAO));
+        environment.jersey().register(new BlockedTargetResource(blockedTargetDAO));
         environment.jersey().register(new CsvMessageBodyWriter());
     }
 }

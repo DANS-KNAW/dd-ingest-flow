@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core;
 
 import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
+import nl.knaw.dans.ingest.core.service.BlockedTargetService;
 import nl.knaw.dans.ingest.core.service.UnboundedTargetedTaskSource;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
@@ -27,8 +28,8 @@ public class AutoIngestArea extends AbstractIngestArea implements Managed {
     private UnboundedTargetedTaskSource taskSource;
 
     public AutoIngestArea(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory,
-        TaskEventService taskEventService, EnqueuingService enqueuingService) {
-        super(inboxDir, outboxDir, taskFactory, taskEventService, enqueuingService);
+        TaskEventService taskEventService, BlockedTargetService blockedTargetService, EnqueuingService enqueuingService) {
+        super(inboxDir, outboxDir, taskFactory, taskEventService, blockedTargetService, enqueuingService);
     }
 
     @Override

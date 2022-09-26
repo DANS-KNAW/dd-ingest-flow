@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core;
 
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
+import nl.knaw.dans.ingest.core.service.BlockedTargetService;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.SingleDepositTargetedTaskSourceImpl;
 import nl.knaw.dans.ingest.core.service.TargetedTaskSource;
@@ -41,8 +42,8 @@ public class ImportArea extends AbstractIngestArea {
     private final Map<String, TargetedTaskSource<DepositImportTaskWrapper>> batches = new HashMap<>();
 
     public ImportArea(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory, DepositIngestTaskFactoryWrapper migrationTaskFactory,
-        TaskEventService taskEventService, EnqueuingService enqueuingService) {
-        super(inboxDir, outboxDir, taskFactory, taskEventService, enqueuingService);
+        TaskEventService taskEventService, BlockedTargetService blockedTargetService, EnqueuingService enqueuingService) {
+        super(inboxDir, outboxDir, taskFactory, taskEventService, blockedTargetService, enqueuingService);
         this.migrationTaskFactory = migrationTaskFactory;
     }
 

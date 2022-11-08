@@ -16,9 +16,9 @@
 package nl.knaw.dans.easy.dd2d
 
 import better.files.File
-import nl.knaw.dans.easy.dd2d.dansbag.InformationPackageType.InformationPackageType
-import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidator, InformationPackageType }
 import nl.knaw.dans.easy.dd2d.mapping.Amd
+import nl.knaw.dans.ingest.api.ValidateCommand.PackageTypeEnum
+import nl.knaw.dans.ingest.core.service.DansBagValidator
 import nl.knaw.dans.lib.dataverse.DataverseClient
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset
 
@@ -62,7 +62,7 @@ class DepositMigrationTask(deposit: Deposit,
     supportedLicenses,
     reportIdToTerm,
     outboxDir) {
-  override protected val informationPackageType: InformationPackageType = InformationPackageType.MIGRATION
+  override protected val informationPackageType: PackageTypeEnum = PackageTypeEnum.MIGRATION
 
   override protected def checkDepositType(): Try[Unit] = {
     for {

@@ -44,7 +44,7 @@ class DepositToDvDatasetMetadataMapper(deduplicate: Boolean,
                                        narcisClassification: Elem,
                                        iso1ToDataverseLanguage: Map[String, String],
                                        iso2ToDataverseLanguage: Map[String, String],
-                                       reportIdToTerm: Map[String, String],  // TODO: not necessary anymore?
+                                       reportIdToTerm: Map[String, String], // TODO: not necessary anymore?
                                       ) extends BlockCitation with DebugEnhancedLogging
 
   with BlockArchaeologySpecific
@@ -62,6 +62,7 @@ class DepositToDvDatasetMetadataMapper(deduplicate: Boolean,
   def toDataverseDataset(ddm: Node, optOtherDoiId: Option[String], optAgreements: Option[Node], optDateOfDeposit: Option[String], contactData: List[FieldMap], vaultMetadata: VaultMetadata): Try[Dataset] = Try {
     // Please, keep ordered by order in Dataverse UI as much as possible!
 
+    println(contactData)
     if (activeMetadataBlocks.contains("citation")) {
       val titles = ddm \ "profile" \ "title"
       checkRequiredField(TITLE, titles)
@@ -118,14 +119,14 @@ class DepositToDvDatasetMetadataMapper(deduplicate: Boolean,
         case node if node.label == "contributorDetails" && (node \ "author").nonEmpty =>
           (node \ "author").filterNot(DcxDaiAuthor isRightsHolder).foreach(author => addCompoundFieldMultipleValues(citationFields, CONTRIBUTOR, author, DcxDaiAuthor toContributorValueObject))
         case node if node.label == "contributorDetails" && (node \ "organization").nonEmpty =>
-          (node \ "organization").filterNot(DcxDaiOrganization inAnyOfRoles(List("RightsHolder", "Funder"))).foreach(organization => addCompoundFieldMultipleValues(citationFields, CONTRIBUTOR, organization, DcxDaiOrganization toContributorValueObject))
+          (node \ "organization").filterNot(DcxDaiOrganization inAnyOfRoles (List("RightsHolder", "Funder"))).foreach(organization => addCompoundFieldMultipleValues(citationFields, CONTRIBUTOR, organization, DcxDaiOrganization toContributorValueObject))
         case _ => // Do nothing
       }
 
       // Add contributors with role Funder as Grant Number with only an agency subfield
       contributors.foreach {
         case node if node.label == "contributorDetails" && (node \ "organization").nonEmpty =>
-          (node \ "organization").filter(DcxDaiOrganization inAnyOfRoles(List("Funder"))).foreach(organization => addCompoundFieldMultipleValues(citationFields, GRANT_NUMBER, organization, DcxDaiOrganization toGrantNumberValueObject))
+          (node \ "organization").filter(DcxDaiOrganization inAnyOfRoles (List("Funder"))).foreach(organization => addCompoundFieldMultipleValues(citationFields, GRANT_NUMBER, organization, DcxDaiOrganization toGrantNumberValueObject))
         case _ => // Do nothing
       }
       addCompoundFieldMultipleValues(citationFields, GRANT_NUMBER, (ddm \ "dcmiMetadata" \ "identifier").filter(Identifier isNwoGrantNumber), Identifier toNwoGrantNumberValue)
@@ -215,6 +216,7 @@ class DepositToDvDatasetMetadataMapper(deduplicate: Boolean,
         blocks.put(blockId, block)
       }
     }
+
     addMetadataBlock("citation", "Citation Metadata", citationFields)
     addMetadataBlock("dansRights", "Rights Metadata", rightsFields)
     addMetadataBlock("dansRelationMetadata", "Relation Metadata", relationFields)
@@ -226,6 +228,7 @@ class DepositToDvDatasetMetadataMapper(deduplicate: Boolean,
     datasetVersion.setFiles(new util.ArrayList[FileMeta]())
     val ds = new Dataset()
     ds.setDatasetVersion(datasetVersion)
+    println(f"Dataset: ${ blocks }")
     ds
   }
 

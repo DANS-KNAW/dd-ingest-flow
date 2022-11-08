@@ -17,9 +17,10 @@ package nl.knaw.dans.easy.dd2d
 
 import better.files.File
 import nl.knaw.dans.easy.dd2d.OutboxSubdir.{ FAILED, OutboxSubdir, PROCESSED, REJECTED }
-import nl.knaw.dans.easy.dd2d.dansbag.InformationPackageType.InformationPackageType
-import nl.knaw.dans.easy.dd2d.dansbag.{ DansBagValidationResult, DansBagValidator, InformationPackageType, RuleViolation }
 import nl.knaw.dans.easy.dd2d.mapping.FieldMap
+import nl.knaw.dans.ingest.api.ValidateCommand.PackageTypeEnum
+import nl.knaw.dans.ingest.api.{ ValidateOk, ValidateOkRuleViolations }
+import nl.knaw.dans.ingest.core.service.DansBagValidator
 import nl.knaw.dans.lib.dataverse.DataverseClient
 import nl.knaw.dans.lib.dataverse.model.dataset
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.major
@@ -63,7 +64,7 @@ case class DepositIngestTask(deposit: Deposit,
                              repordIdToTerm: Map[String, String],
                              outboxDir: File) extends Task[Deposit] with DebugEnhancedLogging {
   trace(deposit)
-  protected val informationPackageType: InformationPackageType = InformationPackageType.DEPOSIT
+  protected val informationPackageType: PackageTypeEnum = PackageTypeEnum.DEPOSIT
   protected val bagProfileVersion: Int = 1
 
   private val datasetMetadataMapper = new DepositToDvDatasetMetadataMapper(deduplicate, activeMetadataBlocks, narcisClassification, iso1ToDataverseLanguage, iso2ToDataverseLanguage, repordIdToTerm)
@@ -124,7 +125,7 @@ case class DepositIngestTask(deposit: Deposit,
     optDansBagValidator.map {
       dansBagValidator =>
         for {
-          validationResult <- dansBagValidator.validateBag(bagDirPath, informationPackageType, bagProfileVersion)
+          validationResult <- Try.apply(dansBagValidator.validateBag(bagDirPath.path, PackageTypeEnum.fromValue(informationPackageType.toString), bagProfileVersion))
           _ <- rejectIfInvalid(validationResult)
         } yield ()
     }.getOrElse({
@@ -133,17 +134,18 @@ case class DepositIngestTask(deposit: Deposit,
     })
   }
 
-  private def rejectIfInvalid(validationResult: DansBagValidationResult): Try[Unit] = Try {
-    if (!validationResult.`Is compliant`) throw RejectedDepositException(deposit,
+  private def rejectIfInvalid(validationResult: ValidateOk): Try[Unit] = Try {
+    if (!validationResult.getIsCompliant) throw RejectedDepositException(deposit,
       s"""
-         |Bag was not valid according to Profile Version ${ validationResult.`Profile version` }.
+         |Bag was not valid according to Profile Version ${ validationResult.getProfileVersion }.
          |Violations:
-         |${ validationResult.`Rule violations`.map(formatViolation).mkString("\n") }
+         |${ validationResult.getRuleViolations.map(formatViolation).mkString("\n") }
                       """.stripMargin)
   }
 
-  private def formatViolation(v: RuleViolation): String = v match {
-    case RuleViolation(nr, msg) => s" - [$nr] $msg"
+  private def formatViolation(v: ValidateOkRuleViolations): String = {
+    s"- [${ v.getRule }] ${ v.getViolation }"
+    //    case RuleViolation(nr, msg) => s" - [$nr] $msg"
   }
 
   private def getMetadata: Try[Dataset] = {

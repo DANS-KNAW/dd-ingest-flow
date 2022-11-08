@@ -13,16 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core;
 
-import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
-
-import java.nio.file.Path;
-
-public class SingleDepositImportTaskIterator extends AbstractDepositsImportTaskIterator {
-    public SingleDepositImportTaskIterator(Path deposit, Path outBox, DepositIngestTaskFactory taskFactory,
-        EventWriter eventWriter) {
-        super(null, outBox, taskFactory, eventWriter);
-        addTaskForDeposit(deposit);
-    }
+public enum DepositState {
+    ARCHIVED, DRAFT, FAILED, FINALIZING, INVALID, REJECTED, SUBMITTED, UPLOADED
 }

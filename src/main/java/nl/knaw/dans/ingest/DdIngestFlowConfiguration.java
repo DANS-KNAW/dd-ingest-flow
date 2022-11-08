@@ -16,12 +16,17 @@
 
 package nl.knaw.dans.ingest;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
+import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.db.DataSourceFactory;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.ValidateDansBagConfig;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.lib.util.DataverseClientFactory;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public class DdIngestFlowConfiguration extends Configuration {
 
@@ -33,6 +38,20 @@ public class DdIngestFlowConfiguration extends Configuration {
 
     private ValidateDansBagConfig validateDansBag;
     private DataSourceFactory taskEventDatabase;
+
+    @Valid
+    @NotNull
+    private JerseyClientConfiguration dansBagValidatorClient = new JerseyClientConfiguration();
+
+    @JsonProperty("dansBagValidatorClient")
+    public JerseyClientConfiguration getDansBagValidatorClient() {
+        return dansBagValidatorClient;
+    }
+
+    @JsonProperty("dansBagValidatorClient")
+    public void setDansBagValidatorClient(JerseyClientConfiguration jerseyClient) {
+        this.dansBagValidatorClient = jerseyClient;
+    }
 
     public IngestFlowConfig getIngestFlow() {
         return ingestFlow;

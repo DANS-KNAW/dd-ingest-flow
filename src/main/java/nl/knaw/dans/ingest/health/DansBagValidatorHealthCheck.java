@@ -16,11 +16,9 @@
 package nl.knaw.dans.ingest.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.easy.dd2d.dansbag.DansBagValidator;
+import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.runtime.BoxedUnit;
-import scala.util.Try;
 
 public class DansBagValidatorHealthCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(DansBagValidatorHealthCheck.class);

@@ -15,14 +15,11 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
+import nl.knaw.dans.easy.dd2d.Deposit;
 
-import java.nio.file.Path;
+public class CannotUpdateDraftDatasetException extends RuntimeException {
 
-public class SingleDepositImportTaskIterator extends AbstractDepositsImportTaskIterator {
-    public SingleDepositImportTaskIterator(Path deposit, Path outBox, DepositIngestTaskFactory taskFactory,
-        EventWriter eventWriter) {
-        super(null, outBox, taskFactory, eventWriter);
-        addTaskForDeposit(deposit);
+    public CannotUpdateDraftDatasetException(Deposit deposit) {
+        super("Latest version must be published before update-deposit can be processed");
     }
 }

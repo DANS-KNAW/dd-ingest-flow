@@ -21,18 +21,18 @@ import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import java.nio.file.Path;
 import java.util.Iterator;
 
-public class SingleDepositTargetedTaskSourceImpl implements TargetedTaskSource<DepositImportTaskWrapper> {
+public class SingleDepositTargetedTaskSourceImpl implements TargetedTaskSource<DepositIngestTask> {
     private final String name;
 
     private final Path deposit;
 
     private final Path outbox;
 
-    private final DepositIngestTaskFactoryWrapper taskFactory;
+    private final DepositIngestTaskFactory taskFactory;
 
     private final EventWriter eventWriter;
 
-    public SingleDepositTargetedTaskSourceImpl(String name, Path deposit, Path outbox, TaskEventService taskEventService, DepositIngestTaskFactoryWrapper taskFactory) {
+    public SingleDepositTargetedTaskSourceImpl(String name, Path deposit, Path outbox, TaskEventService taskEventService, DepositIngestTaskFactory taskFactory) {
         this.name = name;
         this.deposit = deposit;
         this.outbox = outbox;
@@ -41,7 +41,7 @@ public class SingleDepositTargetedTaskSourceImpl implements TargetedTaskSource<D
     }
 
     @Override
-    public Iterator<DepositImportTaskWrapper> iterator() {
+    public Iterator<DepositIngestTask> iterator() {
         return new SingleDepositImportTaskIterator(deposit, outbox, taskFactory, eventWriter);
     }
 }

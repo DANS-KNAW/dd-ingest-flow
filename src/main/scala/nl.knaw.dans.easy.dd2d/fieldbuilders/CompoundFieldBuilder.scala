@@ -27,6 +27,7 @@ class CompoundFieldBuilder(name: String, multipleValues: Boolean = true) extends
   private val values = new mutable.ListBuffer[FieldMap]
 
   def addValue(v: FieldMap): Unit = {
+    println(v)
     if (!multipleValues && values.nonEmpty) throw new IllegalArgumentException("Trying to add a second value to a single value field")
     values.append(v)
   }

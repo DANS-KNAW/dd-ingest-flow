@@ -18,12 +18,11 @@ package nl.knaw.dans.ingest.core.legacy;
 import better.files.File;
 import nl.knaw.dans.easy.dd2d.Deposit;
 import nl.knaw.dans.easy.dd2d.DepositIngestTaskFactory;
-import nl.knaw.dans.easy.dd2d.ZipFileHandler;
-import nl.knaw.dans.easy.dd2d.dansbag.DansBagValidator;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
-import nl.knaw.dans.ingest.core.config.ValidateDansBagConfig;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.EventWriter;
+import nl.knaw.dans.ingest.core.service.ZipFileHandler;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import scala.Option;
 import scala.collection.immutable.List;
@@ -59,24 +58,25 @@ public class DepositIngestTaskFactoryWrapper {
         final Map<String, String> variantToLicense = getMap(ingestFlowConfig, "license-uri-variants.csv", "Variant", "Normalized");
         final List<URI> supportedLicenses = getUriList(ingestFlowConfig, "supported-licenses.txt");
 
-        factory = new DepositIngestTaskFactory(
-            isMigration,
-            Option.apply(Pattern.compile(ingestFlowConfig.getFileExclusionPattern())),
-            new ZipFileHandler(File.apply(ingestFlowConfig.getZipWrappingTempDir())),
-            ingestFlowConfig.getDepositorRole(),
-            false,
-            ingestFlowConfig.isDeduplicate(),
-            DepositIngestTaskFactory.getActiveMetadataBlocks(dataverseClient).get(),
-            Option.apply(validator),
-            dataverseClient,
-            dataverseExtra.getPublishAwaitUnlockMaxRetries(),
-            dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
-            narcisClassification,
-            iso1ToDataverseLanguage,
-            iso2ToDataverseLanguage,
-            variantToLicense,
-            supportedLicenses,
-            reportIdToTerm);
+        factory = null;
+//        factory = new DepositIngestTaskFactory(
+//            isMigration,
+//            Option.apply(Pattern.compile(ingestFlowConfig.getFileExclusionPattern())),
+//            new ZipFileHandler(ingestFlowConfig.getZipWrappingTempDir()),
+//            ingestFlowConfig.getDepositorRole(),
+//            false,
+//            ingestFlowConfig.isDeduplicate(),
+//            DepositIngestTaskFactory.getActiveMetadataBlocks(dataverseClient).get(),
+//            Option.apply(validator),
+//            dataverseClient,
+//            dataverseExtra.getPublishAwaitUnlockMaxRetries(),
+//            dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
+//            narcisClassification,
+//            iso1ToDataverseLanguage,
+//            iso2ToDataverseLanguage,
+//            variantToLicense,
+//            supportedLicenses,
+//            reportIdToTerm);
     }
 
     private Map<String, String> getMap(IngestFlowConfig ingestFlowConfig, String mappingCsv, String keyColumn, String valueColumn) {
@@ -95,5 +95,6 @@ public class DepositIngestTaskFactoryWrapper {
     public DepositImportTaskWrapper createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) {
         return new DepositImportTaskWrapper(factory.createDepositIngestTask(new Deposit(File.apply(depositDir)), File.apply(outboxDir)), eventWriter);
     }
+
 }
 

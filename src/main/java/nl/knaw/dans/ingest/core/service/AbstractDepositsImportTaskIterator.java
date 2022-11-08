@@ -27,16 +27,16 @@ import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Stream;
 
-public abstract class AbstractDepositsImportTaskIterator implements Iterator<DepositImportTaskWrapper> {
+public abstract class AbstractDepositsImportTaskIterator implements Iterator<DepositIngestTask> {
     private static final Logger log = LoggerFactory.getLogger(AbstractDepositsImportTaskIterator.class);
-    private final LinkedBlockingDeque<DepositImportTaskWrapper> deque = new LinkedBlockingDeque<>();
+    private final LinkedBlockingDeque<DepositIngestTask> deque = new LinkedBlockingDeque<>();
     private final Path inboxDir;
     private final Path outBox;
-    private final DepositIngestTaskFactoryWrapper taskFactory;
+    private final DepositIngestTaskFactory taskFactory;
     private final EventWriter eventWriter;
 
     public AbstractDepositsImportTaskIterator(
-        Path inboxDir, Path outBox, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
+        Path inboxDir, Path outBox, DepositIngestTaskFactory taskFactory, EventWriter eventWriter) {
         this.inboxDir = inboxDir;
         this.outBox = outBox;
         this.taskFactory = taskFactory;
@@ -64,7 +64,7 @@ public abstract class AbstractDepositsImportTaskIterator implements Iterator<Dep
     }
 
     @Override
-    public DepositImportTaskWrapper next() {
+    public DepositIngestTask next() {
         try {
             return deque.take();
         }

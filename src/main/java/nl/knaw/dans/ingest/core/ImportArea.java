@@ -17,6 +17,8 @@ package nl.knaw.dans.ingest.core;
 
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
+import nl.knaw.dans.ingest.core.service.DepositIngestTask;
+import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactory;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.SingleDepositTargetedTaskSourceImpl;
 import nl.knaw.dans.ingest.core.service.TargetedTaskSource;
@@ -37,10 +39,10 @@ import java.util.stream.Stream;
 
 public class ImportArea extends AbstractIngestArea {
     private static final Logger log = LoggerFactory.getLogger(ImportArea.class);
-    private final DepositIngestTaskFactoryWrapper migrationTaskFactory;
-    private final Map<String, TargetedTaskSource<DepositImportTaskWrapper>> batches = new HashMap<>();
+    private final DepositIngestTaskFactory migrationTaskFactory;
+    private final Map<String, TargetedTaskSource<DepositIngestTask>> batches = new HashMap<>();
 
-    public ImportArea(Path inboxDir, Path outboxDir, DepositIngestTaskFactoryWrapper taskFactory, DepositIngestTaskFactoryWrapper migrationTaskFactory,
+    public ImportArea(Path inboxDir, Path outboxDir, DepositIngestTaskFactory taskFactory, DepositIngestTaskFactory migrationTaskFactory,
         TaskEventService taskEventService, EnqueuingService enqueuingService) {
         super(inboxDir, outboxDir, taskFactory, taskEventService, enqueuingService);
         this.migrationTaskFactory = migrationTaskFactory;
@@ -81,7 +83,7 @@ public class ImportArea extends AbstractIngestArea {
         validateInDir(batchInDir);
         initOutbox(batchOutDir, continuePrevious || !isBatch);
         String taskName = relativeInputDir.toString();
-        TargetedTaskSource<DepositImportTaskWrapper> taskSource;
+        TargetedTaskSource<DepositIngestTask> taskSource;
         if (isBatch) {
             taskSource = new TargetedTaskSourceImpl(taskName, batchInDir, batchOutDir, taskEventService,
                 isMigration ? migrationTaskFactory : taskFactory);

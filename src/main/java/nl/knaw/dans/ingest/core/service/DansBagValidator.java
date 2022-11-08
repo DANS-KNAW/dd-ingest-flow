@@ -13,6 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.easy.dd2d.dansbag
+package nl.knaw.dans.ingest.core.service;
 
-case class RuleViolation(rule: String, violation: String)
+import nl.knaw.dans.ingest.api.ValidateCommand.PackageTypeEnum;
+import nl.knaw.dans.ingest.api.ValidateOk;
+
+import java.nio.file.Path;
+
+public interface DansBagValidator {
+
+    void checkConnection();
+
+    ValidateOk validateBag(Path bagDir, PackageTypeEnum informationPackageType, int profileVersion);
+}

@@ -16,7 +16,7 @@
 package nl.knaw.dans.easy.dd2d
 
 import better.files.File
-import nl.knaw.dans.easy.dd2d.dansbag.DansBagValidator
+import nl.knaw.dans.ingest.core.service.DansBagValidator
 import nl.knaw.dans.lib.dataverse.DataverseClient
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.csv.{ CSVFormat, CSVParser }

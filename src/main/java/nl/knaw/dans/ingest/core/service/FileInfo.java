@@ -15,14 +15,24 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
+import lombok.Data;
+import lombok.ToString;
+import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 
 import java.nio.file.Path;
 
-public class SingleDepositImportTaskIterator extends AbstractDepositsImportTaskIterator {
-    public SingleDepositImportTaskIterator(Path deposit, Path outBox, DepositIngestTaskFactory taskFactory,
-        EventWriter eventWriter) {
-        super(null, outBox, taskFactory, eventWriter);
-        addTaskForDeposit(deposit);
+@Data
+@ToString
+public class FileInfo {
+
+    private Path path;
+    private String checksum;
+    private FileMeta metadata;
+
+    public FileInfo(Path path, String checksum, FileMeta metadata) {
+        this.path = path;
+        this.checksum = checksum;
+        this.metadata = metadata;
     }
+
 }

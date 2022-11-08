@@ -13,11 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.easy.dd2d.dansbag
+package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.easy.dd2d.dansbag.InformationPackageType.InformationPackageType
+public enum OutboxSubDir {
+    PROCESSED("processed"),
+    REJECTED("rejected"),
+    FAILED("failed");
 
-case class DansBagValidationCommand(bagLocation: String, packageType: String)
+    private String value;
 
+    OutboxSubDir(String value) {
+        this.value = value;
+    }
 
-
+    public String getValue() {
+        return value;
+    }
+}

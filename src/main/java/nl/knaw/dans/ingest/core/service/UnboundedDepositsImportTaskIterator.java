@@ -52,7 +52,7 @@ public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportT
         }
     }
 
-    public UnboundedDepositsImportTaskIterator(Path inboxDir, Path outBox, int pollingInterval, DepositIngestTaskFactoryWrapper taskFactory, EventWriter eventWriter) {
+    public UnboundedDepositsImportTaskIterator(Path inboxDir, Path outBox, int pollingInterval, DepositIngestTaskFactory taskFactory, EventWriter eventWriter) {
         super(inboxDir, outBox, taskFactory, eventWriter);
         FileAlterationObserver observer = new FileAlterationObserver(inboxDir.toFile(), f -> f.isDirectory() && f.getParentFile().equals(inboxDir.toFile()));
         observer.addListener(new EventHandler());

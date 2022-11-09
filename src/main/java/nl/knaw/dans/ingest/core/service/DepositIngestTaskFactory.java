@@ -124,8 +124,8 @@ public class DepositIngestTaskFactory {
                 dansBagValidator,
                 dataverseExtra.getPublishAwaitUnlockMaxRetries(),
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
-                outboxDir.toPath()
-            );
+                outboxDir.toPath(),
+                eventWriter);
         }
 
     }

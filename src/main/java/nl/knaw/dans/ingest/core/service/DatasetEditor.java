@@ -85,7 +85,7 @@ public abstract class DatasetEditor {
         this.objectMapper = objectMapper;
     }
 
-    public abstract String performEdit();
+    public abstract String performEdit() throws IOException, DataverseException, InterruptedException;
 
     Map<Integer, FileInfo> addFiles(String persistentId, Collection<FileInfo> fileInfos) throws IOException, DataverseException {
         var result = new HashMap<Integer, FileInfo>(fileInfos.size());
@@ -178,11 +178,22 @@ public abstract class DatasetEditor {
             var items = files.stream()
                 .filter(f -> !"easy-migration".equals(f.getDirectoryLabel()))
                 .map(f -> f.getDataFile().getId())
-                .toArray(Integer[]::new);
+                .collect(Collectors.toList());
 
-            var embargo = new Embargo(dateAvailableFormat.format(dateAvailable), "", ArrayUtils.toPrimitive(items));
+            embargoFiles(persistentId, dateAvailable, items);
+        }
+    }
+
+    void embargoFiles(String persistentId, Date dateAvailable, Collection<Integer> fileIds) throws IOException, DataverseException {
+        if (!dateAvailable.after(new Date())) {
+            log.debug("Date available in the past, no embargo: {}", dateAvailable);
+        }
+        else {
+            var api = dataverseClient.dataset(persistentId);
+            var embargo = new Embargo(dateAvailableFormat.format(dateAvailable), "",
+                ArrayUtils.toPrimitive(fileIds.toArray(Integer[]::new)));
+
             api.setEmbargo(embargo);
-
             api.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
         }
     }

@@ -34,9 +34,7 @@ import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
-import scala.Tuple2;
 import scala.collection.JavaConverters;
-import scala.collection.immutable.Map$;
 import scala.util.Try;
 import scala.xml.Node;
 
@@ -49,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -69,9 +68,11 @@ public class DepositIngestTask implements TargetedTask {
     protected final Path outboxDir;
     private final Deposit deposit;
 
+    private final EventWriter eventWriter;
+
     public DepositIngestTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Option<Pattern> fileExclusionPattern,
         ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir) {
+        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter) {
         this.datasetMetadataMapper = datasetMetadataMapper;
         this.deposit = deposit;
         this.dataverseClient = dataverseClient;
@@ -86,6 +87,7 @@ public class DepositIngestTask implements TargetedTask {
         this.publishAwaitUnlockMillisecondsBetweenRetries = publishAwaitUnlockMillisecondsBetweenRetries;
         this.publishAwaitUnlockMaxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries;
         this.outboxDir = outboxDir;
+        this.eventWriter = eventWriter;
     }
 
     protected Deposit getDeposit() {
@@ -141,7 +143,11 @@ public class DepositIngestTask implements TargetedTask {
 
     @Override
     public void writeEvent(TaskEvent.EventType eventType, TaskEvent.Result result, String message) {
+        eventWriter.write(getDepositId(), eventType, result, message);
+    }
 
+    private UUID getDepositId() {
+        return UUID.fromString(deposit.depositId());
     }
 
     void doRun() throws Exception {
@@ -155,6 +161,8 @@ public class DepositIngestTask implements TargetedTask {
         var isUpdate = (boolean) deposit.isUpdate().get(); //.equals(Boolean.box(true));
 
         String persistentId = null;
+
+        log.debug("Is update: {}", isUpdate);
 
         if (isUpdate) {
             persistentId = newDatasetUpdater(dataverseDataset).performEdit();
@@ -289,12 +297,12 @@ public class DepositIngestTask implements TargetedTask {
     }
 
     DatasetEditor newDatasetUpdater(Dataset dataset) {
-//        var tuples = variantToLicense.entrySet().stream()
-//            .map(e -> Tuple2.apply(e.getKey(), e.getValue()))
-//            .collect(Collectors.toList());
-//
-//        var scalaVariantToLicense = (scala.collection.immutable.Map<String, String>) Map$.MODULE$.apply(JavaConverters.asScalaBuffer(tuples).toSeq());
-//        var scalaSupportedLicenses = JavaConverters.asScalaBuffer(supportedLicenses).toList();
+        //        var tuples = variantToLicense.entrySet().stream()
+        //            .map(e -> Tuple2.apply(e.getKey(), e.getValue()))
+        //            .collect(Collectors.toList());
+        //
+        //        var scalaVariantToLicense = (scala.collection.immutable.Map<String, String>) Map$.MODULE$.apply(JavaConverters.asScalaBuffer(tuples).toSeq());
+        //        var scalaSupportedLicenses = JavaConverters.asScalaBuffer(supportedLicenses).toList();
         var deposit = getDeposit();
         var blocks = dataset.getDatasetVersion().getMetadataBlocks();
 
@@ -305,12 +313,12 @@ public class DepositIngestTask implements TargetedTask {
     }
 
     DatasetEditor newDatasetCreator(Dataset dataset, String depositorRole) {
-//        var tuples = variantToLicense.entrySet().stream()
-//            .map(e -> Tuple2.apply(e.getKey(), e.getValue()))
-//            .collect(Collectors.toList());
-//
-//        var scalaVariantToLicense = (scala.collection.immutable.Map<String, String>) Map$.MODULE$.apply(JavaConverters.asScalaBuffer(tuples).toSeq());
-//        var scalaSupportedLicenses = JavaConverters.asScalaBuffer(supportedLicenses).toList();
+        //        var tuples = variantToLicense.entrySet().stream()
+        //            .map(e -> Tuple2.apply(e.getKey(), e.getValue()))
+        //            .collect(Collectors.toList());
+        //
+        //        var scalaVariantToLicense = (scala.collection.immutable.Map<String, String>) Map$.MODULE$.apply(JavaConverters.asScalaBuffer(tuples).toSeq());
+        //        var scalaSupportedLicenses = JavaConverters.asScalaBuffer(supportedLicenses).toList();
         var deposit = getDeposit();
 
         return new DatasetCreator(dataverseClient, false, dataset, deposit, new ObjectMapper(), variantToLicense, supportedLicenses, publishAwaitUnlockMillisecondsBetweenRetries,
@@ -361,9 +369,6 @@ public class DepositIngestTask implements TargetedTask {
         var user = dataverseClient.admin().listSingleUser(deposit.depositorUserId()).getData();
         var contacts = createDatasetContacts(user.getDisplayName(), user.getEmail(), user.getAffiliation());
 
-        for (var x : contacts) {
-            System.out.println("X: " + x);
-        }
         return JavaConverters.asScalaBuffer(createDatasetContacts(user.getDisplayName(), user.getEmail(), user.getAffiliation())).toList();
     }
 

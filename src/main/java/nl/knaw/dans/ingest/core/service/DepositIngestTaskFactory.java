@@ -82,7 +82,7 @@ public class DepositIngestTaskFactory {
         return (scala.collection.immutable.Map<String, String>) Map$.MODULE$.apply(JavaConverters.asScalaBuffer(tuples).toSeq());
     }
 
-    public DepositIngestTask createDepositIngestTask(Deposit deposit, File outboxDir) {
+    public DepositIngestTask createDepositIngestTask(Deposit deposit, File outboxDir, EventWriter eventWriter) {
         var depositToDvDatasetMetadataMapper = new DepositToDvDatasetMetadataMapper(
             false,
             nl.knaw.dans.easy.dd2d.DepositIngestTaskFactory.getActiveMetadataBlocks(dataverseClient).get(),
@@ -108,7 +108,8 @@ public class DepositIngestTaskFactory {
                 dansBagValidator,
                 dataverseExtra.getPublishAwaitUnlockMaxRetries(),
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
-                outboxDir.toPath()
+                outboxDir.toPath(),
+                eventWriter
             );
         }
         else {
@@ -149,7 +150,7 @@ public class DepositIngestTaskFactory {
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) {
         var deposit = new Deposit(better.files.File.apply(depositDir));
-        return createDepositIngestTask(deposit, outboxDir.toFile());
+        return createDepositIngestTask(deposit, outboxDir.toFile(), eventWriter);
     }
 
     private Map<String, String> loadCsvToMap(Path path, String keyColumn, String valueColumn) throws IOException {

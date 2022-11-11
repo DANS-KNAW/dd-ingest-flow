@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 public class DepositMigrationTask extends DepositIngestTask {
     public DepositMigrationTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Option<Pattern> fileExclusionPattern,
         ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir) {
+        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter) {
 
         super(
             datasetMetadataMapper, deposit, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
@@ -54,15 +54,7 @@ public class DepositMigrationTask extends DepositIngestTask {
             throw new IllegalArgumentException("Deposit for migrated dataset MUST have deposit property identifier.doi set");
         }
 
-            /*
-            def checkMinimumFieldsForImport(): Try[Unit] = {
-                val missing = new mutable.ListBuffer[String]()
-            if (StringUtils.isBlank(dataversePid)) missing.append("dataversePid")
-            if (StringUtils.isBlank(dataverseNbn)) missing.append("dataverseNbn")
-            if (missing.nonEmpty) Failure(new RuntimeException(s"Not enough Data Vault Metadata for import deposit, missing: ${ missing.mkString(", ") }"))
-            else Success(())
-    }
-             */
+        deposit.vaultMetadata().checkMinimumFieldsForImport().get();
     }
 
     @Override

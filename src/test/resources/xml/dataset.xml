@@ -45,6 +45,11 @@
         <dct:identifier xsi:type="id-type:EASY2">easy-dataset:18335</dct:identifier>
         <dct:identifier xsi:type="id-type:EASY1">easy-dataset:18336</dct:identifier>
         <dct:identifier>easy-dataset:18337</dct:identifier>
+        <dct:identifier xsi:type="ISBN">isbn identifier 1</dct:identifier>
+        <dct:identifier xsi:type="ISSN">issn identifier 1</dct:identifier>
+        <dct:identifier xsi:type="id-type:ISBN">isbn identifier 2</dct:identifier>
+        <dct:identifier xsi:type="id-type:ISSN">issn identifier 2</dct:identifier>
+        <dct:identifier xsi:type="DAI">dai identifier</dct:identifier>
         <dct:description>Metadata description</dct:description>
         <dct:description descriptionType="TechnicalInfo">Technical metadata description</dct:description>
         <dct:modified>2015-09-08</dct:modified>
@@ -54,5 +59,38 @@
         <dct:issued>2015-09-04</dct:issued>
         <dct:valid>yes</dct:valid>
         <dct:coverage>no</dct:coverage>
+        <dct:language encodingScheme="ISO639-2" code="dut">In het Nederlands.</dct:language>
+        <dct:language encodingScheme="ISO639-1" code="dut">nld</dct:language>
+        <dct:language xsi:type="ISO639-1" code="de">not used</dct:language>
+        <dct:language xsi:type="ISO639-2" code="ger">not used</dct:language>
+        <dct:language>nld</dct:language>
+        <dct:subject>no tags subject</dct:subject>
+        <dct:subject schemeURI="https://data.cultureelerfgoed.nl/term/id/pan/PAN"
+                     subjectScheme="PAN thesaurus ideaaltypes">Broader Match: knoop
+        </dct:subject>
+        <dct:subject schemeURI="http://vocab.getty.edu/aat/"
+                     subjectScheme="Art and Architecture Thesaurus">Broader Match: button
+        </dct:subject>
+        <dcx-dai:contributorDetails>
+            <dcx-dai:author>
+                <dcx-dai:initials>J</dcx-dai:initials>
+                <dcx-dai:surname>Doe</dcx-dai:surname>
+                <dcx-dai:role>ProjectManager</dcx-dai:role>
+            </dcx-dai:author>
+        </dcx-dai:contributorDetails>
+        <dcx-dai:contributorDetails>
+            <dcx-dai:author>
+                <dcx-dai:initials>R</dcx-dai:initials>
+                <dcx-dai:surname>Smith</dcx-dai:surname>
+                <dcx-dai:role>RightsHolder</dcx-dai:role>
+            </dcx-dai:author>
+        </dcx-dai:contributorDetails>
+        <dcx-dai:contributorDetails>
+            <dcx-dai:author>
+                <dcx-dai:initials>X</dcx-dai:initials>
+                <dcx-dai:surname>Men</dcx-dai:surname>
+                <dcx-dai:role>ProjectLeader</dcx-dai:role>
+            </dcx-dai:author>
+        </dcx-dai:contributorDetails>
     </ddm:dcmiMetadata>
 </ddm:DDM>

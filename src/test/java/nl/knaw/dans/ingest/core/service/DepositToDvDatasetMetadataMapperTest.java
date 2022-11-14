@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -23,14 +24,21 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER_SCHEME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_NAME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_TYPE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_NUMBER;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,6 +47,9 @@ class DepositToDvDatasetMetadataMapperTest {
 
     private final Set<String> activeMetadataBlocks = Set.of("citation");
     private final XmlReader xmlReader = new XmlReaderImpl();
+
+    private final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
+    private final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
 
     Document readDocument(String name) throws ParserConfigurationException, IOException, SAXException {
         return xmlReader.readXmlFile(Path.of(
@@ -50,17 +61,30 @@ class DepositToDvDatasetMetadataMapperTest {
         return xmlReader.readXmlString(xml);
     }
 
+    DepositToDvDatasetMetadataMapper getMapper() {
+        return new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage);
+    }
+
+    @BeforeEach
+    void setUp() {
+        iso1ToDataverseLanguage.put("nl", "Dutch");
+        iso1ToDataverseLanguage.put("de", "German");
+
+        iso2ToDataverseLanguage.put("dut", "Dutch");
+        iso2ToDataverseLanguage.put("ger", "German");
+    }
+
     @Test
     void toDataverseDataset() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
-        mapper.toDataverseDataset(doc, null);
+//        mapper.toDataverseDataset(doc, null);
     }
 
     @Test
     void getTitles() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getTitles(doc);
@@ -77,7 +101,7 @@ class DepositToDvDatasetMetadataMapperTest {
             + "    </ddm:profile>\n"
             + "</ddm:DDM>";
 
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocumentFromString(xml);
 
         assertThrows(MissingRequiredFieldException.class, () -> mapper.getTitles(doc));
@@ -85,7 +109,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void getAlternativeTitles() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getAlternativeTitles(doc);
@@ -97,7 +121,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void getOtherIdFromDataset() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getOtherIdFromDataset(doc);
@@ -112,7 +136,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void getAuthorCreators() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getAuthorCreators(doc);
@@ -137,7 +161,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void getOrganizationCreators() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getOrganizationCreators(doc);
@@ -162,7 +186,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void getCreators() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getCreators(doc);
@@ -176,7 +200,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void getDescription() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getDescription(doc, DESCRIPTION);
@@ -190,7 +214,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void getNonTechnicalDescription() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getNonTechnicalDescription(doc, DESCRIPTION);
@@ -204,7 +228,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void getTechnicalDescription() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getTechnicalDescription(doc, DESCRIPTION);
@@ -218,7 +242,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void getOtherDescriptions() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
         var result = mapper.getOtherDescriptions(doc, DESCRIPTION);
@@ -256,22 +280,102 @@ class DepositToDvDatasetMetadataMapperTest {
         tests.put("D70100", "Business and Management");
         tests.put("D15300", "Earth and Environmental Sciences");
 
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
 
         for (var test : tests.entrySet()) {
             var result = mapper.mapNarcisClassification(test.getKey());
             assertEquals(test.getValue(), result);
         }
     }
+
     @Test
     void mapNarcisClassificationToOther() {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         assertEquals("Other", mapper.mapNarcisClassification("D99999"));
     }
 
     @Test
     void mapNarcisClassificationInvalid() {
-        var mapper = new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks);
+        var mapper = getMapper();
         assertThrows(RuntimeException.class, () -> mapper.mapNarcisClassification("INVALID"));
+    }
+
+    @Test
+    void getKeywords() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var items = mapper.getKeywords(doc);
+
+        assertThat(items)
+            .extracting(KEYWORD_VALUE)
+            .extracting("value")
+            .containsOnly("no tags subject", "knoop", "button", "nld");
+    }
+
+    @Test
+    void testGetRelatedPublication() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getRelatedPublication(doc);
+
+        assertThat(result)
+            .extracting(PUBLICATION_ID_NUMBER)
+            .extracting("value")
+            .containsOnly(
+                "isbn identifier 1",
+                "isbn identifier 2",
+                "issn identifier 1",
+                "issn identifier 2"
+            );
+
+        assertThat(result)
+            .extracting(PUBLICATION_ID_TYPE)
+            .extracting("value")
+            .containsAll(
+                List.of("ISBN", "ISSN")
+            );
+    }
+
+    @Test
+    void testGetCitationBlockLanguage() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getCitationBlockLanguage(doc, "");
+
+        assertThat(result)
+            .containsOnly("Dutch", "German");
+
+    }
+    @Test
+    void testGetProductionDate() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getProductionDate(doc);
+
+        assertThat(result)
+            .containsOnly("2012-12-01");
+
+    }
+
+    @Test
+    void testGetContributorDetails() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getContributorDetails(doc);
+
+        assertThat(result)
+            .extracting(CONTRIBUTOR_NAME)
+            .extracting("value")
+            .containsOnly("J Doe", "X Men");
+
+        assertThat(result)
+            .extracting(CONTRIBUTOR_TYPE)
+            .extracting("value")
+            .containsOnly("Project Manager", "Project Leader");
     }
 }

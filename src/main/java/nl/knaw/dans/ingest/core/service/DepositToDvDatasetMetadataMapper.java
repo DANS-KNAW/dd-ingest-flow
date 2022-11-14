@@ -20,7 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.easy.dd2d.fieldbuilders.AbstractFieldBuilder;
 import nl.knaw.dans.easy.dd2d.fieldbuilders.CompoundFieldBuilder;
 import nl.knaw.dans.easy.dd2d.fieldbuilders.PrimitiveFieldBuilder;
-import nl.knaw.dans.lib.dataverse.model.dataset.ControlledMultiValueField;
+import nl.knaw.dans.ingest.core.DatasetAuthor;
+import nl.knaw.dans.ingest.core.DatasetOrganization;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
@@ -28,6 +29,8 @@ import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -41,7 +44,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ALTERNATIVE_TITLE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR;
@@ -49,10 +54,23 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_A
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER_SCHEME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_NAME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_TYPE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD_VALUE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD_VOCABULARY;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD_VOCABULARY_URI;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_AGENCY;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PRODUCTION_DATE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_CITATION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_NUMBER;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_TYPE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_URL;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
 import static nl.knaw.dans.ingest.core.service.XmlReader.NAMESPACE_XSI;
@@ -62,6 +80,7 @@ public class DepositToDvDatasetMetadataMapper {
 
     // TODO put this somewhere else
     static Map<String, String> narcisToSubject = new HashMap<>();
+    static Map<String, String> contributoreRoleToContributorType = new HashMap<>();
 
     static {
         narcisToSubject.put("D11", "Mathematical Sciences");
@@ -82,6 +101,30 @@ public class DepositToDvDatasetMetadataMapper {
         narcisToSubject.put("E15", "Earth and Environmental Sciences");
     }
 
+    static {
+        contributoreRoleToContributorType.put("DataCurator", "Data Curator");
+        contributoreRoleToContributorType.put("DataManager", "Data Manager");
+        contributoreRoleToContributorType.put("Editor", "Editor");
+        contributoreRoleToContributorType.put("Funder", "Funder");
+        contributoreRoleToContributorType.put("HostingInstitution", "Hosting Institution");
+        contributoreRoleToContributorType.put("ProjectLeader", "Project Leader");
+        contributoreRoleToContributorType.put("ProjectManager", "Project Manager");
+        contributoreRoleToContributorType.put("Related Person", "Related Person");
+        contributoreRoleToContributorType.put("Researcher", "Researcher");
+        contributoreRoleToContributorType.put("ResearchGroup", "Research Group");
+        contributoreRoleToContributorType.put("RightsHolder", "Rights Holder");
+        contributoreRoleToContributorType.put("Sponsor", "Sponsor");
+        contributoreRoleToContributorType.put("Supervisor", "Supervisor");
+        contributoreRoleToContributorType.put("WorkPackageLeader", "Work Package Leader");
+        contributoreRoleToContributorType.put("Other", "Other");
+        contributoreRoleToContributorType.put("Producer", "Other");
+        contributoreRoleToContributorType.put("RegistrationAuthority", "Other");
+        contributoreRoleToContributorType.put("RegistrationAgency", "Other");
+        contributoreRoleToContributorType.put("Distributor", "Other");
+        contributoreRoleToContributorType.put("DataCollector", "Other");
+        contributoreRoleToContributorType.put("ContactPerson", "Other");
+    }
+
     private final XmlReader xmlReader;
     private final Set<String> activeMetadataBlocks;
     private final Map<String, AbstractFieldBuilder> citationFields = new HashMap<>();
@@ -91,9 +134,22 @@ public class DepositToDvDatasetMetadataMapper {
     private final Map<String, AbstractFieldBuilder> temporalSpatialFields = new HashMap<>();
     private final Map<String, AbstractFieldBuilder> dataVaultFields = new HashMap<>();
 
-    public DepositToDvDatasetMetadataMapper(XmlReader xmlReader, Set<String> activeMetadataBlocks) {
+    private final String SCHEME_PAN = "PAN thesaurus ideaaltypes";
+    private final String SCHEME_URI_PAN = "https://data.cultureelerfgoed.nl/term/id/pan/PAN";
+
+    private final String SCHEME_AAT = "Art and Architecture Thesaurus";
+    private final String SCHEME_URI_AAT = "http://vocab.getty.edu/aat/";
+
+    private final Pattern SUBJECT_MATCH_PREFIX = Pattern.compile("^\\s*[a-zA-Z]+\\s+Match:\\s*");
+
+    private final Map<String, String> iso1ToDataverseLanguage;
+    private final Map<String, String> iso2ToDataverseLanguage;
+
+    public DepositToDvDatasetMetadataMapper(XmlReader xmlReader, Set<String> activeMetadataBlocks, Map<String, String> iso1ToDataverseLanguage, Map<String, String> iso2ToDataverseLanguage) {
         this.xmlReader = xmlReader;
         this.activeMetadataBlocks = activeMetadataBlocks;
+        this.iso1ToDataverseLanguage = iso1ToDataverseLanguage;
+        this.iso2ToDataverseLanguage = iso2ToDataverseLanguage;
     }
 
     public Dataset toDataverseDataset(@NonNull Document ddm, @Nullable Document agreements) throws XPathExpressionException, MissingRequiredFieldException {
@@ -123,10 +179,28 @@ public class DepositToDvDatasetMetadataMapper {
             addCompoundFieldMultipleValues(citationFields, DESCRIPTION, getNonTechnicalDescription(ddm, DESCRIPTION));
             addCompoundFieldMultipleValues(citationFields, DESCRIPTION, getOtherDescriptions(ddm, DESCRIPTION));
 
-            addCvFieldMultipleValues(citationFields, SUBJECT, getAudiences(ddm, DESCRIPTION));
+            addCvFieldMultipleValues(citationFields, SUBJECT, getAudiences(ddm));
+
+            addCompoundFieldMultipleValues(citationFields, KEYWORD, getKeywords(ddm));
+            addCompoundFieldMultipleValues(citationFields, PUBLICATION, getRelatedPublication(ddm));
+            addCvFieldMultipleValues(citationFields, LANGUAGE, getCitationBlockLanguage(ddm, LANGUAGE));
+            addPrimitiveFieldSingleValue(citationFields, PRODUCTION_DATE, getProductionDate(ddm));
+
+            addCompoundFieldMultipleValues(citationFields, PRODUCTION_DATE, getContributorDetails(ddm));
         }
 
         return null;
+    }
+
+    List<String> getProductionDate(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathToStreamOfStrings(ddm, "//ddm:profile/ddm:created")
+            .map(this::formatDate)
+            .collect(Collectors.toList());
+    }
+
+    String formatDate(String text) {
+        var date = DateTime.parse(text);
+        return DateTimeFormat.forPattern("YYYY-MM-dd").print(date);
     }
 
     String mapNarcisClassification(String code) {
@@ -141,19 +215,20 @@ public class DepositToDvDatasetMetadataMapper {
             .orElse("Other");
     }
 
-    Collection<Map<String, MetadataField>> getAudiences(Document ddm, String fieldName) throws XPathExpressionException {
+    Collection<String> getAudiences(Document ddm) throws XPathExpressionException, MissingRequiredFieldException {
         var items = xmlReader.xpathToStreamOfStrings(ddm, "//ddm:profile/ddm:audience")
             .collect(Collectors.toList());
 
-        var values = new ArrayList<String>();
+        // verify all items are filled
+        var hasEmpty = items.stream().filter(StringUtils::isBlank).findFirst();
 
-        for (var item : items) {
-            values.add(mapNarcisClassification(item));
+        if (items.size() == 0 || hasEmpty.isPresent()) {
+            throw new MissingRequiredFieldException("title");
         }
 
-        var result = new HashMap<String, MetadataField>();
-        result.put(fieldName, new ControlledMultiValueField(fieldName, values));
-        return List.of(result);
+        return items.stream()
+            .map(this::mapNarcisClassification)
+            .collect(Collectors.toList());
     }
 
     Collection<Map<String, MetadataField>> getDescription(Document ddm, String fieldName) throws XPathExpressionException {
@@ -301,6 +376,97 @@ public class DepositToDvDatasetMetadataMapper {
         }
     }
 
+    private boolean isNoCvAttributedNode(Node node) {
+        var subjectScheme = node.getAttributes().getNamedItem("subjectScheme");
+        var schemeUri = node.getAttributes().getNamedItem("schemeURI");
+
+        // only return true for items that have no schemeUri and no subjectScheme
+        return (subjectScheme == null || subjectScheme.getTextContent().isEmpty()) &&
+            (schemeUri == null || schemeUri.getTextContent().isEmpty());
+    }
+
+    private boolean isTerm(Node node, String scheme, String uri) {
+        var subjectScheme = Optional.ofNullable(node.getAttributes().getNamedItem("subjectScheme"));
+        var schemeUri = Optional.ofNullable(node.getAttributes().getNamedItem("schemeURI"));
+
+        return subjectScheme.map(m -> m.getTextContent().equals(scheme)).orElse(false)
+            && schemeUri.map(m -> m.getTextContent().equals(uri)).orElse(false);
+
+    }
+
+    private boolean isPanTerm(Node node) {
+        return isTerm(node, SCHEME_PAN, SCHEME_URI_PAN);
+    }
+
+    private boolean isAatTerm(Node node) {
+        return isTerm(node, SCHEME_AAT, SCHEME_URI_AAT);
+    }
+
+    private HashMap<String, MetadataField> buildKeywordField(String value, String vocabulary, String vocabularyURI) {
+        var result = new HashMap<String, MetadataField>();
+        result.put(KEYWORD_VALUE, new PrimitiveSingleValueField(KEYWORD_VALUE, value));
+        result.put(KEYWORD_VOCABULARY, new PrimitiveSingleValueField(KEYWORD_VOCABULARY, vocabulary));
+        result.put(KEYWORD_VOCABULARY_URI, new PrimitiveSingleValueField(KEYWORD_VOCABULARY_URI, vocabularyURI));
+        return result;
+    }
+
+    private HashMap<String, MetadataField> buildNoCvAttributedResult(Node node) {
+        return buildKeywordField(node.getTextContent().trim(), "", "");
+    }
+
+    private HashMap<String, MetadataField> buildPanResult(Node node) {
+        return buildKeywordField(replaceMatch(node.getTextContent().trim()), SCHEME_PAN, SCHEME_URI_PAN);
+    }
+
+    private HashMap<String, MetadataField> buildAatResult(Node node) {
+        return buildKeywordField(replaceMatch(node.getTextContent().trim()), SCHEME_AAT, SCHEME_URI_AAT);
+    }
+
+    private String replaceMatch(String text) {
+        return SUBJECT_MATCH_PREFIX.matcher(text).replaceAll("");
+    }
+
+    private boolean isIsoLanguage(Node node) {
+        var isoLanguages = Set.of("ISO639-1", "ISO639-2");
+        var hasTypes = hasXsiType(node, "ISO639-1") || hasXsiType(node, "ISO639-2");
+
+        var attributes = Optional.ofNullable(node.getAttributes());
+        var hasEncoding = attributes.map(a -> Optional.ofNullable(a.getNamedItem("encodingScheme")))
+            .flatMap(i -> i)
+            .map(Node::getTextContent)
+            .map(isoLanguages::contains)
+            .orElse(false);
+
+        return hasTypes || hasEncoding;
+    }
+
+    Collection<Map<String, MetadataField>> getKeywords(Document ddm) throws XPathExpressionException {
+        var subjectExpression = "//ddm:dcmiMetadata/dcterms:subject";
+
+        var s1 = xmlReader.xpathToStream(ddm, subjectExpression)
+            .filter(this::isNoCvAttributedNode)
+            .map(this::buildNoCvAttributedResult);
+
+        var s2 = xmlReader.xpathToStream(ddm, subjectExpression)
+            .filter(this::isPanTerm)
+            .map(this::buildPanResult);
+
+        var s3 = xmlReader.xpathToStream(ddm, subjectExpression)
+            .filter(this::isAatTerm)
+            .map(this::buildAatResult);
+
+        // TODO extract language stuff into separate class and copy scala tests over because they are more extensive
+        var languages = xmlReader.xpathToStream(ddm, "//ddm:dcmiMetadata/dcterms:language")
+            .filter(node -> !isIsoLanguage(node))
+            .map(this::buildNoCvAttributedResult);
+
+        var stream = Stream.concat(s1, s2);
+        stream = Stream.concat(stream, s3);
+        stream = Stream.concat(stream, languages);
+
+        return stream.collect(Collectors.toList());
+    }
+
     void addPrimitiveFieldMultipleValues(Map<String, AbstractFieldBuilder> fields, String name,
         Collection<String> values) { //metadataBlockFields: mutable.HashMap[String, AbstractFieldBuilder], name: String, sourceNodes: NodeSeq, nodeTransformer: Node => Option[String] = AnyElement toText): Unit = {
 
@@ -338,14 +504,15 @@ public class DepositToDvDatasetMetadataMapper {
         }
     }
 
-    void addCvFieldMultipleValues(Map<String, AbstractFieldBuilder> fields, String name, Collection<Map<String, MetadataField>> valueObjects) {
+    void addCvFieldMultipleValues(Map<String, AbstractFieldBuilder> fields, String name, Collection<String> valueObjects) {
         var builder = fields.getOrDefault(name, new CompoundFieldBuilder(name, true));
 
         if (builder instanceof CompoundFieldBuilder) {
             var cfb = (CompoundFieldBuilder) builder;
 
             for (var o : valueObjects) {
-                cfb.addValue(o);
+                // TODO fix this
+                //                cfb.addValue(o);
             }
         }
         else {
@@ -363,44 +530,30 @@ public class DepositToDvDatasetMetadataMapper {
                 var result = new HashMap<String, MetadataField>();
 
                 try {
-                    var titles = getFirstValue(node, "dcx-dai:titles");
-                    var initials = getFirstValue(node, "dcx-dai:initials");
-                    var insertions = getFirstValue(node, "dcx-dai:insertions");
-                    var surname = getFirstValue(node, "dcx-dai:surname");
-                    var dai = getFirstValue(node, "dcx-dai:DAI");
-                    var isni = getFirstValue(node, "dcx-dai:ISNI");
-                    var orcid = getFirstValue(node, "dcx-dai:ORCID");
-                    var role = getFirstValue(node, "dcx-dai:role");
-                    var organization = getFirstValue(node, "dcx-dai:organization/dcx-dai:name");
-
-                    var name = String.join(" ", List.of(
-                            Optional.ofNullable(initials).orElse(""),
-                            Optional.ofNullable(insertions).orElse(""),
-                            Optional.ofNullable(surname).orElse("")
-                        ))
-                        .trim().replaceAll("\\s+", " ");
+                    var author = parseAuthor(node);
+                    var name = formatName(author);
 
                     if (StringUtils.isNotBlank(name)) {
                         result.put(AUTHOR_NAME, new PrimitiveSingleValueField(AUTHOR_NAME, name));
                     }
 
-                    if (orcid != null) {
+                    if (author.getOrcid() != null) {
                         result.put(AUTHOR_IDENTIFIER_SCHEME, new ControlledSingleValueField(AUTHOR_IDENTIFIER_SCHEME, "ORCID"));
-                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, orcid));
+                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, author.getOrcid()));
                     }
 
-                    else if (isni != null) {
+                    else if (author.getIsni() != null) {
                         result.put(AUTHOR_IDENTIFIER_SCHEME, new ControlledSingleValueField(AUTHOR_IDENTIFIER_SCHEME, "ISNI"));
-                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, isni));
+                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, author.getIsni()));
                     }
 
-                    else if (dai != null) {
+                    else if (author.getDai() != null) {
                         result.put(AUTHOR_IDENTIFIER_SCHEME, new ControlledSingleValueField(AUTHOR_IDENTIFIER_SCHEME, "DAI"));
-                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, dai));
+                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, author.getDai()));
                     }
 
-                    if (organization != null) {
-                        result.put(AUTHOR_AFFILIATION, new PrimitiveSingleValueField(AUTHOR_AFFILIATION, organization));
+                    if (author.getOrganization() != null) {
+                        result.put(AUTHOR_AFFILIATION, new PrimitiveSingleValueField(AUTHOR_AFFILIATION, author.getOrganization()));
                     }
 
                     return result;
@@ -422,21 +575,19 @@ public class DepositToDvDatasetMetadataMapper {
                 var result = new HashMap<String, MetadataField>();
 
                 try {
-                    var name = getFirstValue(node, "dcx-dai:name");
-                    var isni = getFirstValue(node, "dcx-dai:ISNI");
-                    var viaf = getFirstValue(node, "dcx-dai:VIAF");
+                    var organization = parseOrganization(node);
 
-                    if (StringUtils.isNotBlank(name)) {
-                        result.put(AUTHOR_NAME, new PrimitiveSingleValueField(AUTHOR_NAME, name));
+                    if (StringUtils.isNotBlank(organization.getName())) {
+                        result.put(AUTHOR_NAME, new PrimitiveSingleValueField(AUTHOR_NAME, organization.getName()));
                     }
 
-                    if (isni != null) {
+                    if (organization.getIsni() != null) {
                         result.put(AUTHOR_IDENTIFIER_SCHEME, new ControlledSingleValueField(AUTHOR_IDENTIFIER_SCHEME, "ISNI"));
-                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, isni));
+                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, organization.getIsni()));
                     }
-                    else if (viaf != null) {
+                    else if (organization.getViaf() != null) {
                         result.put(AUTHOR_IDENTIFIER_SCHEME, new ControlledSingleValueField(AUTHOR_IDENTIFIER_SCHEME, "VIAF"));
-                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, viaf));
+                        result.put(AUTHOR_IDENTIFIER, new PrimitiveSingleValueField(AUTHOR_IDENTIFIER, organization.getViaf()));
                     }
 
                     return result;
@@ -490,4 +641,180 @@ public class DepositToDvDatasetMetadataMapper {
             })
             .collect(Collectors.toList());
     }
+
+    private boolean hasXsiType(Node node, String xsiType) {
+        var attributes = node.getAttributes();
+
+        if (attributes == null) {
+            return false;
+        }
+
+        return Optional.ofNullable(attributes.getNamedItemNS(NAMESPACE_XSI, "type"))
+            .map(item -> {
+                var text = item.getTextContent();
+                return xsiType.equals(text) || text.endsWith(":" + xsiType);
+            })
+            .orElse(false);
+    }
+
+    Collection<Map<String, MetadataField>> getRelatedPublication(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStream(ddm,
+                "//ddm:dcmiMetadata/dcterms:identifier[@xsi:type]")
+            .filter(node -> hasXsiType(node, "ISBN") || hasXsiType(node, "ISSN"))
+            .map(node -> {
+                var idType = Optional.ofNullable(node.getAttributes().getNamedItemNS(NAMESPACE_XSI, "type"))
+                    .map(item -> {
+                        var text = item.getTextContent();
+                        return text.substring(text.indexOf(':') + 1);
+                    })
+                    .orElse("");
+
+                var item = node.getTextContent();
+                var result = new HashMap<String, MetadataField>();
+                result.put(PUBLICATION_CITATION, new PrimitiveSingleValueField(PUBLICATION_CITATION, ""));
+                result.put(PUBLICATION_ID_NUMBER, new PrimitiveSingleValueField(PUBLICATION_ID_NUMBER, item));
+                result.put(PUBLICATION_URL, new PrimitiveSingleValueField(PUBLICATION_URL, ""));
+                result.put(PUBLICATION_ID_TYPE, new ControlledSingleValueField(PUBLICATION_ID_TYPE, idType));
+
+                return result;
+            })
+            .collect(Collectors.toList());
+
+    }
+
+    Collection<String> getCitationBlockLanguage(Document ddm, String name) throws XPathExpressionException {
+        return xmlReader.xpathsToStream(ddm,
+                "//ddm:dcmiMetadata/dcterms:language")
+            .map(node -> {
+                if (isIsoLanguage(node)) {
+                    return Optional.ofNullable(node.getAttributes().getNamedItem("code"))
+                        .map(code -> isoToDataverse(code.getTextContent()))
+                        .orElse("");
+                }
+                else {
+                    return "";
+                }
+            })
+            .filter(StringUtils::isNotBlank)
+            .collect(Collectors.toList());
+    }
+
+    private String isoToDataverse(String code) {
+        if (code.length() == 2) {
+            return iso1ToDataverseLanguage.get(code);
+        }
+
+        return iso2ToDataverseLanguage.get(code);
+    }
+
+    private DatasetAuthor parseAuthor(Node node) throws XPathExpressionException {
+        return DatasetAuthor.builder()
+            .titles(getFirstValue(node, "dcx-dai:titles"))
+            .initials(getFirstValue(node, "dcx-dai:initials"))
+            .insertions(getFirstValue(node, "dcx-dai:insertions"))
+            .surname(getFirstValue(node, "dcx-dai:surname"))
+            .dai(getFirstValue(node, "dcx-dai:DAI"))
+            .isni(getFirstValue(node, "dcx-dai:ISNI"))
+            .orcid(getFirstValue(node, "dcx-dai:ORCID"))
+            .role(getFirstValue(node, "dcx-dai:role"))
+            .organization(getFirstValue(node, "dcx-dai:organization/dcx-dai:name"))
+            .build();
+    }
+
+    private DatasetOrganization parseOrganization(Node node) throws XPathExpressionException {
+        return DatasetOrganization.builder()
+            .name(getFirstValue(node, "dcx-dai:name"))
+            .role(getFirstValue(node, "dcx-dai:role"))
+            .isni(getFirstValue(node, "dcx-dai:ISNI"))
+            .viaf(getFirstValue(node, "dcx-dai:VIAF"))
+            .build();
+    }
+
+    private String formatName(DatasetAuthor author) {
+        return String.join(" ", List.of(
+                Optional.ofNullable(author.getInitials()).orElse(""),
+                Optional.ofNullable(author.getInsertions()).orElse(""),
+                Optional.ofNullable(author.getSurname()).orElse("")
+            ))
+            .trim().replaceAll("\\s+", " ");
+    }
+
+    Collection<Map<String, MetadataField>> getContributorDetails(Document ddm) throws XPathExpressionException {
+        var nodes = xmlReader.xpathsToStream(ddm, "//ddm:dcmiMetadata/dcx-dai:contributorDetails/dcx-dai:author | //ddm:dcmiMetadata/dcx-dai:contributorDetails/dcx-dai:organization")
+            .filter(node -> {
+                // if author, it should not be a rightsholder
+                if ("author".equals(node.getLocalName())) {
+
+                    try {
+                        var author = parseAuthor(node);
+                        return !StringUtils.contains(author.getRole(), "RightsHolder");
+                    }
+                    catch (XPathExpressionException e) {
+                        return false;
+                    }
+                }
+
+                return true;
+            })
+            .filter(node -> {
+                if ("organization".equals(node.getLocalName())) {
+                    try {
+                        var organization = parseOrganization(node);
+                        return !Set.of("RightsHolder", "Funder").contains(organization.getRole());
+                    }
+                    catch (XPathExpressionException e) {
+                        return false;
+                    }
+                }
+                return true;
+            })
+            .collect(Collectors.toList());
+
+        var result = new ArrayList<Map<String, MetadataField>>();
+
+        for (var node : nodes) {
+            var item = new HashMap<String, MetadataField>();
+
+            if ("author".equals(node.getLocalName())) {
+                var author = parseAuthor(node);
+                var name = formatName(author);
+
+                if (StringUtils.isNotBlank(name)) {
+                    var completeName = author.getOrganization() != null
+                        ? String.format("%s (%s)", name, author.getOrganization())
+                        : name;
+
+                    item.put(CONTRIBUTOR_NAME, new PrimitiveSingleValueField(CONTRIBUTOR_NAME, completeName));
+                }
+                else if (StringUtils.isNotBlank(author.getOrganization())) {
+                    item.put(CONTRIBUTOR_NAME, new PrimitiveSingleValueField(CONTRIBUTOR_NAME, author.getOrganization()));
+                }
+
+                if (StringUtils.isNotBlank(author.getRole())) {
+                    var value = contributoreRoleToContributorType.getOrDefault(author.getRole(), "Other");
+                    item.put(CONTRIBUTOR_TYPE, new PrimitiveSingleValueField(CONTRIBUTOR_TYPE, value));
+                }
+            }
+
+            else if ("organization".equals(node.getLocalName())) {
+                var organization = parseOrganization(node);
+
+                if (StringUtils.isNotBlank(organization.getName())) {
+                    item.put(CONTRIBUTOR_NAME, new PrimitiveSingleValueField(CONTRIBUTOR_NAME, organization.getName()));
+                }
+
+                if (StringUtils.isNotBlank(organization.getRole())) {
+                    var value = contributoreRoleToContributorType.getOrDefault(organization.getRole(), "Other");
+                    item.put(CONTRIBUTOR_TYPE, new PrimitiveSingleValueField(CONTRIBUTOR_TYPE, value));
+                }
+            }
+
+            if (item.keySet().size() > 0) {
+                result.add(item);
+            }
+        }
+
+        return result;
+    }
+
 }

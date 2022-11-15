@@ -33,13 +33,15 @@
         </dcx-dai:creatorDetails>
         <ddm:created>2012-12</ddm:created>
         <ddm:available>2013-05-01</ddm:available>
-        <ddm:audience>D20000</ddm:audience>
+        <ddm:audience xml:lang="nl">D20000</ddm:audience>
         <ddm:audience>D24000</ddm:audience>
-        <ddm:accessRights>OPEN_ACCESS_FOR_REGISTERED_USERS</ddm:accessRights>
+        <ddm:accessRights xml:lang="en">OPEN_ACCESS_FOR_REGISTERED_USERS</ddm:accessRights>
     </ddm:profile>
     <ddm:dcmiMetadata>
         <dct:license xsi:type="dct:URI">http://creativecommons.org/licenses/by-sa/4.0</dct:license>
         <dct:rightsHolder>Mr. Rights</dct:rightsHolder>
+        <dct:source>HTTP</dct:source>
+        <dct:source>FTP</dct:source>
         <dct:title>Alt title 1</dct:title>
         <dct:alternative>Alt title 2</dct:alternative>
         <dct:identifier xsi:type="id-type:EASY2">easy-dataset:18335</dct:identifier>
@@ -50,6 +52,9 @@
         <dct:identifier xsi:type="id-type:ISBN">isbn identifier 2</dct:identifier>
         <dct:identifier xsi:type="id-type:ISSN">issn identifier 2</dct:identifier>
         <dct:identifier xsi:type="DAI">dai identifier</dct:identifier>
+        <dct:identifier xsi:type="id-type:NWO-PROJECTNR">12345</dct:identifier>
+        <dct:identifier xsi:type="NWO-PROJECTNR">6789</dct:identifier>
+        <dct:identifier xsi:type="ARCHIS-ZAAK-IDENTIFICATIE" xml:type="ARCHIS-MONUMENT">6789</dct:identifier>
         <dct:description>Metadata description</dct:description>
         <dct:description descriptionType="TechnicalInfo">Technical metadata description</dct:description>
         <dct:modified>2015-09-08</dct:modified>
@@ -58,6 +63,8 @@
         <dct:dateCopyrighted>2015-09-05</dct:dateCopyrighted>
         <dct:issued>2015-09-04</dct:issued>
         <dct:valid>yes</dct:valid>
+        <dct:publisher>Synthegra</dct:publisher>
+        <dct:publisher>DANS</dct:publisher>
         <dct:coverage>no</dct:coverage>
         <dct:language encodingScheme="ISO639-2" code="dut">In het Nederlands.</dct:language>
         <dct:language encodingScheme="ISO639-1" code="dut">nld</dct:language>
@@ -88,9 +95,37 @@
         <dcx-dai:contributorDetails>
             <dcx-dai:author>
                 <dcx-dai:initials>X</dcx-dai:initials>
-                <dcx-dai:surname>Men</dcx-dai:surname>
+                <dcx-dai:surname xml:lang="de">Men</dcx-dai:surname>
                 <dcx-dai:role>ProjectLeader</dcx-dai:role>
             </dcx-dai:author>
         </dcx-dai:contributorDetails>
+
+        <dcx-dai:contributorDetails>
+            <dcx-dai:organization>
+                <dcx-dai:name xml:lang="en">Anti-Vampire League</dcx-dai:name>
+                <dcx-dai:role>
+                    Funder
+                </dcx-dai:role>
+                <dcx-dai:ISNI>http://isni.org/isni/0000000121032683</dcx-dai:ISNI>
+            </dcx-dai:organization>
+            <dcx-dai:organization>
+                <dcx-dai:name xml:lang="en">Important</dcx-dai:name>
+                <dcx-dai:role>Important guy</dcx-dai:role>
+                <dcx-dai:ISNI>http://isni.org/isni/0000000121032684</dcx-dai:ISNI>
+            </dcx-dai:organization>
+        </dcx-dai:contributorDetails>
+        <ddm:datesOfCollection>2022-01-01/2022-02-01</ddm:datesOfCollection>
+        <ddm:datesOfCollection>
+            2021-01-01/2021-02-01
+        </ddm:datesOfCollection>
+        <ddm:datesOfCollection>
+            2020-01-01/
+        </ddm:datesOfCollection>
+        <ddm:datesOfCollection>
+            /2019-02-01
+        </ddm:datesOfCollection>
+
+        <ddm:relation href="https://knaw.nl/">Relation</ddm:relation>
+        <ddm:conformsTo>Conforms To</ddm:conformsTo>
     </ddm:dcmiMetadata>
 </ddm:DDM>

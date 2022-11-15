@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 public interface XmlReader {
 
+    String NAMESPACE_XML = "http://www.w3.org/XML/1998/namespace";
     String NAMESPACE_DC = "http://purl.org/dc/elements/1.1/";
     String NAMESPACE_DCX_DAI = "http://easy.dans.knaw.nl/schemas/dcx/dai/";
     String NAMESPACE_DDM = "http://easy.dans.knaw.nl/schemas/md/ddm/";

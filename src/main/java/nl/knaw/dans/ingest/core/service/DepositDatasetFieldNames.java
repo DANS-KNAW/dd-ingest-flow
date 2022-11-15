@@ -94,4 +94,28 @@ public class DepositDatasetFieldNames {
     public final static String ORIGIN_OF_SOURCES = "originOfSources";
     public final static String CHARACTERISTICS_OF_SOURCES = "characteristicOfSources";
     public final static String ACCESS_TO_SOURCES = "accessToSources";
+
+    public final static String RIGHTS_HOLDER = "dansRightsHolder";
+    public final static String PERSONAL_DATA_PRESENT = "dansPersonalDataPresent";
+    public final static String LANGUAGE_OF_METADATA = "dansMetadataLanguage";
+    public final static String AUDIENCE = "dansAudience";
+
+    public final static String COLLECTION = "dansCollection";
+
+    public final static String RELATION = "dansRelation";
+    public final static String RELATION_TYPE = "dansRelationType";
+    public final static String RELATION_URI = "dansRelationURI";
+    public final static String RELATION_TEXT = "dansRelationText";
+
+    public final static String ARCHIS_ZAAK_ID = "dansArchisZaakId";
+    public final static String ARCHIS_NUMBER = "dansArchisNumber";
+    public final static String ARCHIS_NUMBER_TYPE = "dansArchisNumberType";
+    public final static String ARCHIS_NUMBER_ID = "dansArchisNumberId";
+    public final static String ABR_RAPPORT_TYPE = "dansAbrRapportType";
+    public final static String ABR_RAPPORT_NUMMER = "dansAbrRapportNummer";
+    public final static String ABR_VERWERVINGSWIJZE = "dansAbrVerwervingswijze";
+    public final static String ABR_COMPLEX = "dansAbrComplex";
+    public final static String ABR_ARTIFACT = "dansAbrArtifact";
+    public final static String ABR_PERIOD = "dansAbrPeriod";
+
 }

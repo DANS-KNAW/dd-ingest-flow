@@ -17,9 +17,11 @@ package nl.knaw.dans.ingest.core;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 @Builder
+@ToString
 public class DatasetOrganization {
     private String name;
     private String role;

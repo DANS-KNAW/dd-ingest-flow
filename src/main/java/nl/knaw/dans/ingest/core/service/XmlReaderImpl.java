@@ -50,6 +50,7 @@ public class XmlReaderImpl implements XmlReader {
             .newXPath();
 
         final var namespaceMap = Map.of(
+            "xml", NAMESPACE_XML,
             "dc", NAMESPACE_DC,
             "dcx-dai", NAMESPACE_DCX_DAI,
             "ddm", NAMESPACE_DDM,

@@ -34,7 +34,12 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_I
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_NAME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_TYPE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_COLLECTION_END;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_COLLECTION_START;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTOR_NAME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER_AGENCY;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_NUMBER;
@@ -72,14 +77,14 @@ class DepositToDvDatasetMetadataMapperTest {
 
         iso2ToDataverseLanguage.put("dut", "Dutch");
         iso2ToDataverseLanguage.put("ger", "German");
+
+        XPathEvaluator.init(xmlReader);
     }
 
     @Test
     void toDataverseDataset() throws Exception {
         var mapper = getMapper();
         var doc = readDocument("dataset.xml");
-
-//        mapper.toDataverseDataset(doc, null);
     }
 
     @Test
@@ -263,44 +268,6 @@ class DepositToDvDatasetMetadataMapperTest {
     }
 
     @Test
-    void mapNarcisClassification() {
-        var tests = new HashMap<String, String>();
-        tests.put("D11000", "Mathematical Sciences");
-        tests.put("D12300", "Physics");
-        tests.put("D13200", "Chemistry");
-        tests.put("D14320", "Engineering");
-        tests.put("D16000", "Computer and Information Science");
-        tests.put("D17000", "Astronomy and Astrophysics");
-        tests.put("D18220", "Agricultural Sciences");
-        tests.put("D22200", "Medicine, Health and Life Sciences");
-        tests.put("D36000", "Arts and Humanities");
-        tests.put("D41100", "Law");
-        tests.put("D65000", "Social Sciences");
-        tests.put("D42100", "Social Sciences");
-        tests.put("D70100", "Business and Management");
-        tests.put("D15300", "Earth and Environmental Sciences");
-
-        var mapper = getMapper();
-
-        for (var test : tests.entrySet()) {
-            var result = mapper.mapNarcisClassification(test.getKey());
-            assertEquals(test.getValue(), result);
-        }
-    }
-
-    @Test
-    void mapNarcisClassificationToOther() {
-        var mapper = getMapper();
-        assertEquals("Other", mapper.mapNarcisClassification("D99999"));
-    }
-
-    @Test
-    void mapNarcisClassificationInvalid() {
-        var mapper = getMapper();
-        assertThrows(RuntimeException.class, () -> mapper.mapNarcisClassification("INVALID"));
-    }
-
-    @Test
     void getKeywords() throws Exception {
         var mapper = getMapper();
         var doc = readDocument("dataset.xml");
@@ -349,6 +316,7 @@ class DepositToDvDatasetMetadataMapperTest {
             .containsOnly("Dutch", "German");
 
     }
+
     @Test
     void testGetProductionDate() throws Exception {
         var mapper = getMapper();
@@ -371,11 +339,109 @@ class DepositToDvDatasetMetadataMapperTest {
         assertThat(result)
             .extracting(CONTRIBUTOR_NAME)
             .extracting("value")
-            .containsOnly("J Doe", "X Men");
+            .containsOnly("J Doe", "X Men", "Important");
 
         assertThat(result)
             .extracting(CONTRIBUTOR_TYPE)
             .extracting("value")
-            .containsOnly("Project Manager", "Project Leader");
+            .containsOnly("Project Manager", "Project Leader", "Other");
+    }
+
+    @Test
+    void testGetFunderDetails() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getFunderDetails(doc);
+
+        assertThat(result)
+            .extracting(GRANT_NUMBER_AGENCY)
+            .extracting("value")
+            .containsOnly("Anti-Vampire League");
+    }
+
+    @Test
+    void testGetNwoGrantNumber() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getNwoGrantNumbers(doc);
+
+        assertThat(result)
+            .extracting(GRANT_NUMBER_VALUE)
+            .extracting("value")
+            .containsOnly("12345", "6789");
+    }
+
+    @Test
+    void testGetPublishers() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getPublishers(doc);
+
+        assertThat(result)
+            .extracting(DISTRIBUTOR_NAME)
+            .extracting("value")
+            .containsOnly("Synthegra");
+    }
+
+    @Test
+    void testGetDistributionDate() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getDistributionDate(doc);
+
+        assertThat(result)
+            .containsOnly("2013-05-01");
+    }
+
+    @Test
+    void testGetDatesOfCollection() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getDatesOfCollection(doc);
+
+        assertThat(result)
+            .extracting(DATE_OF_COLLECTION_START)
+            .extracting("value")
+            .containsOnly("2022-01-01", "2021-01-01", "2020-01-01", "");
+
+        assertThat(result)
+            .extracting(DATE_OF_COLLECTION_END)
+            .extracting("value")
+            .containsOnly("2022-02-01", "2021-02-01", "", "2019-02-01");
+    }
+
+    @Test
+    void testGetDatasources() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getDataSources(doc);
+        assertThat(result)
+            .containsOnly("FTP", "HTTP");
+    }
+
+    @Test
+    void testGetRightsHolders() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getRightsHolders(doc);
+        assertThat(result)
+            .containsOnly("Mr. Rights");
+    }
+
+    @Test
+    void testGetLanguageAttributes() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getLanguageAttributes(doc);
+        assertThat(result)
+            .containsOnly("en", "la", "nl", "de");
     }
 }

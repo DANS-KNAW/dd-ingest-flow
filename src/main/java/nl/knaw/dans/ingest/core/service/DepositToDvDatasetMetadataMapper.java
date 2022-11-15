@@ -15,13 +15,20 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import com.google.common.collect.Comparators;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.easy.dd2d.fieldbuilders.AbstractFieldBuilder;
 import nl.knaw.dans.easy.dd2d.fieldbuilders.CompoundFieldBuilder;
 import nl.knaw.dans.easy.dd2d.fieldbuilders.PrimitiveFieldBuilder;
 import nl.knaw.dans.ingest.core.DatasetAuthor;
 import nl.knaw.dans.ingest.core.DatasetOrganization;
+import nl.knaw.dans.ingest.core.service.mapping.AbrReportType;
+import nl.knaw.dans.ingest.core.service.mapping.Audience;
+import nl.knaw.dans.ingest.core.service.mapping.DcxDaiAuthor;
+import nl.knaw.dans.ingest.core.service.mapping.DcxDaiOrganization;
+import nl.knaw.dans.ingest.core.service.mapping.Identifier;
+import nl.knaw.dans.ingest.core.service.mapping.InCollection;
+import nl.knaw.dans.ingest.core.service.mapping.Language;
+import nl.knaw.dans.ingest.core.service.mapping.Relation;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
@@ -48,20 +55,43 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_RAPPORT_NUMMER;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_RAPPORT_TYPE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_VERWERVINGSWIJZE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ALTERNATIVE_TITLE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ARCHIS_NUMBER;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ARCHIS_ZAAK_ID;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUDIENCE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_AFFILIATION;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER_SCHEME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.COLLECTION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_NAME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_TYPE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATA_SOURCES;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_COLLECTION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_COLLECTION_END;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_COLLECTION_START;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTION_DATE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTOR;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTOR_ABBREVIATION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTOR_AFFILIATION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTOR_LOGO_URL;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTOR_NAME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTOR_URL;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER_AGENCY;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD_VOCABULARY;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD_VOCABULARY_URI;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE_OF_METADATA;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_AGENCY;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
@@ -71,6 +101,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICAT
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_NUMBER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_TYPE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_URL;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_HOLDER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
 import static nl.knaw.dans.ingest.core.service.XmlReader.NAMESPACE_XSI;
@@ -78,28 +109,7 @@ import static nl.knaw.dans.ingest.core.service.XmlReader.NAMESPACE_XSI;
 @Slf4j
 public class DepositToDvDatasetMetadataMapper {
 
-    // TODO put this somewhere else
-    static Map<String, String> narcisToSubject = new HashMap<>();
     static Map<String, String> contributoreRoleToContributorType = new HashMap<>();
-
-    static {
-        narcisToSubject.put("D11", "Mathematical Sciences");
-        narcisToSubject.put("D12", "Physics");
-        narcisToSubject.put("D13", "Chemistry");
-        narcisToSubject.put("D14", "Engineering");
-        narcisToSubject.put("D16", "Computer and Information Science");
-        narcisToSubject.put("D17", "Astronomy and Astrophysics");
-        narcisToSubject.put("D18", "Agricultural Sciences");
-        narcisToSubject.put("D2", "Medicine, Health and Life Sciences");
-        narcisToSubject.put("D3", "Arts and Humanities");
-        narcisToSubject.put("D41", "Law");
-        narcisToSubject.put("D5", "Social Sciences");
-        narcisToSubject.put("D6", "Social Sciences");
-        narcisToSubject.put("D42", "Social Sciences");
-        narcisToSubject.put("D7", "Business and Management");
-        narcisToSubject.put("D15", "Earth and Environmental Sciences");
-        narcisToSubject.put("E15", "Earth and Environmental Sciences");
-    }
 
     static {
         contributoreRoleToContributorType.put("DataCurator", "Data Curator");
@@ -142,6 +152,7 @@ public class DepositToDvDatasetMetadataMapper {
 
     private final Pattern SUBJECT_MATCH_PREFIX = Pattern.compile("^\\s*[a-zA-Z]+\\s+Match:\\s*");
 
+    private final Pattern DATES_OF_COLLECTION_PATTERN = Pattern.compile("^(.*)/(.*)$");
     private final Map<String, String> iso1ToDataverseLanguage;
     private final Map<String, String> iso2ToDataverseLanguage;
 
@@ -179,17 +190,132 @@ public class DepositToDvDatasetMetadataMapper {
             addCompoundFieldMultipleValues(citationFields, DESCRIPTION, getNonTechnicalDescription(ddm, DESCRIPTION));
             addCompoundFieldMultipleValues(citationFields, DESCRIPTION, getOtherDescriptions(ddm, DESCRIPTION));
 
-            addCvFieldMultipleValues(citationFields, SUBJECT, getAudiences(ddm));
+            addCvFieldMultipleValues(citationFields, SUBJECT, getAudiencesDeprecated(ddm));
 
             addCompoundFieldMultipleValues(citationFields, KEYWORD, getKeywords(ddm));
             addCompoundFieldMultipleValues(citationFields, PUBLICATION, getRelatedPublication(ddm));
             addCvFieldMultipleValues(citationFields, LANGUAGE, getCitationBlockLanguage(ddm, LANGUAGE));
             addPrimitiveFieldSingleValue(citationFields, PRODUCTION_DATE, getProductionDate(ddm));
 
-            addCompoundFieldMultipleValues(citationFields, PRODUCTION_DATE, getContributorDetails(ddm));
+            addCompoundFieldMultipleValues(citationFields, CONTRIBUTOR, getContributorDetails(ddm));
+            addCompoundFieldMultipleValues(citationFields, GRANT_NUMBER, getFunderDetails(ddm));
+            addCompoundFieldMultipleValues(citationFields, GRANT_NUMBER, getNwoGrantNumbers(ddm));
+
+            addCompoundFieldMultipleValues(citationFields, DISTRIBUTOR, getPublishers(ddm));
+            addPrimitiveFieldSingleValue(citationFields, DISTRIBUTION_DATE, getDistributionDate(ddm));
+
+            // TODO add date of deposit from arguments
+            // TODO: from scala: what to set dateOfDeposit to for SWORD or multi-deposits? Take from deposit.properties?
+            //            addPrimitiveFieldSingleValue(citationFields, DATE_OF_DEPOSIT, optDateOfDeposit)
+
+            addCompoundFieldMultipleValues(citationFields, DATE_OF_COLLECTION, getDatesOfCollection(ddm));
+            addPrimitiveFieldMultipleValues(citationFields, DATA_SOURCES, getDataSources(ddm));
+
+        }
+        else {
+            throw new IllegalStateException("Metadatablock citation should always be active");
+        }
+
+        if (activeMetadataBlocks.contains("dansRights")) {
+            // TODO this bit
+            //            checkRequiredField(RIGHTS_HOLDER, ddm \ "dcmiMetadata" \ "rightsHolder")
+            addPrimitiveFieldMultipleValues(rightsFields, RIGHTS_HOLDER, getRightsHolders(ddm));
+
+            // TODO check how this works
+            //            OptionExtensions(optAgreements.map { agreements =>
+            //                addCvFieldSingleValue(rightsFields, PERSONAL_DATA_PRESENT, agreements \ "personalDataStatement", PersonalStatement toHasPersonalDataValue)
+            //            }).doIfNone(() => addCvFieldSingleValue(rightsFields, PERSONAL_DATA_PRESENT, "Unknown"))
+
+            addPrimitiveFieldMultipleValues(rightsFields, RIGHTS_HOLDER, getContributorDetailsAuthors(ddm)
+                .filter(DcxDaiAuthor::isRightsHolder)
+                .map(DcxDaiAuthor::toRightsHolder)
+                .collect(Collectors.toList()));
+
+            addPrimitiveFieldMultipleValues(rightsFields, RIGHTS_HOLDER, getContributorDetailsOrganizations(ddm)
+                .filter(DcxDaiOrganization::isRightsHolder)
+                .map(DcxDaiOrganization::toRightsHolder)
+                .collect(Collectors.toList()));
+
+            addCvFieldMultipleValues(rightsFields, LANGUAGE_OF_METADATA, getLanguageAttributes(ddm)
+                .map(n -> Language.isoToDataverse(n, iso1ToDataverseLanguage, iso2ToDataverseLanguage))
+                .collect(Collectors.toList()));
+        }
+
+        if (activeMetadataBlocks.contains("dansRelationMetadata")) {
+            addPrimitiveFieldMultipleValues(relationFields, AUDIENCE, getAudiences(ddm)
+                .map(Audience::toNarcisTerm)
+                .collect(Collectors.toList()));
+
+            addPrimitiveFieldMultipleValues(relationFields, COLLECTION, getInCollections(ddm)
+                .map(InCollection::toCollection)
+                .collect(Collectors.toList()));
+
+            addCompoundFieldMultipleValues(relationFields, COLLECTION, getRelations(ddm)
+                .filter(Relation::isRelation)
+                .map(Relation::toRelationObject)
+                .collect(Collectors.toList()));
+        }
+
+        if (activeMetadataBlocks.contains("dansArchaeologyMetadata")) {
+            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ARCHIS_ZAAK_ID, getIdentifiers(ddm)
+                .filter(Identifier::isArchisZaakId)
+                .map(Identifier::toArchisZaakId)
+                .collect(Collectors.toList()));
+
+            addCompoundFieldMultipleValues(archaeologySpecificFields, ARCHIS_NUMBER, getIdentifiers(ddm)
+                .filter(Identifier::isArchisZaakId)
+                .map(Identifier::toArchisNumberValue)
+                .collect(Collectors.toList()));
+
+            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ABR_RAPPORT_TYPE, getReportNumbers(ddm)
+                .filter(AbrReportType::isAbrReportType)
+                .map(AbrReportType::toAbrRapportType)
+                .collect(Collectors.toList()));
+
+            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ABR_RAPPORT_NUMMER, getReportNumbers(ddm)
+                .map(Node::getTextContent)
+                .collect(Collectors.toList()));
+
+//            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ABR_VERWERVINGSWIJZE, getAcquisitionMethods(ddm)
+//                .map(Node::getTextContent)
+//                .collect(Collectors.toList()));
         }
 
         return null;
+    }
+
+    private Stream<Node> getAcquisitionMethods(Document ddm) {
+        return null;
+    }
+
+    Stream<Node> getReportNumbers(Document ddm) throws XPathExpressionException {
+        // TODO verify namespace
+        return xmlReader.xpathToStream(ddm,
+            "//ddm:dcmiMetadata/ddm:reportNumber");
+    }
+
+    Stream<Node> getRelations(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathToStream(ddm,
+            "//ddm:dcmiMetadata//*");
+    }
+
+    Stream<Node> getInCollections(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathToStream(ddm,
+            "//ddm:dcmiMetadata/ddm:inCollection");
+    }
+
+    Stream<String> getLanguageAttributes(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStreamOfStrings(ddm, "//ddm:profile//@xml:lang | //ddm:dcmiMetadata//@xml:lang");
+    }
+
+    Stream<Node> getContributorDetailsOrganizations(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStream(ddm,
+            "//ddm:dcmiMetadata/dcx-dai:contributorDetails/dcx-dai:organization");
+    }
+
+    Stream<Node> getContributorDetailsAuthors(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStream(ddm,
+            "//ddm:dcmiMetadata/dcx-dai:contributorDetails/dcx-dai:author");
     }
 
     List<String> getProductionDate(Document ddm) throws XPathExpressionException {
@@ -203,19 +329,11 @@ public class DepositToDvDatasetMetadataMapper {
         return DateTimeFormat.forPattern("YYYY-MM-dd").print(date);
     }
 
-    String mapNarcisClassification(String code) {
-        if (!code.matches("^[D|E]\\d{5}$")) {
-            throw new RuntimeException("NARCIS classification code incorrectly formatted");
-        }
-
-        return narcisToSubject.keySet().stream()
-            .filter(code::startsWith)
-            .max((a, b) -> Comparators.max(a.length(), b.length()))
-            .map(narcisToSubject::get)
-            .orElse("Other");
+    Stream<String> getAudiences(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathToStreamOfStrings(ddm, "//ddm:profile/ddm:audience");
     }
 
-    Collection<String> getAudiences(Document ddm) throws XPathExpressionException, MissingRequiredFieldException {
+    Collection<String> getAudiencesDeprecated(Document ddm) throws XPathExpressionException, MissingRequiredFieldException {
         var items = xmlReader.xpathToStreamOfStrings(ddm, "//ddm:profile/ddm:audience")
             .collect(Collectors.toList());
 
@@ -227,7 +345,7 @@ public class DepositToDvDatasetMetadataMapper {
         }
 
         return items.stream()
-            .map(this::mapNarcisClassification)
+            .map(Audience::toCitationBlockSubject)
             .collect(Collectors.toList());
     }
 
@@ -276,6 +394,10 @@ public class DepositToDvDatasetMetadataMapper {
         var result = new HashMap<String, MetadataField>();
         result.put(fieldName, new PrimitiveSingleValueField(fieldName, content));
         return result;
+    }
+
+    Stream<Node> getIdentifiers(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathToStream(ddm, "//ddm:dcmiMetadata/dcterms:identifier");
     }
 
     Collection<Map<String, MetadataField>> getOtherIdFromDataset(Document ddm) throws XPathExpressionException {
@@ -426,20 +548,6 @@ public class DepositToDvDatasetMetadataMapper {
         return SUBJECT_MATCH_PREFIX.matcher(text).replaceAll("");
     }
 
-    private boolean isIsoLanguage(Node node) {
-        var isoLanguages = Set.of("ISO639-1", "ISO639-2");
-        var hasTypes = hasXsiType(node, "ISO639-1") || hasXsiType(node, "ISO639-2");
-
-        var attributes = Optional.ofNullable(node.getAttributes());
-        var hasEncoding = attributes.map(a -> Optional.ofNullable(a.getNamedItem("encodingScheme")))
-            .flatMap(i -> i)
-            .map(Node::getTextContent)
-            .map(isoLanguages::contains)
-            .orElse(false);
-
-        return hasTypes || hasEncoding;
-    }
-
     Collection<Map<String, MetadataField>> getKeywords(Document ddm) throws XPathExpressionException {
         var subjectExpression = "//ddm:dcmiMetadata/dcterms:subject";
 
@@ -457,7 +565,7 @@ public class DepositToDvDatasetMetadataMapper {
 
         // TODO extract language stuff into separate class and copy scala tests over because they are more extensive
         var languages = xmlReader.xpathToStream(ddm, "//ddm:dcmiMetadata/dcterms:language")
-            .filter(node -> !isIsoLanguage(node))
+            .filter(node -> !Language.isIsoLanguage(node))
             .map(this::buildNoCvAttributedResult);
 
         var stream = Stream.concat(s1, s2);
@@ -521,7 +629,7 @@ public class DepositToDvDatasetMetadataMapper {
     }
 
     String getFirstValue(Node node, String expression) throws XPathExpressionException {
-        return xmlReader.xpathToStreamOfStrings(node, expression).findFirst().orElse(null);
+        return xmlReader.xpathToStreamOfStrings(node, expression).map(String::trim).findFirst().orElse(null);
     }
 
     Collection<Map<String, MetadataField>> getAuthorCreators(Document ddm) throws XPathExpressionException {
@@ -686,7 +794,7 @@ public class DepositToDvDatasetMetadataMapper {
         return xmlReader.xpathsToStream(ddm,
                 "//ddm:dcmiMetadata/dcterms:language")
             .map(node -> {
-                if (isIsoLanguage(node)) {
+                if (Language.isIsoLanguage(node)) {
                     return Optional.ofNullable(node.getAttributes().getNamedItem("code"))
                         .map(code -> isoToDataverse(code.getTextContent()))
                         .orElse("");
@@ -817,4 +925,91 @@ public class DepositToDvDatasetMetadataMapper {
         return result;
     }
 
+    Collection<Map<String, MetadataField>> getFunderDetails(Document ddm) throws XPathExpressionException {
+
+        return xmlReader.xpathsToStream(ddm, "//ddm:dcmiMetadata/dcx-dai:contributorDetails/dcx-dai:organization[normalize-space(dcx-dai:role/text()) = 'Funder']")
+            .map(node -> {
+                try {
+                    var org = parseOrganization(node);
+                    var item = new HashMap<String, MetadataField>();
+                    item.put(GRANT_NUMBER_AGENCY, new PrimitiveSingleValueField(GRANT_NUMBER_AGENCY, org.getName().trim()));
+                    item.put(GRANT_NUMBER_VALUE, new PrimitiveSingleValueField(GRANT_NUMBER_VALUE, ""));
+
+                    return item;
+                }
+                catch (XPathExpressionException e) {
+                    log.error("Error parsing organization", e);
+                }
+                return null;
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+    }
+
+    Collection<Map<String, MetadataField>> getNwoGrantNumbers(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStream(ddm, "//ddm:dcmiMetadata/dcterms:identifier")
+            .filter(node -> hasXsiType(node, "NWO-PROJECTNR"))
+            .map(node -> {
+                var result = new HashMap<String, MetadataField>();
+                result.put(GRANT_NUMBER_AGENCY, new PrimitiveSingleValueField(GRANT_NUMBER_AGENCY, "NWO"));
+                result.put(GRANT_NUMBER_VALUE, new PrimitiveSingleValueField(GRANT_NUMBER_VALUE, node.getTextContent()));
+
+                return result;
+            })
+            .collect(Collectors.toList());
+    }
+
+    Collection<Map<String, MetadataField>> getPublishers(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStream(ddm, "//ddm:dcmiMetadata/dcterms:publisher")
+            .filter(node -> {
+                var dansNames = Set.of("DANS", "DANS-KNAW", "DANS/KNAW");
+                return !dansNames.contains(node.getTextContent());
+            })
+            .map(node -> {
+                var result = new HashMap<String, MetadataField>();
+                result.put(DISTRIBUTOR_NAME, new PrimitiveSingleValueField(DISTRIBUTOR_NAME, node.getTextContent()));
+                result.put(DISTRIBUTOR_URL, new PrimitiveSingleValueField(DISTRIBUTOR_URL, node.getTextContent()));
+                result.put(DISTRIBUTOR_LOGO_URL, new PrimitiveSingleValueField(DISTRIBUTOR_LOGO_URL, node.getTextContent()));
+                result.put(DISTRIBUTOR_ABBREVIATION, new PrimitiveSingleValueField(DISTRIBUTOR_ABBREVIATION, node.getTextContent()));
+                result.put(DISTRIBUTOR_AFFILIATION, new PrimitiveSingleValueField(DISTRIBUTOR_AFFILIATION, node.getTextContent()));
+
+                return result;
+            })
+            .collect(Collectors.toList());
+    }
+
+    List<String> getDistributionDate(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStreamOfStrings(ddm, "//ddm:profile/ddm:available")
+            .map(this::formatDate)
+            .collect(Collectors.toList());
+    }
+
+    Collection<Map<String, MetadataField>> getDatesOfCollection(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStreamOfStrings(ddm, "//ddm:dcmiMetadata/ddm:datesOfCollection")
+            .map(text -> {
+                var result = new HashMap<String, MetadataField>();
+                var matches = DATES_OF_COLLECTION_PATTERN.matcher(text.trim());
+
+                if (matches.matches()) {
+                    result.put(DATE_OF_COLLECTION_START, new PrimitiveSingleValueField(DATE_OF_COLLECTION_START, matches.group(1)));
+                    result.put(DATE_OF_COLLECTION_END, new PrimitiveSingleValueField(DATE_OF_COLLECTION_END, matches.group(2)));
+                }
+
+                return result;
+            })
+            .filter(result -> !result.isEmpty())
+            .collect(Collectors.toList());
+    }
+
+    Collection<String> getDataSources(Document ddm) throws XPathExpressionException {
+        // TODO verify the correct namespace, there are no examples?
+        return xmlReader.xpathsToStreamOfStrings(ddm, "//ddm:dcmiMetadata/dcterms:source")
+            .collect(Collectors.toList());
+    }
+
+    Collection<String> getRightsHolders(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStreamOfStrings(ddm, "//ddm:dcmiMetadata/dcterms:rightsHolder")
+            .collect(Collectors.toList());
+    }
 }

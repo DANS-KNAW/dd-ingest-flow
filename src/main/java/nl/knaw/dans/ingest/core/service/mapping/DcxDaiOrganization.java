@@ -40,23 +40,4 @@ public final class DcxDaiOrganization {
             throw new RuntimeException(e);
         }
     }
-
-    //    private static String getFirstValue(Node node, String expression) throws XPathExpressionException {
-    //        var nodes =node.getChildNodes();
-    //        return xmlReader.xpathToStreamOfStrings(node, expression).map(String::trim).findFirst().orElse(null);
-    //    }
-    //
-    //    private static DatasetAuthor parseAuthor(Node node) throws XPathExpressionException {
-    //        return DatasetAuthor.builder()
-    //            .titles(getFirstValue(node, "dcx-dai:titles"))
-    //            .initials(getFirstValue(node, "dcx-dai:initials"))
-    //            .insertions(getFirstValue(node, "dcx-dai:insertions"))
-    //            .surname(getFirstValue(node, "dcx-dai:surname"))
-    //            .dai(getFirstValue(node, "dcx-dai:DAI"))
-    //            .isni(getFirstValue(node, "dcx-dai:ISNI"))
-    //            .orcid(getFirstValue(node, "dcx-dai:ORCID"))
-    //            .role(getFirstValue(node, "dcx-dai:role"))
-    //            .organization(getFirstValue(node, "dcx-dai:organization/dcx-dai:name"))
-    //            .build();
-    //    }
 }

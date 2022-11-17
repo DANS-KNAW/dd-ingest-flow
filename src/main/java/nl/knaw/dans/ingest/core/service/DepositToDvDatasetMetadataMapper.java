@@ -655,8 +655,7 @@ public class DepositToDvDatasetMetadataMapper {
         return stream.collect(Collectors.toList());
     }
 
-    void addPrimitiveFieldMultipleValues(Map<String, AbstractFieldBuilder> fields, String name,
-        Collection<String> values) { //metadataBlockFields: mutable.HashMap[String, AbstractFieldBuilder], name: String, sourceNodes: NodeSeq, nodeTransformer: Node => Option[String] = AnyElement toText): Unit = {
+    void addPrimitiveFieldMultipleValues(Map<String, AbstractFieldBuilder> fields, String name, Collection<String> values) {
 
         var filteredValue = values.stream()
             .filter(Objects::nonNull)
@@ -1092,4 +1091,5 @@ public class DepositToDvDatasetMetadataMapper {
         return xmlReader.xpathsToStreamOfStrings(ddm, "//ddm:dcmiMetadata/dcterms:rightsHolder")
             .collect(Collectors.toList());
     }
+
 }

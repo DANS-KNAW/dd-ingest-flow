@@ -46,6 +46,7 @@ public class Relation extends Base {
             .orElse("");
 
         var nodeName = node.getLocalName();
+
         var result = new HashMap<String, MetadataField>();
         result.put(RELATION, new ControlledSingleValueField(RELATION, labelToType.getOrDefault(nodeName, nodeName)));
         result.put(RELATION_URI, new PrimitiveSingleValueField(RELATION_URI, href));

@@ -118,4 +118,39 @@ public class DepositDatasetFieldNames {
     public final static String ABR_ARTIFACT = "dansAbrArtifact";
     public final static String ABR_PERIOD = "dansAbrPeriod";
 
+    public final static String ABR_BASE_URL = "https://data.cultureelerfgoed.nl/term/id/abr";
+    public final static String SCHEME_ABR_OLD = "Archeologisch Basis Register";
+    public final static String SCHEME_URI_ABR_OLD = "https://data.cultureelerfgoed.nl/term/id/rn/a4a7933c-e096-4bcf-a921-4f70a78749fe";
+    public final static String SCHEME_ABR_PLUS = "Archeologisch Basis Register";
+    public final static String SCHEME_URI_ABR_PLUS = "https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed";
+
+    public final static String SCHEME_ABR_COMPLEX = "ABR Complextypen";
+    public final static String SCHEME_URI_ABR_COMPLEX = "https://data.cultureelerfgoed.nl/term/id/abr/e9546020-4b28-4819-b0c2-29e7c864c5c0";
+
+    public final static String SCHEME_ABR_ARTIFACT = "ABR Artefacten";
+    public final static String SCHEME_URI_ABR_ARTIFACT = "https://data.cultureelerfgoed.nl/term/id/abr/22cbb070-6542-48f0-8afe-7d98d398cc0b";
+
+    public final static String SCHEME_ABR_PERIOD = "ABR Periodes";
+    public final static String SCHEME_URI_ABR_PERIOD = "https://data.cultureelerfgoed.nl/term/id/abr/9b688754-1315-484b-9c89-8817e87c1e84";
+
+    public final static String SCHEME_ABR_RAPPORT_TYPE = "ABR Rapporten";
+    public final static String SCHEME_URI_ABR_RAPPORT_TYPE = "https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e";
+
+    public final static String SCHEME_ABR_VERWERVINGSWIJZE = "ABR verwervingswijzen";
+    public final static String SCHEME_URI_ABR_VERWERVINGSWIJZE = "https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238";
+
+    public final static String TEMPORAL_COVERAGE = "dansTemporalCoverage";
+    public final static String SPATIAL_POINT = "dansSpatialPoint";
+    public final static String SPATIAL_POINT_SCHEME = "dansSpatialPointScheme";
+    public final static String SPATIAL_POINT_X = "dansSpatialPointX";
+    public final static String SPATIAL_POINT_Y = "dansSpatialPointY";
+    public final static String SPATIAL_BOX = "dansSpatialBox";
+    public final static String SPATIAL_BOX_SCHEME = "dansSpatialBoxScheme";
+    public final static String SPATIAL_BOX_NORTH = "dansSpatialBoxNorth";
+    public final static String SPATIAL_BOX_EAST = "dansSpatialBoxEast";
+    public final static String SPATIAL_BOX_SOUTH = "dansSpatialBoxSouth";
+    public final static String SPATIAL_BOX_WEST = "dansSpatialBoxWest";
+    public final static String SPATIAL_COVERAGE_CONTROLLED = "dansSpatialCoverageControlled";
+    public final static String SPATIAL_COVERAGE_UNCONTROLLED = "dansSpatialCoverageText";
+
 }

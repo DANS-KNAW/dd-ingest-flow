@@ -21,6 +21,7 @@ import nl.knaw.dans.easy.dd2d.fieldbuilders.CompoundFieldBuilder;
 import nl.knaw.dans.easy.dd2d.fieldbuilders.PrimitiveFieldBuilder;
 import nl.knaw.dans.ingest.core.DatasetAuthor;
 import nl.knaw.dans.ingest.core.DatasetOrganization;
+import nl.knaw.dans.ingest.core.service.mapping.AbrAcquisitionMethod;
 import nl.knaw.dans.ingest.core.service.mapping.AbrReportType;
 import nl.knaw.dans.ingest.core.service.mapping.Audience;
 import nl.knaw.dans.ingest.core.service.mapping.DcxDaiAuthor;
@@ -29,6 +30,10 @@ import nl.knaw.dans.ingest.core.service.mapping.Identifier;
 import nl.knaw.dans.ingest.core.service.mapping.InCollection;
 import nl.knaw.dans.ingest.core.service.mapping.Language;
 import nl.knaw.dans.ingest.core.service.mapping.Relation;
+import nl.knaw.dans.ingest.core.service.mapping.SpatialBox;
+import nl.knaw.dans.ingest.core.service.mapping.SpatialPoint;
+import nl.knaw.dans.ingest.core.service.mapping.SubjectAbr;
+import nl.knaw.dans.ingest.core.service.mapping.TemporalAbr;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
@@ -55,6 +60,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_ARTIFACT;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_COMPLEX;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_PERIOD;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_RAPPORT_NUMMER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_RAPPORT_TYPE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_VERWERVINGSWIJZE;
@@ -102,7 +110,11 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICAT
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_TYPE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_URL;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_HOLDER;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_VERWERVINGSWIJZE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_VERWERVINGSWIJZE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TEMPORAL_COVERAGE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
 import static nl.knaw.dans.ingest.core.service.XmlReader.NAMESPACE_XSI;
 
@@ -276,16 +288,84 @@ public class DepositToDvDatasetMetadataMapper {
                 .map(Node::getTextContent)
                 .collect(Collectors.toList()));
 
-//            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ABR_VERWERVINGSWIJZE, getAcquisitionMethods(ddm)
-//                .map(Node::getTextContent)
-//                .collect(Collectors.toList()));
+            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ABR_VERWERVINGSWIJZE, getAcquisitionMethods(ddm)
+                .map(AbrAcquisitionMethod::toVerwervingswijze)
+                .collect(Collectors.toList()));
+
+            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ABR_COMPLEX, getSubjects(ddm)
+                .filter(SubjectAbr::isAbrComplex)
+                .map(SubjectAbr::toAbrComplex)
+                .collect(Collectors.toList()));
+
+            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ABR_ARTIFACT, getSubjects(ddm)
+                .filter(SubjectAbr::isOldAbr)
+                .map(SubjectAbr::fromAbrOldToAbrArtifact)
+                .collect(Collectors.toList()));
+
+            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ABR_ARTIFACT, getSubjects(ddm)
+                .filter(SubjectAbr::isAbrArtifact)
+                .map(SubjectAbr::toAbrArtifact)
+                .collect(Collectors.toList()));
+
+            addPrimitiveFieldMultipleValues(archaeologySpecificFields, ABR_PERIOD, getSubjects(ddm)
+                .filter(TemporalAbr::isAbrPeriod)
+                .map(TemporalAbr::toAbrPeriod)
+                .collect(Collectors.toList()));
+        }
+
+        if (activeMetadataBlocks.contains("dansTemporalSpatial")) {
+
+            addPrimitiveFieldMultipleValues(temporalSpatialFields, TEMPORAL_COVERAGE, getTemporal(ddm)
+                .filter(node -> !TemporalAbr.isAbrPeriod(node))
+                .map(TemporalAbr::asText)
+                .collect(Collectors.toList()));
+
+            addCompoundFieldMultipleValues(temporalSpatialFields, TEMPORAL_COVERAGE, getSpatial(ddm)
+                .filter(node -> SpatialPoint.hasChildNode(node, "/Point"))
+                .map(SpatialPoint::toEasyTsmSpatialPointValueObject)
+                .collect(Collectors.toList()));
+
+            addCompoundFieldMultipleValues(temporalSpatialFields, SPATIAL_BOX, getBoundedBy(ddm)
+                .map(SpatialBox::toEasyTsmSpatialBoxValueObject)
+                .collect(Collectors.toList()));
+
+            //            addCvFieldMultipleValues(temporalSpatialFields, SPATIAL_COVERAGE_CONTROLLED, (ddm \ "dcmiMetadata" \ "spatial").filterNot(_.child.exists(_.isInstanceOf[Elem])), SpatialCoverage
+            //            toControlledSpatialValue)
+            //            addPrimitiveFieldMultipleValues(temporalSpatialFields, SPATIAL_COVERAGE_UNCONTROLLED, (ddm \ "dcmiMetadata" \ "spatial").filterNot(_.child.exists(_.isInstanceOf[Elem])), SpatialCoverage
+            //            toUncontrolledSpatialValue)
         }
 
         return null;
     }
 
-    private Stream<Node> getAcquisitionMethods(Document ddm) {
-        return null;
+    Stream<Node> getTemporal(Document ddm) throws XPathExpressionException {
+        // TODO verify namespace
+        return xmlReader.xpathsToStream(ddm, "//ddm:dcmiMetadata/ddm:temporal");
+    }
+
+    Stream<Node> getSpatial(Document ddm) throws XPathExpressionException {
+        // TODO verify namespace
+        return xmlReader.xpathsToStream(ddm, "//ddm:dcmiMetadata/dcterms:spatial");
+    }
+
+    Stream<Node> getBoundedBy(Document ddm) throws XPathExpressionException {
+        // TODO verify namespace
+        return xmlReader.xpathsToStream(ddm, "//ddm:dcmiMetadata/dcterms:spatial//gml:boundedBy");
+    }
+
+    Stream<Node> getSubjects(Document ddm) throws XPathExpressionException {
+        return xmlReader.xpathsToStream(ddm, "//ddm:dcmiMetadata/dcterms:subject");
+    }
+
+    Stream<Node> getAcquisitionMethods(Document ddm) throws XPathExpressionException {
+        // TODO verify namespace of second element
+        // TODO: (from scala) also take attribute namespace into account (should be ddm)
+        var expr = String.format(
+            "//ddm:dcmiMetadata/ddm:acquisitionMethod[@subjectScheme = '%s' and @schemeURI = '%s']",
+            SCHEME_ABR_VERWERVINGSWIJZE, SCHEME_URI_ABR_VERWERVINGSWIJZE
+        );
+
+        return xmlReader.xpathToStream(ddm, expr);
     }
 
     Stream<Node> getReportNumbers(Document ddm) throws XPathExpressionException {

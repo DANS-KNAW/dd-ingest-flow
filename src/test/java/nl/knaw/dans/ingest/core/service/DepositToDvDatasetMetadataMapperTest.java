@@ -18,6 +18,7 @@ package nl.knaw.dans.ingest.core.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -443,5 +444,18 @@ class DepositToDvDatasetMetadataMapperTest {
         var result = mapper.getLanguageAttributes(doc);
         assertThat(result)
             .containsOnly("en", "la", "nl", "de");
+    }
+
+    @Test
+    void testGetAcquisitionMethods()  throws Exception{
+        var mapper = getMapper();
+        var doc = readDocument("dataset.xml");
+
+        var result = mapper.getAcquisitionMethods(doc);
+
+        assertThat(result)
+            .map(Node::getTextContent)
+            .map(String::trim)
+            .containsOnly("Method 1");
     }
 }

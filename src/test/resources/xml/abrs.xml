@@ -1,0 +1,46 @@
+<ddm:DDM xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:dct="http://purl.org/dc/terms/"
+         xsi:schemaLocation="http://easy.dans.knaw.nl/schemas/md/ddm/ http://easy.dans.knaw.nl/schemas/md/2017/09/ddm.xsd">
+    <ddm:dcmiMetadata>
+        <ddm:subject>no tags subject</ddm:subject>
+        <ddm:subject schemeURI="https://data.cultureelerfgoed.nl/term/id/pan/PAN"
+                     valueURI="https://test1.com/"
+                     subjectScheme="PAN thesaurus ideaaltypes">Broader Match: knoop
+        </ddm:subject>
+        <ddm:subject schemeURI="http://vocab.getty.edu/aat/"
+                     valueURI="https://test2.com/"
+                     subjectScheme="Art and Architecture Thesaurus">Broader Match: button
+        </ddm:subject>
+        <ddm:subject schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/e9546020-4b28-4819-b0c2-29e7c864c5c0"
+                     valueURI="https://test3.com/"
+                     subjectScheme="ABR Complextypen">
+            ABR COMPLEX
+        </ddm:subject>
+        <ddm:subject schemeURI="https://data.cultureelerfgoed.nl/term/id/rn/a4a7933c-e096-4bcf-a921-4f70a78749fe"
+                     valueURI="https://test4.com/supersecret/"
+                     subjectScheme="Archeologisch Basis Register">
+            ABR BASIS REGISTER OLD
+        </ddm:subject>
+        <ddm:subject schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/22cbb070-6542-48f0-8afe-7d98d398cc0b"
+                     valueURI="https://test5.com/"
+                     subjectScheme="ABR Artefacten">
+            ABR ARTEFACTEN
+        </ddm:subject>
+        <ddm:subject schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/9b688754-1315-484b-9c89-8817e87c1e84"
+                     valueURI="https://test6.com/"
+                     subjectScheme="ABR Periodes">
+            ABR PERIODES
+        </ddm:subject>
+
+        <ddm:acquisitionMethod subjectScheme="ABR verwervingswijzen"
+                               schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238">
+            Method 1
+        </ddm:acquisitionMethod>
+
+        <ddm:acquisitionMethod subjectScheme="ABR something else"
+                               schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238">
+            Method 2
+        </ddm:acquisitionMethod>
+    </ddm:dcmiMetadata>
+</ddm:DDM>

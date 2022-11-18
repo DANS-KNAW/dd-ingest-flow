@@ -23,6 +23,10 @@ public class TemporalAbr extends Base {
         return r1 && r2;
     }
 
+    public static boolean isNotAbrPeriod(Node node) {
+        return !isAbrPeriod(node);
+    }
+
     public static boolean isAbrPeriod(Node node) {
         var a1 = hasAttributes(node,
             "subjectScheme", SCHEME_ABR_PERIOD,

@@ -2,16 +2,26 @@ package nl.knaw.dans.ingest.core.service.mapping;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
+import nl.knaw.dans.ingest.core.service.builder.CompoundFieldGenerator;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.w3c.dom.Node;
 
 import javax.xml.xpath.XPathExpressionException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Optional;
 
 import static nl.knaw.dans.ingest.core.service.XmlReader.NAMESPACE_XSI;
 
 @Slf4j
 public class Base {
+//    private static final DateFormat dateAvailableFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateFormat dateAvailableFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+    private static final DateTimeFormatter yyyymmddPattern = DateTimeFormat.forPattern("YYYY-MM-dd");
     static boolean hasXsiType(Node node, String xsiType) {
         var attributes = node.getAttributes();
 
@@ -69,5 +79,11 @@ public class Base {
             log.error("Error evaluation XPath expression {}", xpath, e);
             return Optional.empty();
         }
+    }
+
+    public static String toYearMonthDayFormat(Node node) {
+        var text = node.getTextContent();
+        var date = DateTime.parse(text);
+        return yyyymmddPattern.print(date);
     }
 }

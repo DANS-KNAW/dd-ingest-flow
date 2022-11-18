@@ -8,80 +8,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
 import javax.xml.xpath.XPathExpressionException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_AFFILIATION;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER_SCHEME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_NAME;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_TYPE;
-import static nl.knaw.dans.ingest.core.service.mapping.Contributor.contributorRoleToContributorType;
 
 @Slf4j
-public final class DcxDaiAuthor extends Base {
+public final class Creator extends Base {
     public static CompoundFieldGenerator<Node> toAuthorValueObject = (builder, node) -> {
-        try {
-            var author = parseAuthor(node);
-            var name = formatName(author);
-
-            if (StringUtils.isNotBlank(name)) {
-                builder.addSubfield(AUTHOR_NAME, name);
-            }
-
-            if (author.getOrcid() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ORCID");
-                builder.addSubfield(AUTHOR_IDENTIFIER, author.getOrcid());
-            }
-
-            else if (author.getIsni() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ISNI");
-                builder.addSubfield(AUTHOR_IDENTIFIER, author.getIsni());
-            }
-
-            else if (author.getDai() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "DAI");
-                builder.addSubfield(AUTHOR_IDENTIFIER, author.getDai());
-            }
-
-            if (author.getOrganization() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "DAI");
-                builder.addSubfield(AUTHOR_AFFILIATION, author.getOrganization());
-            }
-        }
-        catch (XPathExpressionException e) {
-            log.error("Xpath exception", e);
-        }
+        builder.addSubfield(AUTHOR_NAME, node.getTextContent());
     };
-
-    public static CompoundFieldGenerator<Node> toContributorValueObject = (builder, node) -> {
-        try {
-            var author = parseAuthor(node);
-            var name = formatName(author);
-
-            if (StringUtils.isNotBlank(name)) {
-                var completeName = author.getOrganization() != null
-                    ? String.format("%s (%s)", name, author.getOrganization())
-                    : name;
-
-                builder.addSubfield(CONTRIBUTOR_NAME, completeName);
-            }
-            else if (StringUtils.isNotBlank(author.getOrganization())) {
-                builder.addSubfield(CONTRIBUTOR_NAME, author.getOrganization());
-            }
-            if (StringUtils.isNotBlank(author.getRole())) {
-                var value = contributorRoleToContributorType.getOrDefault(author.getRole(), "Other");
-                builder.addSubfield(CONTRIBUTOR_TYPE, value);
-            }
-        }
-        catch (XPathExpressionException e) {
-            throw new RuntimeException("Unable to parse author", e);
-        }
-    };
-
 
     private static String formatName(DatasetAuthor author) {
         return String.join(" ", List.of(

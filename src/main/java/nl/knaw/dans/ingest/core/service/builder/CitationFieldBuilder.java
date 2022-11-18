@@ -1,0 +1,90 @@
+package nl.knaw.dans.ingest.core.service.builder;
+
+import org.w3c.dom.Node;
+
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ALTERNATIVE_TITLE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATA_SOURCES;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_COLLECTION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTION_DATE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTOR;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PRODUCTION_DATE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
+
+public class CitationFieldBuilder extends FieldBuilder {
+
+    public void addTitle(Stream<String> nodes) {
+        addSingleString(TITLE, nodes);
+    }
+
+    public void addOtherIds(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+        addMultiple(OTHER_ID, stream, generator);
+    }
+
+    public void addAuthors(Stream<Node> creators, CompoundFieldGenerator<Node> generator) {
+        addMultiple(AUTHOR, creators, generator);
+    }
+
+    public void addAlternativeTitle(Stream<String> stream) {
+        addSingleString(ALTERNATIVE_TITLE, stream);
+    }
+
+    public void addDescription(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+        addMultiple(DESCRIPTION, stream, generator);
+    }
+
+    public void addSubject(Stream<String> stream, Function<String, String> mapper) {
+        addMultipleControlledFields(SUBJECT, stream.map(mapper));
+    }
+
+    public void addKeywords(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+        addMultiple(KEYWORD, stream, generator);
+    }
+
+    public void addPublications(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+        addMultiple(PUBLICATION, stream, generator);
+    }
+
+    public void addLanguages(Stream<Node> stream, Function<Node, String> mapper) {
+        addMultipleControlledFields(LANGUAGE, stream.map(mapper));
+    }
+
+    public void addProductionDate(Stream<String> stream) {
+        addSingleString(PRODUCTION_DATE, stream);
+    }
+
+    public void addContributors(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+        addMultiple(CONTRIBUTOR, stream, generator);
+    }
+
+    public void addGrantNumbers(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+        addMultiple(GRANT_NUMBER, stream, generator);
+    }
+
+    public void addDistributor(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+        addMultiple(DISTRIBUTOR, stream, generator);
+    }
+
+    public void addDistributionDate(Stream<String> stream) {
+        addSingleString(DISTRIBUTION_DATE, stream);
+    }
+
+    public void addDateOfCollections(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+        addMultiple(DATE_OF_COLLECTION, stream, generator);
+    }
+
+    public void addDataSources(Stream<String> dataSources) {
+        addSingleString(DATA_SOURCES, dataSources);
+    }
+}

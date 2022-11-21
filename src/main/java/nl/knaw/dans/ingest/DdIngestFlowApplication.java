@@ -28,7 +28,6 @@ import nl.knaw.dans.ingest.core.AutoIngestArea;
 import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
-import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DansBagValidatorImpl;
@@ -95,16 +94,16 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             false,
             dataverseClient,
             validator,
-            configuration.getIngestFlow(),
-            configuration.getDataverseExtra()
-        );
+            xmlReader, configuration.getIngestFlow(),
+            configuration.getDataverseExtra(),
+            depositPropertiesManager);
         final var migrationTaskFactory = new DepositIngestTaskFactory(
             true,
             dataverseClient,
             validator,
-            configuration.getIngestFlow(),
-            configuration.getDataverseExtra()
-        );
+            xmlReader, configuration.getIngestFlow(),
+            configuration.getDataverseExtra(),
+            depositPropertiesManager);
 
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());

@@ -100,7 +100,7 @@ public class XmlReaderImpl implements XmlReader {
             .parse(new InputSource(new StringReader(str)));
     }
 
-    private Object evaluateXpath(Node node, String expr, QName type) throws XPathExpressionException {
+    private synchronized Object evaluateXpath(Node node, String expr, QName type) throws XPathExpressionException {
         return xpath.compile(expr).evaluate(node, type);
     }
 

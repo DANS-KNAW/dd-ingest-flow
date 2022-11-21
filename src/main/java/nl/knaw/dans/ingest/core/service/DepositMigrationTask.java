@@ -17,44 +17,42 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.easy.dd2d.Deposit;
-import nl.knaw.dans.easy.dd2d.DepositToDvDatasetMetadataMapper;
-import nl.knaw.dans.easy.dd2d.RejectedDepositException;
-import nl.knaw.dans.easy.dd2d.mapping.Amd;
+import nl.knaw.dans.ingest.core.service.mapping.Amd;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
+import org.apache.commons.lang3.StringUtils;
+import org.w3c.dom.Document;
 import scala.Option;
-import scala.util.Try;
-import scala.xml.Node;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Slf4j
 public class DepositMigrationTask extends DepositIngestTask {
     public DepositMigrationTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Option<Pattern> fileExclusionPattern,
         ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter) {
+        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, XmlReader xmlReader) {
 
         super(
             datasetMetadataMapper, deposit, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
-            publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries, outboxDir, eventWriter);
+            publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries, outboxDir, eventWriter, xmlReader);
     }
 
     @Override
     void checkDepositType() {
         var deposit = getDeposit();
 
-        if (deposit.doi() == null || deposit.doi().isEmpty()) {
+        if (StringUtils.isEmpty(deposit.getDoi())) {
             throw new IllegalArgumentException("Deposit for migrated dataset MUST have deposit property identifier.doi set");
         }
 
-        deposit.vaultMetadata().checkMinimumFieldsForImport().get();
+        deposit.getVaultMetadata().checkMinimumFieldsForImport().get();
     }
 
     @Override
@@ -79,30 +77,30 @@ public class DepositMigrationTask extends DepositIngestTask {
     }
 
     @Override
-    void checkPersonalDataPresent(Try<Option<Node>> optionTry) {
-        if (optionTry.get().isEmpty()) {
-            throw new RejectedDepositException(getDeposit(), "Migration deposit MUST have an agreements.xml", null);
+    void checkPersonalDataPresent(Document document) {
+        if (document == null) {
+            throw new RejectedDepositException(getDeposit(), "Migration deposit MUST have an agreements.xml");
         }
     }
 
     @Override
-    Option<String> getDateOfDeposit() {
-        var deposit = getDeposit();
-        var amd = deposit.tryOptAmd().get();
-        return amd.flatMap(Amd::toDateOfDeposit);
+    Optional<String> getDateOfDeposit() {
+        return Optional.ofNullable(getDeposit().getAmd())
+            .map(Amd::toDateOfDeposit)
+            .flatMap(i -> i);
     }
 
     @Override
     void publishDataset(String persistentId) throws Exception {
         try {
             var deposit = getDeposit();
-            var amd = deposit.tryOptAmd();
+            var amd = deposit.getAmd();
 
-            if (amd.isFailure()) {
+            if (amd == null) {
                 throw new Exception(String.format("no AMD found for %s", persistentId));
             }
 
-            var date = amd.get().flatMap(Amd::toPublicationDate);
+            var date = Amd.toPublicationDate(amd);
 
             if (date.isEmpty()) {
                 throw new IllegalArgumentException(String.format("no publication date found in AMD for %s", persistentId));

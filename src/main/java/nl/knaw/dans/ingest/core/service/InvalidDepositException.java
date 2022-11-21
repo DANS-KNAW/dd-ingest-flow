@@ -15,11 +15,12 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-public class MissingRequiredFieldException extends RuntimeException {
-    private final String title;
+public class InvalidDepositException extends Throwable {
+    public InvalidDepositException(String msg) {
+        super(msg);
+    }
 
-    public MissingRequiredFieldException(String title) {
-        super();
-        this.title = title;
+    public InvalidDepositException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 }

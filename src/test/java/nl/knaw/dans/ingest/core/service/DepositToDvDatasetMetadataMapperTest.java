@@ -48,7 +48,9 @@ class DepositToDvDatasetMetadataMapperTest {
     }
 
     DepositToDvDatasetMetadataMapper getMapper() {
-        return new DepositToDvDatasetMetadataMapper(xmlReader, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage);
+        return new DepositToDvDatasetMetadataMapper(
+            true, xmlReader, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage
+        );
     }
 
     @BeforeEach
@@ -67,8 +69,9 @@ class DepositToDvDatasetMetadataMapperTest {
         var mapper = getMapper();
         var doc = readDocument("dataset.xml");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null);
-        System.out.println("RESULT: " + result);
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
+
+        var result = mapper.toDataverseDataset(doc, null, null, null, null, vaultMetadata);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()

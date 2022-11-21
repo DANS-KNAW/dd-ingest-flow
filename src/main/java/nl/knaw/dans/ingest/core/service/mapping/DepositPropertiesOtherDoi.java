@@ -15,23 +15,15 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.XmlReader;
-import org.w3c.dom.Node;
+import nl.knaw.dans.ingest.core.service.builder.CompoundFieldGenerator;
 
-import java.util.Optional;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_AGENCY;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
 
-@Slf4j
-public final class InCollection extends Base {
+public class DepositPropertiesOtherDoi extends Base {
 
-    public static String toCollection(Node node) {
-        return Optional.ofNullable(node.getAttributes())
-            .map(n -> Optional.ofNullable(n.getNamedItemNS(XmlReader.NAMESPACE_DDM, "valueUri")))
-            .flatMap(i -> i)
-            .map(Node::getTextContent)
-            .orElseGet(() -> {
-                log.error("Missing valueURI attribute on ddm:inCollection node");
-                return null;
-            });
-    }
-}
+    public static CompoundFieldGenerator<String> toOtherIdValue = (builder, value) -> {
+        builder.addSubfield(OTHER_ID_AGENCY, "");
+        builder.addSubfield(OTHER_ID_VALUE, value);
+    };
+};

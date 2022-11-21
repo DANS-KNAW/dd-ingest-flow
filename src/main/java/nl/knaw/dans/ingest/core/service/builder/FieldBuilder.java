@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2022 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package nl.knaw.dans.ingest.core.service.builder;
 
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
@@ -21,17 +36,13 @@ public class FieldBuilder {
         return fields;
     }
 
-    private CompoundFieldBuilder getBuilder(String name, boolean multiple) {
+    CompoundFieldBuilder getBuilder(String name, boolean multiple) {
         var result = Optional.ofNullable(fields.get(name))
             .map(CompoundFieldBuilder::nextValue)
             .orElse(new CompoundFieldBuilder(name, multiple));
 
         fields.put(name, result);
         return result;
-    }
-
-    public void addSingleString(String name, String data) {
-        getBuilder(name, false).addSubfield(name, data);
     }
 
     public void addSingleString(String name, Stream<String> data) {
@@ -63,15 +74,11 @@ public class FieldBuilder {
 
     }
 
-    public void addMultipleStrings(String name, Stream<String> data) {
+    public void addMultiplePrimitivesString(String name, Stream<String> data) {
         data.forEach(value -> {
             var builder = getBuilder(name, true);
             builder.addSubfield(name, value);
         });
-    }
-
-    public void addSingle(String name, Node data, CompoundFieldGenerator<Node> generator) {
-        generator.build(getBuilder(name, false), data);
     }
 
     public void addMultiple(String name, Stream<Node> data, CompoundFieldGenerator<Node> generator) {
@@ -81,4 +88,10 @@ public class FieldBuilder {
         });
     }
 
+    public void addMultipleString(String name, Stream<String> data, CompoundFieldGenerator<String> generator) {
+        data.forEach(value -> {
+            var builder = getBuilder(name, true);
+            generator.build(builder, value);
+        });
+    }
 }

@@ -15,18 +15,16 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.easy.dd2d.Deposit;
-import nl.knaw.dans.easy.dd2d.DepositToDvDatasetMetadataMapper;
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
+import nl.knaw.dans.lib.dataverse.DataverseException;
+import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlockSummary;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.io.FileUtils;
 import scala.Option;
-import scala.Tuple2;
-import scala.collection.JavaConverters;
-import scala.collection.immutable.Map$;
 import scala.xml.Elem;
 
 import java.io.File;
@@ -39,13 +37,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class DepositIngestTaskFactory {
 
     private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
+    private final XmlReader xmlReader;
 
     private final IngestFlowConfig ingestFlowConfig;
     private final DataverseExtra dataverseExtra;
@@ -55,14 +56,17 @@ public class DepositIngestTaskFactory {
     private final Map<String, String> reportIdToTerm;
     private final Map<String, String> variantToLicense;
     private final List<URI> supportedLicenses;
+    private final DepositManager depositManager;
+
     private final boolean isMigration;
 
     public DepositIngestTaskFactory(boolean isMigration, DataverseClient dataverseClient,
-        DansBagValidator dansBagValidator, IngestFlowConfig ingestFlowConfig,
-        DataverseExtra dataverseExtra) throws IOException, URISyntaxException {
+        DansBagValidator dansBagValidator, XmlReader xmlReader, IngestFlowConfig ingestFlowConfig,
+        DataverseExtra dataverseExtra, DepositManager depositManager) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
+        this.xmlReader = xmlReader;
         this.ingestFlowConfig = ingestFlowConfig;
         this.dataverseExtra = dataverseExtra;
         this.narcisClassification = nl.knaw.dans.easy.dd2d.DepositIngestTaskFactory.readXml(ingestFlowConfig.getMappingDefsDir().resolve("narcis_classification.xml").toFile());
@@ -71,25 +75,16 @@ public class DepositIngestTaskFactory {
         this.reportIdToTerm = getMap(ingestFlowConfig, "ABR-reports.csv", "URI-suffix", "Term");
         this.variantToLicense = getMap(ingestFlowConfig, "license-uri-variants.csv", "Variant", "Normalized");
         this.supportedLicenses = getUriList(ingestFlowConfig, "supported-licenses.txt");
-    }
-
-    scala.collection.immutable.Map<String, String> toScalaMap(Map<String, String> input) {
-
-        var tuples = input.entrySet().stream()
-            .map(e -> Tuple2.apply(e.getKey(), e.getValue()))
-            .collect(Collectors.toList());
-
-        return (scala.collection.immutable.Map<String, String>) Map$.MODULE$.apply(JavaConverters.asScalaBuffer(tuples).toSeq());
+        this.depositManager = depositManager;
     }
 
     public DepositIngestTask createDepositIngestTask(Deposit deposit, File outboxDir, EventWriter eventWriter) {
         var depositToDvDatasetMetadataMapper = new DepositToDvDatasetMetadataMapper(
             false,
-            nl.knaw.dans.easy.dd2d.DepositIngestTaskFactory.getActiveMetadataBlocks(dataverseClient).get(),
-            narcisClassification,
-            toScalaMap(iso1ToDataverseLanguage),
-            toScalaMap(iso2ToDataverseLanguage),
-            toScalaMap(reportIdToTerm)
+            xmlReader,
+            getActiveMetadataBlocks(dataverseClient),
+            iso1ToDataverseLanguage,
+            iso2ToDataverseLanguage
         );
 
         var zipFileHandler = new ZipFileHandler(ingestFlowConfig.getZipWrappingTempDir());
@@ -109,7 +104,8 @@ public class DepositIngestTaskFactory {
                 dataverseExtra.getPublishAwaitUnlockMaxRetries(),
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir.toPath(),
-                eventWriter
+                eventWriter,
+                xmlReader
             );
         }
         else {
@@ -126,7 +122,8 @@ public class DepositIngestTaskFactory {
                 dataverseExtra.getPublishAwaitUnlockMaxRetries(),
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir.toPath(),
-                eventWriter);
+                eventWriter,
+                xmlReader);
         }
 
     }
@@ -148,8 +145,9 @@ public class DepositIngestTaskFactory {
         return result;
     }
 
-    public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) {
-        var deposit = new Deposit(better.files.File.apply(depositDir));
+    public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
+        var deposit = depositManager.loadDeposit(depositDir);
+        //        var deposit = new Deposit(better.files.File.apply(depositDir));
         return createDepositIngestTask(deposit, outboxDir.toFile(), eventWriter);
     }
 
@@ -162,6 +160,17 @@ public class DepositIngestTaskFactory {
             }
 
             return result;
+        }
+    }
+
+    Set<String> getActiveMetadataBlocks(DataverseClient dataverseClient) {
+        try {
+            var result = dataverseClient.dataverse("root").listMetadataBlocks();
+            return result.getData().stream().map(MetadataBlockSummary::getName).collect(Collectors.toSet());
+        }
+        catch (IOException | DataverseException e) {
+            log.error("Unable to fetch active metadata blocks", e);
+            throw new RuntimeException(e);
         }
     }
 }

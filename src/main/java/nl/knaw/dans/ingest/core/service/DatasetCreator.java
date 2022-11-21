@@ -17,8 +17,6 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.easy.dd2d.Deposit;
-import nl.knaw.dans.easy.dd2d.FailedDepositException;
 import nl.knaw.dans.easy.dd2d.mapping.AccessRights;
 import nl.knaw.dans.lib.dataverse.DataverseApi;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
@@ -108,7 +106,7 @@ public class DatasetCreator extends DatasetEditor {
     private RoleAssignment getRoleAssignment() {
         var result = new RoleAssignment();
         result.setRole(depositorRole);
-        result.setAssignee(String.format("@%s", deposit.depositorUserId()));
+        result.setAssignee(String.format("@%s", deposit.getDepositorUserId()));
 
         return result;
     }
@@ -143,7 +141,7 @@ public class DatasetCreator extends DatasetEditor {
 
     String importDataset(DataverseApi api) throws IOException, DataverseException {
         var response = isMigration
-            ? api.importDataset(dataset, Optional.of(String.format("doi:%s", deposit.doi())), false)
+            ? api.importDataset(dataset, Optional.of(String.format("doi:%s", deposit.getDoi())), false)
             : api.createDataset(dataset);
 
         return response.getData().getPersistentId();

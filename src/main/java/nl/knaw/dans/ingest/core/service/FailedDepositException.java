@@ -15,11 +15,8 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-public class MissingRequiredFieldException extends RuntimeException {
-    private final String title;
-
-    public MissingRequiredFieldException(String title) {
-        super();
-        this.title = title;
+public class FailedDepositException extends RuntimeException {
+    public FailedDepositException(Deposit deposit, String message) {
+        super(String.format("Failed %s: %s", deposit.getDir(), message));
     }
 }

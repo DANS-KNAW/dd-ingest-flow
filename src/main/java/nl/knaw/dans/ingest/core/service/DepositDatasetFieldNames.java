@@ -152,5 +152,11 @@ public class DepositDatasetFieldNames {
     public final static String SPATIAL_BOX_WEST = "dansSpatialBoxWest";
     public final static String SPATIAL_COVERAGE_CONTROLLED = "dansSpatialCoverageControlled";
     public final static String SPATIAL_COVERAGE_UNCONTROLLED = "dansSpatialCoverageText";
-
+    public static final String DATAVERSE_PID = "dansDataversePid";
+    public static final String DATAVERSE_PID_VERSION = "dansDataversePidVersion";
+    public static final String BAG_ID = "dansBagId";
+    public static final String NBN = "dansNbn";
+    public static final String DANS_OTHER_ID = "dansOtherId";
+    public static final String DANS_OTHER_ID_VERSION = "dansOtherIdVersion";
+    public static final String SWORD_TOKEN = "dansSwordToken";
 }

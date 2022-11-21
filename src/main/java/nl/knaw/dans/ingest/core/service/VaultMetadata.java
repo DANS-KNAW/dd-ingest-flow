@@ -15,11 +15,20 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-public class MissingRequiredFieldException extends RuntimeException {
-    private final String title;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
-    public MissingRequiredFieldException(String title) {
-        super();
-        this.title = title;
-    }
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+public class VaultMetadata {
+    private String pid;
+    private String bagId;
+    private String nbn;
+    private String otherId;
+    private String otherIdVersion;
+    private String swordToken;
 }

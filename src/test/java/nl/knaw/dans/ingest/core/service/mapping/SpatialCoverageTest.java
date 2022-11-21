@@ -1,12 +1,29 @@
+/*
+ * Copyright (C) 2022 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package nl.knaw.dans.ingest.core.service.mapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Slf4j
 class SpatialCoverageTest extends BaseTest {
 
     @Test
@@ -24,7 +41,7 @@ class SpatialCoverageTest extends BaseTest {
     }
 
     @Test
-    void tesFieldBuilder() throws Exception {
+    void testFieldBuilder() throws Exception {
         var builder = new CompoundFieldBuilder("TEST", true);
         builder.addSubfield("field1", "value1")
             .addSubfield("field2", "value2")
@@ -37,11 +54,10 @@ class SpatialCoverageTest extends BaseTest {
 
         builder.nextValue();
         var result = builder.build();
-        System.out.println("RESULT: " + result);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
             .writeValueAsString(result);
-        System.out.println("RESULT: " + str);
+        log.debug("result: {}", str);
     }
 }

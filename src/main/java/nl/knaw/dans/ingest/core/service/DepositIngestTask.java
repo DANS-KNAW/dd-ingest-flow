@@ -15,12 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import better.files.File;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.easy.dd2d.Deposit;
-import nl.knaw.dans.easy.dd2d.DepositToDvDatasetMetadataMapper;
-import nl.knaw.dans.easy.dd2d.FailedDepositException;
-import nl.knaw.dans.easy.dd2d.RejectedDepositException;
 import nl.knaw.dans.ingest.api.ValidateCommand;
 import nl.knaw.dans.ingest.core.DepositState;
 import nl.knaw.dans.ingest.core.TaskEvent;
@@ -28,22 +23,19 @@ import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType;
+import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 import scala.Option;
-import scala.collection.JavaConverters;
-import scala.util.Try;
-import scala.xml.Node;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.LinkOption;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,7 +49,6 @@ public class DepositIngestTask implements TargetedTask {
     protected final DataverseClient dataverseClient;
     protected final String depositorRole;
     protected final Option<Pattern> fileExclusionPattern;
-    //    private val datasetMetadataMapper = new DepositToDvDatasetMetadataMapper(deduplicate, activeMetadataBlocks, narcisClassification, iso1ToDataverseLanguage, iso2ToDataverseLanguage, repordIdToTerm)
     protected final ZipFileHandler zipFileHandler;
     protected final Map<String, String> variantToLicense;
     protected final List<URI> supportedLicenses;
@@ -69,10 +60,11 @@ public class DepositIngestTask implements TargetedTask {
     private final Deposit deposit;
 
     private final EventWriter eventWriter;
+    private final XmlReader xmlReader;
 
     public DepositIngestTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Option<Pattern> fileExclusionPattern,
         ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter) {
+        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, XmlReader xmlReader) {
         this.datasetMetadataMapper = datasetMetadataMapper;
         this.deposit = deposit;
         this.dataverseClient = dataverseClient;
@@ -88,6 +80,7 @@ public class DepositIngestTask implements TargetedTask {
         this.publishAwaitUnlockMaxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries;
         this.outboxDir = outboxDir;
         this.eventWriter = eventWriter;
+        this.xmlReader = xmlReader;
     }
 
     protected Deposit getDeposit() {
@@ -102,7 +95,7 @@ public class DepositIngestTask implements TargetedTask {
         }
         catch (RejectedDepositException e) {
             log.error("deposit was rejected", e);
-            updateDepositFromResult(DepositState.REJECTED, e.msg());
+            updateDepositFromResult(DepositState.REJECTED, e.getMessage());
         }
         catch (Exception e) {
             log.error("deposit failed", e);
@@ -110,35 +103,39 @@ public class DepositIngestTask implements TargetedTask {
         }
     }
 
-    void moveDepositToOutbox(OutboxSubDir subDir) {
+    void moveDepositToOutbox(OutboxSubDir subDir) throws IOException {
 
         var deposit = getDeposit();
         var target = this.outboxDir.resolve(subDir.getValue());
 
-        var linkOptions = JavaConverters.asScalaBuffer(new ArrayList<LinkOption>()).toSeq();
-        deposit.dir().moveToDirectory(File.apply(target), linkOptions);
+        Files.move(deposit.getDir(), target);
     }
 
     void updateDepositFromResult(DepositState depositState, String message) {
-        deposit.setState(depositState.toString(), message);
+        deposit.setState(depositState);
+        deposit.setStateDescription(message);
 
-        switch (depositState) {
-            case ARCHIVED:
-                moveDepositToOutbox(OutboxSubDir.PROCESSED);
-                break;
-            case REJECTED:
-                moveDepositToOutbox(OutboxSubDir.REJECTED);
-                break;
-            case FAILED:
-                moveDepositToOutbox(OutboxSubDir.FAILED);
-                break;
+        try {
+            switch (depositState) {
+                case ARCHIVED:
+                    moveDepositToOutbox(OutboxSubDir.PROCESSED);
+                    break;
+                case REJECTED:
+                    moveDepositToOutbox(OutboxSubDir.REJECTED);
+                    break;
+                case FAILED:
+                    moveDepositToOutbox(OutboxSubDir.FAILED);
+                    break;
+            }
         }
-
+        catch (IOException e) {
+            log.error("Unable to move directory for deposit {}", deposit.getDir(), e);
+        }
     }
 
     @Override
     public String getTarget() {
-        return getDeposit().doi();
+        return getDeposit().getOtherId();
     }
 
     @Override
@@ -147,7 +144,7 @@ public class DepositIngestTask implements TargetedTask {
     }
 
     private UUID getDepositId() {
-        return UUID.fromString(deposit.depositId());
+        return UUID.fromString(deposit.getId());
     }
 
     void doRun() throws Exception {
@@ -158,49 +155,21 @@ public class DepositIngestTask implements TargetedTask {
         var deposit = getDeposit();
         // get metadata
         var dataverseDataset = getMetadata();
-        var isUpdate = (boolean) deposit.isUpdate().get(); //.equals(Boolean.box(true));
-
-        String persistentId = null;
+        var isUpdate = deposit.isUpdate();
 
         log.debug("Is update: {}", isUpdate);
 
-        if (isUpdate) {
-            persistentId = newDatasetUpdater(dataverseDataset).performEdit();
-        }
-        else {
-            persistentId = newDatasetCreator(dataverseDataset, depositorRole).performEdit();
-        }
-        //        var editor = isUpdate ? newDatasetUpdater(dataverseDataset) : newDatasetCreator(dataverseDataset, depositorRole);
-        //        var persistentId = editor.performEdit().get();
+        var persistentId = isUpdate
+            ? newDatasetUpdater(dataverseDataset).performEdit()
+            : newDatasetCreator(dataverseDataset, depositorRole).performEdit();
 
         publishDataset(persistentId);
         postPublication(persistentId);
-
-        /*
-
-    trace(())
-    logger.info(s"Ingesting $deposit into Dataverse")
-    for {
-      _ <- checkDepositType()
-      _ <- validateDeposit()
-      dataverseDataset <- getMetadata
-      isUpdate <- deposit.isUpdate
-      _ = debug(s"isUpdate? = $isUpdate")
-      editor = if (isUpdate) newDatasetUpdater(dataverseDataset)
-               else newDatasetCreator(dataverseDataset, depositorRole)
-      persistentId <- editor.performEdit()
-      _ <- publishDataset(persistentId)
-      _ <- postPublication(persistentId)
-    } yield ()
-         */
-
     }
 
     void checkDepositType() {
         var deposit = getDeposit();
-        var hasDoi = Optional.ofNullable(deposit.doi())
-            .map(d -> !d.isEmpty())
-            .orElse(false);
+        var hasDoi = StringUtils.isNotBlank(deposit.getDoi());
 
         if (hasDoi) {
             throw new IllegalArgumentException("Deposits must not have an identifier.doi property unless they are migrated");
@@ -213,7 +182,7 @@ public class DepositIngestTask implements TargetedTask {
 
         if (dansBagValidator != null) {
             var result = dansBagValidator.validateBag(
-                deposit.bagDir().path(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
+                deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
 
             if (!result.getIsCompliant()) {
                 var violations = result.getRuleViolations().stream()
@@ -222,7 +191,7 @@ public class DepositIngestTask implements TargetedTask {
 
                 throw new RejectedDepositException(deposit, String.format(
                     "Bag was not valid according to Profile Version %s. Violations: %s",
-                    result.getProfileVersion(), violations), null
+                    result.getProfileVersion(), violations)
                 );
             }
         }
@@ -231,13 +200,6 @@ public class DepositIngestTask implements TargetedTask {
     void postPublication(String persistentId) throws IOException, DataverseException, InterruptedException {
         waitForReleasedState(persistentId);
         savePersistentIdentifiersInDepositProperties(persistentId);
-        /*
-    trace(persistentId)
-    for {
-      _ <- waitForReleasedState(persistentId)
-      _ <- savePersistentIdentifiersInDepositProperties(persistentId)
-    } yield ()
-         */
     }
 
     void savePersistentIdentifiersInDepositProperties(String persistentId) throws IOException, DataverseException {
@@ -279,7 +241,7 @@ public class DepositIngestTask implements TargetedTask {
         }
 
         if (!"RELEASED".equals(state)) {
-            throw new FailedDepositException(deposit, "Dataset did not become RELEASED within the wait period", null);
+            throw new FailedDepositException(deposit, "Dataset did not become RELEASED within the wait period");
         }
     }
 
@@ -297,33 +259,42 @@ public class DepositIngestTask implements TargetedTask {
     }
 
     DatasetEditor newDatasetUpdater(Dataset dataset) {
-        //        var tuples = variantToLicense.entrySet().stream()
-        //            .map(e -> Tuple2.apply(e.getKey(), e.getValue()))
-        //            .collect(Collectors.toList());
-        //
-        //        var scalaVariantToLicense = (scala.collection.immutable.Map<String, String>) Map$.MODULE$.apply(JavaConverters.asScalaBuffer(tuples).toSeq());
-        //        var scalaSupportedLicenses = JavaConverters.asScalaBuffer(supportedLicenses).toList();
         var deposit = getDeposit();
         var blocks = dataset.getDatasetVersion().getMetadataBlocks();
 
-        return new DatasetUpdater(dataverseClient, false, dataset, deposit, variantToLicense, supportedLicenses, publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries,
-            fileExclusionPattern.getOrElse(() -> null), zipFileHandler, new ObjectMapper(), blocks);
-        //        return new DatasetUpdater(deposit, fileExclusionPattern, zipFileHandler, false, dataset.getDatasetVersion().getMetadataBlocks(), scalaVariantToLicense, scalaSupportedLicenses,
-        //            dataverseClient, blocks);
+        return new DatasetUpdater(
+            dataverseClient,
+            false,
+            dataset,
+            deposit,
+            variantToLicense,
+            supportedLicenses,
+            publishAwaitUnlockMillisecondsBetweenRetries,
+            publishAwaitUnlockMaxNumberOfRetries,
+            fileExclusionPattern.getOrElse(() -> null),
+            zipFileHandler,
+            new ObjectMapper(),
+            blocks
+        );
     }
 
     DatasetEditor newDatasetCreator(Dataset dataset, String depositorRole) {
-        //        var tuples = variantToLicense.entrySet().stream()
-        //            .map(e -> Tuple2.apply(e.getKey(), e.getValue()))
-        //            .collect(Collectors.toList());
-        //
-        //        var scalaVariantToLicense = (scala.collection.immutable.Map<String, String>) Map$.MODULE$.apply(JavaConverters.asScalaBuffer(tuples).toSeq());
-        //        var scalaSupportedLicenses = JavaConverters.asScalaBuffer(supportedLicenses).toList();
         var deposit = getDeposit();
 
-        return new DatasetCreator(dataverseClient, false, dataset, deposit, new ObjectMapper(), variantToLicense, supportedLicenses, publishAwaitUnlockMillisecondsBetweenRetries,
-            publishAwaitUnlockMaxNumberOfRetries, fileExclusionPattern.getOrElse(() -> null), zipFileHandler, depositorRole);
-        //        return new DatasetCreator(deposit, fileExclusionPattern, zipFileHandler, depositorRole, false, dataset, scalaVariantToLicense, scalaSupportedLicenses, dataverseClient);
+        return new DatasetCreator(
+            dataverseClient,
+            false,
+            dataset,
+            deposit,
+            new ObjectMapper(),
+            variantToLicense,
+            supportedLicenses,
+            publishAwaitUnlockMillisecondsBetweenRetries,
+            publishAwaitUnlockMaxNumberOfRetries,
+            fileExclusionPattern.getOrElse(() -> null),
+            zipFileHandler,
+            depositorRole
+        );
     }
 
     Dataset getMetadata() throws IOException, DataverseException {
@@ -338,55 +309,34 @@ public class DepositIngestTask implements TargetedTask {
       dataverseDataset <- datasetMetadataMapper.toDataverseDataset(ddm, deposit.getOptOtherDoiId, optAgreements, optDateOfDeposit, datasetContacts, deposit.vaultMetadata)
          */
         var date = getDateOfDeposit();
-        var contacts = getDatasetContacts();
+        var contact = getDatasetContact();
         var deposit = getDeposit();
 
         // TODO think about putting assertions inside a getter method
-        checkPersonalDataPresent(deposit.tryOptAgreementsXml());
+        checkPersonalDataPresent(deposit.getAgreements());
 
         return datasetMetadataMapper.toDataverseDataset(
-            deposit.tryDdm().get(),
-            deposit.getOptOtherDoiId(),
-            deposit.tryOptAgreementsXml().get(),
-            date,
-            contacts,
-            deposit.vaultMetadata()
-        ).get();
+            deposit.getDdm(),
+            deposit.getOtherDoiId(),
+            deposit.getAgreements(),
+            date.orElse(null),
+            contact,
+            deposit.getVaultMetadata()
+        );
     }
 
-    void checkPersonalDataPresent(Try<Option<Node>> optionTry) {
+    void checkPersonalDataPresent(Document agreements) {
         // do nothing
     }
 
     // TODO convert to Optional
-    Option<String> getDateOfDeposit() {
-        return Option.empty();
+    Optional<String> getDateOfDeposit() {
+        return Optional.empty();
     }
 
-    // TODO convert to java versions
-    scala.collection.immutable.List<Map<String, MetadataField>> getDatasetContacts() throws IOException, DataverseException {
+    AuthenticatedUser getDatasetContact() throws IOException, DataverseException {
         var deposit = getDeposit();
-        var user = dataverseClient.admin().listSingleUser(deposit.depositorUserId()).getData();
-        var contacts = createDatasetContacts(user.getDisplayName(), user.getEmail(), user.getAffiliation());
-
-        return JavaConverters.asScalaBuffer(createDatasetContacts(user.getDisplayName(), user.getEmail(), user.getAffiliation())).toList();
+        return dataverseClient.admin().listSingleUser(deposit.getDepositorUserId()).getData();
     }
 
-    List<Map<String, MetadataField>> createDatasetContacts(String displayName, String email, String affiliation) {
-        var fields = new ArrayList<MetadataField>();
-        fields.add(new PrimitiveSingleValueField("datasetContactName", displayName));
-        fields.add(new PrimitiveSingleValueField("datasetContactEmail", email));
-
-        if (affiliation != null) {
-            fields.add(new PrimitiveSingleValueField("datasetContactAffiliation", affiliation));
-        }
-
-        var result = new HashMap<String, MetadataField>();
-
-        for (var field : fields) {
-            result.put(field.getTypeName(), field);
-        }
-
-        return List.of(result);
-    }
 }

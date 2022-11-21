@@ -1,5 +1,21 @@
+/*
+ * Copyright (C) 2022 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package nl.knaw.dans.ingest.core.service.builder;
 
+import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import org.w3c.dom.Node;
 
 import java.util.function.Function;
@@ -8,6 +24,7 @@ import java.util.stream.Stream;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ALTERNATIVE_TITLE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATASET_CONTACT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATA_SOURCES;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_COLLECTION;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
@@ -30,6 +47,10 @@ public class CitationFieldBuilder extends FieldBuilder {
 
     public void addOtherIds(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
         addMultiple(OTHER_ID, stream, generator);
+    }
+
+    public void addOtherIdsStrings(Stream<String> stream, CompoundFieldGenerator<String> generator) {
+        addMultipleString(OTHER_ID, stream, generator);
     }
 
     public void addAuthors(Stream<Node> creators, CompoundFieldGenerator<Node> generator) {
@@ -86,5 +107,12 @@ public class CitationFieldBuilder extends FieldBuilder {
 
     public void addDataSources(Stream<String> dataSources) {
         addSingleString(DATA_SOURCES, dataSources);
+    }
+
+    public void addDatasetContact(Stream<AuthenticatedUser> data, CompoundFieldGenerator<AuthenticatedUser> generator) {
+        data.forEach(value -> {
+            var builder = getBuilder(DATASET_CONTACT, true);
+            generator.build(builder, value);
+        });
     }
 }

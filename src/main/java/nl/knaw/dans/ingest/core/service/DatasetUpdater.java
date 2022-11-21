@@ -17,7 +17,6 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.easy.dd2d.Deposit;
 import nl.knaw.dans.easy.dd2d.FailedDepositException;
 import nl.knaw.dans.easy.dd2d.mapping.AccessRights;
 import nl.knaw.dans.lib.dataverse.DatasetApi;

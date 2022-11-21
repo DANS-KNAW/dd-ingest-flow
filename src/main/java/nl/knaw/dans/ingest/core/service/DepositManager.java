@@ -15,11 +15,16 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-public class MissingRequiredFieldException extends RuntimeException {
-    private final String title;
 
-    public MissingRequiredFieldException(String title) {
-        super();
-        this.title = title;
-    }
+import org.w3c.dom.Document;
+
+import java.io.IOException;
+import java.nio.file.Path;
+
+public interface DepositManager {
+
+    Deposit loadDeposit(Path path) throws InvalidDepositException, IOException;
+
+    void saveProperties(Path path, Deposit deposit) throws InvalidDepositException;
+
 }

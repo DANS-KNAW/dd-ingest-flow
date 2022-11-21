@@ -15,8 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
-
 import java.nio.file.Path;
 
 public class BoundedDepositImportTaskIterator extends  AbstractDepositsImportTaskIterator {

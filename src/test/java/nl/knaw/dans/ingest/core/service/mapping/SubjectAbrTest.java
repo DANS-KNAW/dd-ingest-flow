@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
+import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Node;
 
@@ -27,7 +28,7 @@ class SubjectAbrTest extends BaseTest {
     @Test
     void isAbrComplex() throws Exception {
         var doc = readDocument("abrs.xml");
-        var nodes = xmlReader.xpathToStream(doc, "//ddm:subject")
+        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isAbrComplex)
             .collect(Collectors.toList());
 
@@ -41,7 +42,7 @@ class SubjectAbrTest extends BaseTest {
     @Test
     void isOldAbr() throws Exception {
         var doc = readDocument("abrs.xml");
-        var nodes = xmlReader.xpathToStream(doc, "//ddm:subject")
+        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isOldAbr)
             .collect(Collectors.toList());
 
@@ -54,7 +55,7 @@ class SubjectAbrTest extends BaseTest {
     @Test
     void isAbrArtifact() throws Exception {
         var doc = readDocument("abrs.xml");
-        var nodes = xmlReader.xpathToStream(doc, "//ddm:subject")
+        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isAbrArtifact)
             .collect(Collectors.toList());
 
@@ -67,7 +68,7 @@ class SubjectAbrTest extends BaseTest {
     @Test
     void toAbrComplex() throws Exception {
         var doc = readDocument("abrs.xml");
-        var nodes = xmlReader.xpathToStream(doc, "//ddm:subject")
+        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isAbrComplex)
             .map(SubjectAbr::toAbrComplex)
             .collect(Collectors.toList());
@@ -80,7 +81,7 @@ class SubjectAbrTest extends BaseTest {
     @Test
     void toAbrArtifact() throws Exception {
         var doc = readDocument("abrs.xml");
-        var nodes = xmlReader.xpathToStream(doc, "//ddm:subject")
+        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isAbrArtifact)
             .map(SubjectAbr::toAbrArtifact)
             .collect(Collectors.toList());
@@ -93,7 +94,7 @@ class SubjectAbrTest extends BaseTest {
     @Test
     void fromAbrOldToAbrArtifact() throws Exception {
         var doc = readDocument("abrs.xml");
-        var nodes = xmlReader.xpathToStream(doc, "//ddm:subject")
+        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isOldAbr)
             .map(SubjectAbr::fromAbrOldToAbrArtifact)
             .collect(Collectors.toList());

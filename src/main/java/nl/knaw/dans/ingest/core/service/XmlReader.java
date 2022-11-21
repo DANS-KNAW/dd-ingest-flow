@@ -16,14 +16,11 @@
 package nl.knaw.dans.ingest.core.service;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.stream.Stream;
 
 public interface XmlReader {
 
@@ -41,13 +38,5 @@ public interface XmlReader {
     Document readXmlFile(Path path) throws ParserConfigurationException, IOException, SAXException;
 
     Document readXmlString(String str) throws ParserConfigurationException, IOException, SAXException;
-
-    Stream<Node> xpathToStream(Node node, String expression) throws XPathExpressionException;
-
-    Stream<Node> xpathsToStream(Node node, String... expressions) throws XPathExpressionException;
-
-    Stream<String> xpathToStreamOfStrings(Node node, String expression) throws XPathExpressionException;
-
-    Stream<String> xpathsToStreamOfStrings(Node node, String... expressions) throws XPathExpressionException;
 
 }

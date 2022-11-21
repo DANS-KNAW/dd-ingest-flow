@@ -15,8 +15,6 @@
  */
 package nl.knaw.dans.ingest.core;
 
-import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
-import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import nl.knaw.dans.ingest.core.service.DepositIngestTask;
 import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactory;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;

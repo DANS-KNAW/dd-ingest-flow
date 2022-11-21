@@ -15,13 +15,8 @@
  */
 package nl.knaw.dans.ingest.core;
 
-import better.files.File;
-import nl.knaw.dans.easy.dd2d.Deposit;
-import nl.knaw.dans.easy.dd2d.DepositMigrationTask;
-import nl.knaw.dans.easy.dd2d.ZipFileHandler;
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import org.junit.jupiter.api.Test;
-import scala.Option;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,6 +46,29 @@ public class DepositStartImportTaskWrapperTest {
         deposit3_2created     -> ERROR 2 created timestamps
 
      */
+
+    private static DepositImportTaskWrapper createTaskWrapper(String depositName) {
+        //        return new DepositImportTaskWrapper(new DepositMigrationTask(
+        //            new Deposit(File.apply(testDepositsBasedir.resolve(depositName))),
+        //            Option.empty(),
+        //            new ZipFileHandler(File.apply(Paths.get("dummy"))),
+        //            "dummy",
+        //            false,
+        //            null,
+        //            Option.empty(),
+        //            null,
+        //            0,
+        //            0,
+        //            null,
+        //            null,
+        //            null,
+        //            null,
+        //            null,
+        //            null,
+        //            null
+        //        ), null);
+        return null;
+    }
 
     @Test
     public void depositsShouldBeOrderedByCreatedTimestamp() {
@@ -84,27 +102,5 @@ public class DepositStartImportTaskWrapperTest {
     public void failFastIfMultipleCreatedTimestamps() {
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> createTaskWrapper("deposit3_2created"));
         assertTrue(thrown.getMessage().contains("There should be exactly one Created value; found 2"));
-    }
-
-    private static DepositImportTaskWrapper createTaskWrapper(String depositName) {
-        return new DepositImportTaskWrapper(new DepositMigrationTask(
-            new Deposit(File.apply(testDepositsBasedir.resolve(depositName))),
-            Option.empty(),
-            new ZipFileHandler(File.apply(Paths.get("dummy"))),
-            "dummy",
-            false,
-            null,
-            Option.empty(),
-            null,
-            0,
-            0,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        ), null);
     }
 }

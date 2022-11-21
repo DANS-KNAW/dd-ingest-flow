@@ -20,6 +20,8 @@ import nl.knaw.dans.ingest.api.ValidateCommand;
 import nl.knaw.dans.ingest.core.DepositState;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
+import nl.knaw.dans.ingest.core.service.exception.FailedDepositException;
+import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
@@ -30,7 +32,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-import scala.Option;
 
 import java.io.IOException;
 import java.net.URI;
@@ -48,7 +49,7 @@ public class DepositIngestTask implements TargetedTask {
     private static final Logger log = LoggerFactory.getLogger(DepositIngestTask.class);
     protected final DataverseClient dataverseClient;
     protected final String depositorRole;
-    protected final Option<Pattern> fileExclusionPattern;
+    protected final Pattern fileExclusionPattern;
     protected final ZipFileHandler zipFileHandler;
     protected final Map<String, String> variantToLicense;
     protected final List<URI> supportedLicenses;
@@ -62,7 +63,7 @@ public class DepositIngestTask implements TargetedTask {
     private final EventWriter eventWriter;
     private final XmlReader xmlReader;
 
-    public DepositIngestTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Option<Pattern> fileExclusionPattern,
+    public DepositIngestTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
         int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, XmlReader xmlReader) {
         this.datasetMetadataMapper = datasetMetadataMapper;
@@ -83,7 +84,7 @@ public class DepositIngestTask implements TargetedTask {
         this.xmlReader = xmlReader;
     }
 
-    protected Deposit getDeposit() {
+    public Deposit getDeposit() {
         return this.deposit;
     }
 
@@ -271,7 +272,7 @@ public class DepositIngestTask implements TargetedTask {
             supportedLicenses,
             publishAwaitUnlockMillisecondsBetweenRetries,
             publishAwaitUnlockMaxNumberOfRetries,
-            fileExclusionPattern.getOrElse(() -> null),
+            fileExclusionPattern,
             zipFileHandler,
             new ObjectMapper(),
             blocks
@@ -291,7 +292,7 @@ public class DepositIngestTask implements TargetedTask {
             supportedLicenses,
             publishAwaitUnlockMillisecondsBetweenRetries,
             publishAwaitUnlockMaxNumberOfRetries,
-            fileExclusionPattern.getOrElse(() -> null),
+            fileExclusionPattern,
             zipFileHandler,
             depositorRole
         );

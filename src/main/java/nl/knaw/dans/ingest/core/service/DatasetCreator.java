@@ -17,7 +17,7 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.easy.dd2d.mapping.AccessRights;
+import nl.knaw.dans.ingest.core.service.exception.FailedDepositException;
 import nl.knaw.dans.lib.dataverse.DataverseApi;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
@@ -81,7 +81,7 @@ public class DatasetCreator extends DatasetEditor {
         var api = dataverseClient.dataset(persistentId);
 
         // license stuff
-        var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.tryDdm().get())));
+        var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.getDdm())));
         api.updateMetadataFromJsonLd(license, true);
         api.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
 
@@ -99,7 +99,7 @@ public class DatasetCreator extends DatasetEditor {
         api.assignRole(getRoleAssignment());
         api.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
 
-        var dateAvailable = deposit.getDateAvailable().get();
+        var dateAvailable = getDateAvailable(deposit); //deposit.getDateAvailable().get();
         embargoFiles(persistentId, dateAvailable);
     }
 
@@ -109,21 +109,6 @@ public class DatasetCreator extends DatasetEditor {
         result.setAssignee(String.format("@%s", deposit.getDepositorUserId()));
 
         return result;
-    }
-
-    private void configureEnableAccessRequests(String persistentId, boolean canEnable) throws IOException, DataverseException {
-        var api = dataverseClient.accessRequests(persistentId);
-
-        var ddm = deposit.tryDdm().get();
-        var files = deposit.tryFilesXml().get();
-        var enable = AccessRights.isEnableRequests(ddm.$bslash("profile").$bslash("accessRights").head(), files);
-
-        if (!enable) {
-            api.disable();
-        }
-        else if (canEnable) {
-            api.enable();
-        }
     }
 
     private void updateFileMetadata(Map<Integer, FileInfo> databaseIds) throws IOException, DataverseException {

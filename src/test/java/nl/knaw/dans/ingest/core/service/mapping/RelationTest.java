@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
+import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import org.junit.jupiter.api.Test;
 
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ class RelationTest extends BaseTest {
     @Test
     void testToRelationObject() throws Exception {
         var doc = readDocument("dataset.xml");
-        var items = xmlReader.xpathToStream(doc, "//ddm:dcmiMetadata//*")
+        var items = XPathEvaluator.nodes(doc, "//ddm:dcmiMetadata//*")
             .filter(Relation::isRelation)
             .map(Relation::toRelationObject)
             .collect(Collectors.toList());

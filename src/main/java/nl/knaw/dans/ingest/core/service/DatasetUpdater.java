@@ -17,8 +17,8 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.easy.dd2d.FailedDepositException;
-import nl.knaw.dans.easy.dd2d.mapping.AccessRights;
+import nl.knaw.dans.ingest.core.service.exception.CannotUpdateDraftDatasetException;
+import nl.knaw.dans.ingest.core.service.exception.FailedDepositException;
 import nl.knaw.dans.lib.dataverse.DatasetApi;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -64,7 +65,7 @@ public class DatasetUpdater extends DatasetEditor {
 
             var doi = isMigration
                 ? getDoiByIsVersionOf()
-                : getDoi(String.format("dansSwordToken:%s", deposit.vaultMetadata().dataverseSwordToken()));
+                : getDoi(String.format("dansSwordToken:%s", deposit.getVaultMetadata().getSwordToken()));
 
             try {
                 var api = dataverseClient.dataset(doi);
@@ -84,7 +85,7 @@ public class DatasetUpdater extends DatasetEditor {
                 api.updateMetadataFromJsonLd(blocks, true);
                 api.awaitUnlock();
 
-                var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.tryDdm().get())));
+                var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.getDdm())));
                 api.updateMetadataFromJsonLd(license, true);
                 api.awaitUnlock();
 
@@ -177,7 +178,7 @@ public class DatasetUpdater extends DatasetEditor {
 
                 // embargo
                 // TODO only embargo a subset of files based on previous actions
-                var dateAvailable = deposit.getDateAvailable().get();
+                var dateAvailable = getDateAvailable(deposit);
                 var fileIdsToEmbargo = union(fileReplacements.keySet(), fileAdditions.keySet())
                     .stream()
                     .map(key -> Map.entry(key, fileReplacements.getOrDefault(key, fileAdditions.get(key))))
@@ -190,7 +191,7 @@ public class DatasetUpdater extends DatasetEditor {
                 /*
                  * Cannot enable requests if they were disallowed because of closed files in a previous version. However disabling is possible because a the update may add a closed file.
                  */
-                configureEnableAccessRequests(deposit, doi, false);
+                configureEnableAccessRequests(doi, false);
 
                 return doi;
             }
@@ -217,55 +218,6 @@ public class DatasetUpdater extends DatasetEditor {
     private void deleteDraft(String persistentId) throws IOException, DataverseException {
         dataverseClient.dataset(persistentId).deleteDraft();
     }
-
-    /*
-    protected def deleteDraftIfExists(persistentId: String): Unit = {
-        val result = for {
-            v <- Try(dataverseClient.dataset(persistentId).getLatestVersion.getData)
-            _ = logger.trace("deleting draft")
-                _ <- if (v.getLatestVersion.getVersionState.contains("DRAFT"))
-                deleteDraft(persistentId)
-            else Success(())
-        } yield ()
-        result.doIfFailure {
-            case e => logger.warn("Could not delete draft", e)
-        }
-    }
-
-     */
-    void configureEnableAccessRequests(Deposit deposit, String persistentId, boolean canEnable) throws IOException, DataverseException {
-        var ddm = deposit.tryDdm().get();
-        var files = deposit.tryFilesXml().get();
-
-        var enable = AccessRights.isEnableRequests(ddm.$bslash("profile").$bslash("accessRights").head(), files);
-
-        log.trace("AccessRequests enable {} can {}", enable, canEnable);
-
-        var api = dataverseClient.accessRequests(persistentId);
-
-        if (!enable) {
-            api.disable();
-        }
-        else if (canEnable) {
-            api.enable();
-        }
-
-        // else do nothing
-    }
-    /*
-    protected def configureEnableAccessRequests(deposit: Deposit, persistendId: PersistentId, canEnable: Boolean): Try[Unit] = {
-        for {
-            ddm <- deposit.tryDdm
-            files <- deposit.tryFilesXml
-            enable = AccessRights.isEnableRequests((ddm \ "profile" \ "accessRights").head, files)
-            _ = logger.trace("AccessRequests enable "+ enable + " can " +canEnable)
-                _ <- if (!enable) Try(dataverseClient.accessRequests(persistendId).disable())
-            else if (canEnable) Try(dataverseClient.accessRequests(persistendId).enable())
-            else Success(())
-        } yield ()
-    }
-
-     */
 
     private void updateFileMetadata(Map<Integer, FileMeta>... fileMaps) throws IOException, DataverseException {
         var seen = new HashSet<Integer>();
@@ -472,13 +424,14 @@ public class DatasetUpdater extends DatasetEditor {
                     return null;
                 }
             })
-            .filter(x -> x != null)
+            .filter(Objects::nonNull)
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private String getDoiByIsVersionOf() throws IOException, DataverseException {
-        var isVersionOf = deposit.getIsVersionOf();
-        return getDoi(String.format("dansBagId:%s", isVersionOf.get()));
+    private String getDoiByIsVersionOf() {
+        return Optional.of(deposit.getIsVersionOf())
+            .map(item -> String.format("dansBagId:%s", item))
+            .orElse(null);
     }
 
     String getDoi(String query) throws IOException, DataverseException {

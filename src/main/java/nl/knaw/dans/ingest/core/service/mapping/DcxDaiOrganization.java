@@ -38,61 +38,45 @@ import static nl.knaw.dans.ingest.core.service.mapping.Contributor.contributorRo
 public final class DcxDaiOrganization {
 
     public static CompoundFieldGenerator<Node> toAuthorValueObject = (builder, node) -> {
-        try {
-            var organization = parseOrganization(node);
+        var organization = parseOrganization(node);
 
-            if (StringUtils.isNotBlank(organization.getName())) {
-                builder.addSubfield(AUTHOR_NAME, organization.getName());
-            }
-
-            if (organization.getIsni() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ISNI");
-                builder.addSubfield(AUTHOR_IDENTIFIER, organization.getIsni());
-            }
-            else if (organization.getViaf() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "VIAF");
-                builder.addSubfield(AUTHOR_IDENTIFIER, organization.getViaf());
-            }
+        if (StringUtils.isNotBlank(organization.getName())) {
+            builder.addSubfield(AUTHOR_NAME, organization.getName());
         }
-        catch (XPathExpressionException e) {
-            log.error("Xpath exception", e);
+
+        if (organization.getIsni() != null) {
+            builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ISNI");
+            builder.addSubfield(AUTHOR_IDENTIFIER, organization.getIsni());
+        }
+        else if (organization.getViaf() != null) {
+            builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "VIAF");
+            builder.addSubfield(AUTHOR_IDENTIFIER, organization.getViaf());
         }
     };
 
     public static CompoundFieldGenerator<Node> toContributorValueObject = (builder, node) -> {
-        try {
-            var organization = parseOrganization(node);
+        var organization = parseOrganization(node);
 
-            if (StringUtils.isNotBlank(organization.getName())) {
-                builder.addSubfield(CONTRIBUTOR_NAME, organization.getName());
-            }
-            if (StringUtils.isNotBlank(organization.getRole())) {
-                var value = contributorRoleToContributorType.getOrDefault(organization.getRole(), "Other");
-                builder.addSubfield(CONTRIBUTOR_TYPE, value);
-            }
+        if (StringUtils.isNotBlank(organization.getName())) {
+            builder.addSubfield(CONTRIBUTOR_NAME, organization.getName());
         }
-        catch (XPathExpressionException e) {
-            throw new RuntimeException("Unable to parse author", e);
+        if (StringUtils.isNotBlank(organization.getRole())) {
+            var value = contributorRoleToContributorType.getOrDefault(organization.getRole(), "Other");
+            builder.addSubfield(CONTRIBUTOR_TYPE, value);
         }
     };
 
     public static CompoundFieldGenerator<Node> toGrantNumberValueObject = (builder, node) -> {
-        try {
-            var org = parseOrganization(node);
-            builder.addSubfield(GRANT_NUMBER_AGENCY, org.getName().trim());
-            builder.addSubfield(GRANT_NUMBER_VALUE, "");
-        }
-        catch (XPathExpressionException e) {
-            log.error("Error parsing organization", e);
-            throw new RuntimeException("Parse error", e);
-        }
+        var org = parseOrganization(node);
+        builder.addSubfield(GRANT_NUMBER_AGENCY, org.getName().trim());
+        builder.addSubfield(GRANT_NUMBER_VALUE, "");
     };
 
-    private static String getFirstValue(Node node, String expression) throws XPathExpressionException {
+    private static String getFirstValue(Node node, String expression) {
         return XPathEvaluator.strings(node, expression).map(String::trim).findFirst().orElse(null);
     }
 
-    private static DatasetOrganization parseOrganization(Node node) throws XPathExpressionException {
+    private static DatasetOrganization parseOrganization(Node node) {
         return DatasetOrganization.builder()
             .name(getFirstValue(node, "dcx-dai:name"))
             .role(getFirstValue(node, "dcx-dai:role"))
@@ -102,42 +86,22 @@ public final class DcxDaiOrganization {
     }
 
     public static boolean isRightsHolderOrFunder(Node node) {
-        try {
-            var organization = parseOrganization(node);
-            return Set.of("RightsHolder", "Funder").contains(organization.getRole());
-        }
-        catch (XPathExpressionException e) {
-            throw new RuntimeException(e);
-        }
+        var organization = parseOrganization(node);
+        return Set.of("RightsHolder", "Funder").contains(organization.getRole());
     }
 
     public static boolean isRightsHolder(Node node) {
-        try {
-            var organization = parseOrganization(node);
-            return StringUtils.contains(organization.getRole(), "RightsHolder");
-        }
-        catch (XPathExpressionException e) {
-            throw new RuntimeException(e);
-        }
+        var organization = parseOrganization(node);
+        return StringUtils.contains(organization.getRole(), "RightsHolder");
     }
 
     public static String toRightsHolder(Node node) {
-        try {
-            var organization = parseOrganization(node);
-            return organization.getName();
-        }
-        catch (XPathExpressionException e) {
-            throw new RuntimeException(e);
-        }
+        var organization = parseOrganization(node);
+        return organization.getName();
     }
 
     public static boolean isFunder(Node node) {
-        try {
-            var organization = parseOrganization(node);
-            return StringUtils.contains(organization.getRole(), "Funder");
-        }
-        catch (XPathExpressionException e) {
-            throw new RuntimeException(e);
-        }
+        var organization = parseOrganization(node);
+        return StringUtils.contains(organization.getRole(), "Funder");
     }
 }

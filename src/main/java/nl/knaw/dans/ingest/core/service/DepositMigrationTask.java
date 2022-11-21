@@ -17,17 +17,18 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapping.Amd;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
-import scala.Option;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +36,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class DepositMigrationTask extends DepositIngestTask {
-    public DepositMigrationTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Option<Pattern> fileExclusionPattern,
+    public DepositMigrationTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
         int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, XmlReader xmlReader) {
 
@@ -52,7 +53,26 @@ public class DepositMigrationTask extends DepositIngestTask {
             throw new IllegalArgumentException("Deposit for migrated dataset MUST have deposit property identifier.doi set");
         }
 
-        deposit.getVaultMetadata().checkMinimumFieldsForImport().get();
+        validateVaultMetadata(deposit.getVaultMetadata());
+    }
+
+    void validateVaultMetadata(VaultMetadata vaultMetadata) {
+        var missing = new ArrayList<String>();
+
+        if (StringUtils.isBlank(vaultMetadata.getPid())) {
+            missing.add("dataversePid");
+        }
+
+        if (StringUtils.isBlank(vaultMetadata.getNbn())) {
+            missing.add("dataverseNbn");
+        }
+
+        if (!missing.isEmpty()) {
+            var msg = String.join(", ", missing);
+            throw new RuntimeException(String.format(
+                "Not enough Data Vault Metadata for import deposit, missing: %s", msg
+            ));
+        }
     }
 
     @Override
@@ -62,7 +82,7 @@ public class DepositMigrationTask extends DepositIngestTask {
 
         // the only difference from the parent is the "isMigration" property
         return new DatasetCreator(dataverseClient, true, dataset, deposit, new ObjectMapper(), variantToLicense, supportedLicenses, publishAwaitUnlockMillisecondsBetweenRetries,
-            publishAwaitUnlockMaxNumberOfRetries, fileExclusionPattern.getOrElse(() -> null), zipFileHandler, depositorRole);
+            publishAwaitUnlockMaxNumberOfRetries, fileExclusionPattern, zipFileHandler, depositorRole);
     }
 
     @Override
@@ -73,7 +93,7 @@ public class DepositMigrationTask extends DepositIngestTask {
 
         return new DatasetUpdater(dataverseClient, true, dataset, deposit, variantToLicense, supportedLicenses, publishAwaitUnlockMillisecondsBetweenRetries,
             publishAwaitUnlockMaxNumberOfRetries,
-            fileExclusionPattern.getOrElse(() -> null), zipFileHandler, new ObjectMapper(), blocks);
+            fileExclusionPattern, zipFileHandler, new ObjectMapper(), blocks);
     }
 
     @Override

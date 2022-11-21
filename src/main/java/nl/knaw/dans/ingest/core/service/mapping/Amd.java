@@ -20,7 +20,6 @@ import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
-import javax.xml.xpath.XPathExpressionException;
 import java.util.Optional;
 
 import static nl.knaw.dans.ingest.core.DepositState.PUBLISHED;
@@ -51,27 +50,21 @@ public class Amd extends Base {
     }
 
     private static Optional<String> getFirstChangeToState(Node node, String state) {
-        try {
-            return XPathEvaluator.nodes(node, "//stateChangeDates/damd:stateChangeDate")
-                .filter(n -> {
-                    var toState = getChildNode(n, "toState")
-                        .map(Node::getTextContent)
-                        .orElse("");
+        return XPathEvaluator.nodes(node, "//stateChangeDates/damd:stateChangeDate")
+            .filter(n -> {
+                var toState = getChildNode(n, "toState")
+                    .map(Node::getTextContent)
+                    .orElse("");
 
-                    return toState.equals(state);
-                })
-                .map(n -> getChildNode(n, "changeDate").map(Node::getTextContent))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(StringUtils::isNotBlank)
-                .map(Base::toYearMonthDayFormat)
-                .sorted()
-                .findFirst();
+                return toState.equals(state);
+            })
+            .map(n -> getChildNode(n, "changeDate").map(Node::getTextContent))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(StringUtils::isNotBlank)
+            .map(Base::toYearMonthDayFormat)
+            .sorted()
+            .findFirst();
 
-        }
-        catch (XPathExpressionException e) {
-            log.error("Xpath error", e);
-            return Optional.empty();
-        }
     }
 }

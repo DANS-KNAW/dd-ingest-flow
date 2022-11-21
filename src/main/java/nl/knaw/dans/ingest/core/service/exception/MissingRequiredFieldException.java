@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.service.exception;
 
-public class FailedDepositException extends RuntimeException {
-    public FailedDepositException(Deposit deposit, String message) {
-        super(String.format("Failed %s: %s", deposit.getDir(), message));
+public class MissingRequiredFieldException extends RuntimeException {
+    private final String title;
+
+    public MissingRequiredFieldException(String title) {
+        super();
+        this.title = title;
     }
 }

@@ -18,6 +18,7 @@ package nl.knaw.dans.ingest.core.service;
 import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.reader.BagReader;
 import nl.knaw.dans.ingest.core.DepositState;
+import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -122,6 +123,7 @@ public class DepositManagerImpl implements DepositManager {
 
             var deposit = mapToDeposit(path, bagDir, config, bagInfo);
 
+            deposit.setBag(bagInfo);
             deposit.setDdm(readOptionalXmlFile(deposit.getDdmPath()));
             deposit.setFilesXml(readOptionalXmlFile(deposit.getFilesXmlPath()));
             deposit.setAgreements(readOptionalXmlFile(deposit.getAgreementsXmlPath()));
@@ -164,10 +166,34 @@ public class DepositManagerImpl implements DepositManager {
         deposit.setDataverseOtherIdVersion(config.getString("dataverse.other-id-version", ""));
         deposit.setDataverseSwordToken(config.getString("dataverse.sword-token", ""));
 
-        var isVersionOf = bag.getMetadata().get("Is-Version-Of");
-        deposit.setUpdate(isVersionOf.size() > 0 && StringUtils.isNotBlank(isVersionOf.get(0)));
+        bag.getMetadata().get("Is-Version-Of")
+            .stream()
+            .filter(StringUtils::isNotBlank)
+            .findFirst()
+            .ifPresent(item -> {
+                deposit.setUpdate(true);
+                deposit.setIsVersionOf(item);
+            });
+
+        var created = getUniqueValue(bag, "Created");
+        deposit.setBagCreated(OffsetDateTime.parse(created).toInstant());
 
         return deposit;
+    }
+
+    String getUniqueValue(Bag bag, String key) {
+        var metadata = bag.getMetadata();
+        var value = metadata.get(key);
+
+        if (value.size() != 1) {
+            throw new IllegalArgumentException(String.format("Value '%s' should contain exactly 1 value in bag; %s found", key, value.size()));
+        }
+
+        if (StringUtils.isBlank(value.get(0))) {
+            throw new IllegalArgumentException(String.format("Value '%s' is empty", key));
+        }
+
+        return value.get(0);
     }
 
     void mapToConfig(Configuration config, Deposit deposit) {

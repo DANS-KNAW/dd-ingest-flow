@@ -32,10 +32,12 @@ import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DansBagValidatorImpl;
 import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactory;
+import nl.knaw.dans.ingest.core.service.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
+import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
 import nl.knaw.dans.ingest.health.DansBagValidatorHealthCheck;
 import nl.knaw.dans.ingest.health.DataverseHealthCheck;
@@ -80,6 +82,9 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final TargetedTaskSequenceManager targetedTaskSequenceManager = new TargetedTaskSequenceManager(taskExecutor);
         final DataverseClient dataverseClient = configuration.getDataverse().build();
 
+        final var xmlReader = new XmlReaderImpl();
+        final var depositManager = new DepositManagerImpl(xmlReader);
+
         var dansBagValidatorClient = new JerseyClientBuilder(environment)
             .withProvider(MultiPartFeature.class)
             .using(configuration.getDansBagValidatorClient())
@@ -96,14 +101,14 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             validator,
             xmlReader, configuration.getIngestFlow(),
             configuration.getDataverseExtra(),
-            depositPropertiesManager);
+            depositManager);
         final var migrationTaskFactory = new DepositIngestTaskFactory(
             true,
             dataverseClient,
             validator,
             xmlReader, configuration.getIngestFlow(),
             configuration.getDataverseExtra(),
-            depositPropertiesManager);
+            depositManager);
 
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());

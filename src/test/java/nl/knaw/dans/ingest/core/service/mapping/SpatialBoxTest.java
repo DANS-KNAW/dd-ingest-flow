@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
+import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,7 @@ class SpatialBoxTest extends BaseTest {
     @Test
     void testToEasyTsmSpatialBoxValueObject() throws Exception {
         var doc = readDocument("spatial.xml");
-        var node = xmlReader.xpathToStream(doc, "//gml:boundedBy[1]")
+        var node = XPathEvaluator.nodes(doc, "//gml:boundedBy[1]")
             .findFirst().orElseThrow();
 
         var builder = new CompoundFieldBuilder(SPATIAL_BOX, true);
@@ -68,7 +69,7 @@ class SpatialBoxTest extends BaseTest {
     @Test
     void testToEasyTsmSpatialBoxValueObjectWithRd() throws Exception {
         var doc = readDocument("spatial.xml");
-        var node = xmlReader.xpathToStream(doc, "//gml:boundedBy[2]")
+        var node = XPathEvaluator.nodes(doc, "//gml:boundedBy[2]")
             .findFirst().orElseThrow();
 
         var builder = new CompoundFieldBuilder(SPATIAL_BOX, true);
@@ -83,7 +84,7 @@ class SpatialBoxTest extends BaseTest {
     @Test
     void testToEasyTsmSpatialBoxValueObjectWithInvalidPairs() throws Exception {
         var doc = readDocument("spatial.xml");
-        var node = xmlReader.xpathToStream(doc, "//gml:boundedBy[3]")
+        var node = XPathEvaluator.nodes(doc, "//gml:boundedBy[3]")
             .findFirst().orElseThrow();
 
         var e = assertThrows(NumberFormatException.class, () -> SpatialBox.toEasyTsmSpatialBoxValueObject.build(null, node));

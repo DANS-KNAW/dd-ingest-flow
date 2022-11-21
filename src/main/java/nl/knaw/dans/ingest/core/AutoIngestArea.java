@@ -16,7 +16,6 @@
 package nl.knaw.dans.ingest.core;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
 import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactory;
 import nl.knaw.dans.ingest.core.service.UnboundedTargetedTaskSource;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;

@@ -15,9 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
-import nl.knaw.dans.ingest.core.legacy.DepositIngestTaskFactoryWrapper;
-
 import java.nio.file.Path;
 import java.util.Iterator;
 

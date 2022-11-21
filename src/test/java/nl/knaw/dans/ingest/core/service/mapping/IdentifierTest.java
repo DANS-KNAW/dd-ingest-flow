@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
+import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import org.junit.jupiter.api.Test;
 
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ class IdentifierTest extends BaseTest {
     @Test
     void testToArchisNumberValue() throws Exception {
         var ddm = readDocument("dataset.xml");
-        var ids = xmlReader.xpathToStream(ddm, "//ddm:dcmiMetadata/dcterms:identifier");
+        var ids = XPathEvaluator.nodes(ddm, "//ddm:dcmiMetadata/dcterms:identifier");
 
         var results = ids
             .filter(Identifier::isArchisZaakId)

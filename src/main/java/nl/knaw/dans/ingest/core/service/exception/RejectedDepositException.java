@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.service.exception;
 
-public class InvalidDepositException extends Throwable {
-    public InvalidDepositException(String msg) {
-        super(msg);
-    }
+import nl.knaw.dans.ingest.core.service.Deposit;
 
-    public InvalidDepositException(String msg, Throwable cause) {
-        super(msg, cause);
+public class RejectedDepositException extends RuntimeException {
+    public RejectedDepositException(Deposit deposit, String message) {
+        super(String.format("Rejected %s: %s", deposit.getDir(), message));
     }
 }

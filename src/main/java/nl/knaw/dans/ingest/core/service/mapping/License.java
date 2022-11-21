@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.service.mapping;
 
 import lombok.extern.slf4j.Slf4j;
-import scala.Option;
-import scala.collection.JavaConverters;
-import scala.xml.Node;
+import nl.knaw.dans.ingest.core.service.XmlReader;
+import org.w3c.dom.Node;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,34 +25,24 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class License {
-
-    final static String DCTERMS_NAMESPACE_URI = "http://purl.org/dc/terms/";
-    final static String XML_SCHEMA_INSTANCE_URI = "http://www.w3.org/2001/XMLSchema-instance";
+public class License extends Base {
 
     public static boolean isLicenseUri(Node node) {
-        if (!"license".equals(node.label())) {
+        if (!"license".equals(node.getLocalName())) {
             return false;
         }
 
-        if (!DCTERMS_NAMESPACE_URI.equals(node.namespace())) {
+        if (XmlReader.NAMESPACE_DCTERMS.equals(node.getNamespaceURI())) {
             return false;
         }
 
-        var xsiType = "URI";
-        var result = JavaConverters.asJavaCollection(node.attribute(XML_SCHEMA_INSTANCE_URI, "type").get())
-            .stream()
-            .map(Node::text)
-            .filter(n -> n.endsWith(String.format(":%s", xsiType)) || xsiType.equals(n))
-            .findFirst();
-
-        if (result.isEmpty()) {
+        if (!hasXsiType(node, "URI")) {
             return false;
         }
 
         // validate it is a valid URI
         try {
-            new URI(node.text());
+            new URI(node.getTextContent());
             return true;
         }
         catch (URISyntaxException e) {
@@ -61,12 +50,12 @@ public class License {
         }
     }
 
-    public static URI getLicenseUri(List<URI> supportedLicenses, Map<String, String> variantToLicense, Option<Node> licenseNode) {
+    public static URI getLicenseUri(List<URI> supportedLicenses, Map<String, String> variantToLicense, Node licenseNode) {
         // TODO add the URI normalization
-        var licenseText = licenseNode.get().text();
+        var licenseText = licenseNode.getTextContent();
 
         try {
-            if (!isLicenseUri(licenseNode.get())) {
+            if (!isLicenseUri(licenseNode)) {
                 throw new IllegalArgumentException("Not a valid license node");
             }
 
@@ -77,7 +66,8 @@ public class License {
             }
 
             return licenseUri;
-        } catch (URISyntaxException e) {
+        }
+        catch (URISyntaxException e) {
             log.error("Invalid license URI: {}", licenseText, e);
             throw new IllegalArgumentException("Not a valid license URI", e);
         }

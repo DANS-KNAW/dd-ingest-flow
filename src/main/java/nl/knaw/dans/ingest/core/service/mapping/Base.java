@@ -23,7 +23,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.w3c.dom.Node;
 
-import javax.xml.xpath.XPathExpressionException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Optional;
@@ -52,19 +51,19 @@ public class Base {
             .orElse(false);
     }
 
-    static Optional<Node> getAttribute(Node node, String name) {
+    public static Optional<Node> getAttribute(Node node, String name) {
         return Optional.ofNullable(node.getAttributes())
             .map(a -> Optional.ofNullable(a.getNamedItem(name)))
             .flatMap(i -> i);
     }
 
-    static Optional<Node> getAttribute(Node node, String namespaceURI, String name) {
+    public static Optional<Node> getAttribute(Node node, String namespaceURI, String name) {
         return Optional.ofNullable(node.getAttributes())
             .map(a -> Optional.ofNullable(a.getNamedItemNS(namespaceURI, name)))
             .flatMap(i -> i);
     }
 
-    static boolean hasAttribute(Node node, String name, String value) {
+    public static boolean hasAttribute(Node node, String name, String value) {
         return getAttribute(node, name)
             .map(n -> StringUtils.equals(value, n.getTextContent()))
             .orElse(false);
@@ -87,13 +86,7 @@ public class Base {
     }
 
     public static Optional<Node> getChildNode(Node node, String xpath) {
-        try {
-            return XPathEvaluator.nodes(node, xpath).findAny();
-        }
-        catch (XPathExpressionException e) {
-            log.error("Error evaluation XPath expression {}", xpath, e);
-            return Optional.empty();
-        }
+        return XPathEvaluator.nodes(node, xpath).findAny();
     }
 
     public static String toYearMonthDayFormat(Node node) {

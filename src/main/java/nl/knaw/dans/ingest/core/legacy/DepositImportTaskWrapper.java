@@ -15,24 +15,18 @@
  */
 package nl.knaw.dans.ingest.core.legacy;
 
-import gov.loc.repository.bagit.domain.Bag;
-import gov.loc.repository.bagit.domain.Metadata;
-import nl.knaw.dans.easy.dd2d.DepositIngestTask;
-import nl.knaw.dans.easy.dd2d.FailedDepositException;
-import nl.knaw.dans.easy.dd2d.RejectedDepositException;
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
+import nl.knaw.dans.ingest.core.service.DepositIngestTask;
 import nl.knaw.dans.ingest.core.service.EventWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 public class DepositImportTaskWrapper implements TargetedTask, Comparable<DepositImportTaskWrapper> {
-    private static final Logger log = LoggerFactory.getLogger(DepositImportTaskWrapper.class);
 
     private final DepositIngestTask task;
     private final Instant created;
@@ -44,15 +38,18 @@ public class DepositImportTaskWrapper implements TargetedTask, Comparable<Deposi
         this.eventWriter = eventWriter;
     }
 
+    private static Instant getCreatedInstant(DepositIngestTask t) {
+        return t.getDeposit().getBagCreated();
+    }
+
     @Override
     public String getTarget() {
-        return task.deposit().doi();
+        return task.getDeposit().getDoi();
     }
 
     public UUID getDepositId() {
-        return UUID.fromString(task.deposit().depositId());
+        return UUID.fromString(task.getDeposit().getDepositId());
     }
-
 
     @Override
     public void writeEvent(TaskEvent.EventType eventType, TaskEvent.Result result, String message) {
@@ -63,7 +60,7 @@ public class DepositImportTaskWrapper implements TargetedTask, Comparable<Deposi
     public void run() {
         writeEvent(TaskEvent.EventType.START_PROCESSING, TaskEvent.Result.OK, null);
         try {
-            task.run().get();
+            task.run();
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.OK, null);
         }
         catch (RejectedDepositException e) {
@@ -77,28 +74,6 @@ public class DepositImportTaskWrapper implements TargetedTask, Comparable<Deposi
     @Override
     public int compareTo(DepositImportTaskWrapper o) {
         return created.compareTo(o.created);
-    }
-
-    private static Instant getCreatedInstant(DepositIngestTask t) {
-        Bag bag;
-        try {
-            bag = t.deposit().tryBag().get();
-        }
-        catch (Exception e) {
-            throw new IllegalArgumentException("Unable to find bag; task = " + t, e);
-        }
-        Metadata metadata = bag.getMetadata();
-        if (metadata == null) {
-            throw new IllegalArgumentException("bag-info.txt not found in bag; task = " + t);
-        }
-        List<String> createdValues = metadata.get("Created");
-        if (createdValues == null) {
-            throw new IllegalArgumentException("No Created value found in bag; task = " + t);
-        }
-        if (createdValues.size() != 1) {
-            throw new IllegalArgumentException("There should be exactly one Created value; found " + createdValues.size() + "; task = " + t);
-        }
-        return OffsetDateTime.parse(createdValues.get(0)).toInstant();
     }
 
     @Override

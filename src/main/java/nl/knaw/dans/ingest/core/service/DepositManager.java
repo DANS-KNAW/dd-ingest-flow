@@ -16,7 +16,7 @@
 package nl.knaw.dans.ingest.core.service;
 
 
-import org.w3c.dom.Document;
+import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 
 import java.io.IOException;
 import java.nio.file.Path;

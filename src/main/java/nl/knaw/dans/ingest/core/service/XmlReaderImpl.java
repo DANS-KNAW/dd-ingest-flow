@@ -100,40 +100,6 @@ public class XmlReaderImpl implements XmlReader {
             .parse(new InputSource(new StringReader(str)));
     }
 
-    private synchronized Object evaluateXpath(Node node, String expr, QName type) throws XPathExpressionException {
-        return xpath.compile(expr).evaluate(node, type);
-    }
-
-    @Override
-    public Stream<Node> xpathToStream(Node node, String expression) throws XPathExpressionException {
-        var nodes = (NodeList) evaluateXpath(node, expression, XPathConstants.NODESET);
-
-        return IntStream.range(0, nodes.getLength())
-            .mapToObj(nodes::item);
-    }
-
-    @Override
-    public Stream<Node> xpathsToStream(Node node, String ...expressions) throws XPathExpressionException {
-        var items = new ArrayList<Stream<Node>>();
-
-        for (var expr : expressions) {
-            var item = xpathToStream(node, expr);
-            items.add(item);
-        }
-
-        return items.stream().flatMap(i -> i);
-    }
-
-    @Override
-    public Stream<String> xpathToStreamOfStrings(Node node, String expression) throws XPathExpressionException {
-        return xpathToStream(node, expression).map(Node::getTextContent);
-    }
-
-    @Override
-    public Stream<String> xpathsToStreamOfStrings(Node node, String ...expressions) throws XPathExpressionException {
-        return xpathsToStream(node, expressions).map(Node::getTextContent);
-    }
-
     private DocumentBuilderFactory getFactory() throws ParserConfigurationException {
         var factory = DocumentBuilderFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);

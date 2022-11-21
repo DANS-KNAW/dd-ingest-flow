@@ -49,7 +49,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     DepositToDvDatasetMetadataMapper getMapper() {
         return new DepositToDvDatasetMetadataMapper(
-            true, xmlReader, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage
+            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage
         );
     }
 
@@ -60,8 +60,6 @@ class DepositToDvDatasetMetadataMapperTest {
 
         iso2ToDataverseLanguage.put("dut", "Dutch");
         iso2ToDataverseLanguage.put("ger", "German");
-
-        XPathEvaluator.init(xmlReader);
     }
 
     @Test

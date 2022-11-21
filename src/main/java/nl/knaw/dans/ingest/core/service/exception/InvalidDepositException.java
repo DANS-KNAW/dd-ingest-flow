@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.service.exception;
 
-import nl.knaw.dans.easy.dd2d.Deposit;
+public class InvalidDepositException extends Throwable {
+    public InvalidDepositException(String msg) {
+        super(msg);
+    }
 
-public class CannotUpdateDraftDatasetException extends RuntimeException {
-
-    public CannotUpdateDraftDatasetException(Deposit deposit) {
-        super("Latest version must be published before update-deposit can be processed");
+    public InvalidDepositException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 }

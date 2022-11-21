@@ -18,16 +18,14 @@ package nl.knaw.dans.ingest.core.service;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlockSummary;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.io.FileUtils;
-import scala.Option;
-import scala.xml.Elem;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -37,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -50,7 +49,7 @@ public class DepositIngestTaskFactory {
 
     private final IngestFlowConfig ingestFlowConfig;
     private final DataverseExtra dataverseExtra;
-    private final Elem narcisClassification;
+    //    private final Elem narcisClassification;
     private final Map<String, String> iso1ToDataverseLanguage;
     private final Map<String, String> iso2ToDataverseLanguage;
     private final Map<String, String> reportIdToTerm;
@@ -69,7 +68,7 @@ public class DepositIngestTaskFactory {
         this.xmlReader = xmlReader;
         this.ingestFlowConfig = ingestFlowConfig;
         this.dataverseExtra = dataverseExtra;
-        this.narcisClassification = nl.knaw.dans.easy.dd2d.DepositIngestTaskFactory.readXml(ingestFlowConfig.getMappingDefsDir().resolve("narcis_classification.xml").toFile());
+        //        this.narcisClassification = nl.knaw.dans.easy.dd2d.DepositIngestTaskFactory.readXml(ingestFlowConfig.getMappingDefsDir().resolve("narcis_classification.xml").toFile());
         this.iso1ToDataverseLanguage = getMap(ingestFlowConfig, "iso639-1-to-dv.csv", "ISO639-1", "Dataverse-language");
         this.iso2ToDataverseLanguage = getMap(ingestFlowConfig, "iso639-2-to-dv.csv", "ISO639-2", "Dataverse-language");
         this.reportIdToTerm = getMap(ingestFlowConfig, "ABR-reports.csv", "URI-suffix", "Term");
@@ -78,17 +77,18 @@ public class DepositIngestTaskFactory {
         this.depositManager = depositManager;
     }
 
-    public DepositIngestTask createDepositIngestTask(Deposit deposit, File outboxDir, EventWriter eventWriter) {
+    public DepositIngestTask createDepositIngestTask(Deposit deposit, Path outboxDir, EventWriter eventWriter) {
         var depositToDvDatasetMetadataMapper = new DepositToDvDatasetMetadataMapper(
             false,
-            xmlReader,
             getActiveMetadataBlocks(dataverseClient),
             iso1ToDataverseLanguage,
             iso2ToDataverseLanguage
         );
 
         var zipFileHandler = new ZipFileHandler(ingestFlowConfig.getZipWrappingTempDir());
-        var fileExclusionPattern = Option.apply(Pattern.compile(ingestFlowConfig.getFileExclusionPattern()));
+        var fileExclusionPattern = Optional.ofNullable(ingestFlowConfig.getFileExclusionPattern())
+            .map(Pattern::compile)
+            .orElse(null);
 
         if (this.isMigration) {
             return new DepositMigrationTask(
@@ -103,7 +103,7 @@ public class DepositIngestTaskFactory {
                 dansBagValidator,
                 dataverseExtra.getPublishAwaitUnlockMaxRetries(),
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
-                outboxDir.toPath(),
+                outboxDir,
                 eventWriter,
                 xmlReader
             );
@@ -121,7 +121,7 @@ public class DepositIngestTaskFactory {
                 dansBagValidator,
                 dataverseExtra.getPublishAwaitUnlockMaxRetries(),
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
-                outboxDir.toPath(),
+                outboxDir,
                 eventWriter,
                 xmlReader);
         }
@@ -145,10 +145,15 @@ public class DepositIngestTaskFactory {
         return result;
     }
 
-    public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
-        var deposit = depositManager.loadDeposit(depositDir);
-        //        var deposit = new Deposit(better.files.File.apply(depositDir));
-        return createDepositIngestTask(deposit, outboxDir.toFile(), eventWriter);
+    public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) {
+        try {
+            var deposit = depositManager.loadDeposit(depositDir);
+            //        var deposit = new Deposit(better.files.File.apply(depositDir));
+            return createDepositIngestTask(deposit, outboxDir, eventWriter);
+        }
+        catch (InvalidDepositException | IOException e) {
+            throw new RuntimeException("Invalid deposit", e);
+        }
     }
 
     private Map<String, String> loadCsvToMap(Path path, String keyColumn, String valueColumn) throws IOException {

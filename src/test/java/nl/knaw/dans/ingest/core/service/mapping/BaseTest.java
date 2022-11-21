@@ -32,7 +32,6 @@ public class BaseTest {
 
     @BeforeEach
     public void setUp() {
-        XPathEvaluator.init(xmlReader);
     }
 
     Document readDocument(String name) throws ParserConfigurationException, IOException, SAXException {

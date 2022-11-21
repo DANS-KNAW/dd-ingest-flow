@@ -22,10 +22,7 @@ import nl.knaw.dans.ingest.core.service.builder.CompoundFieldGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
-import javax.xml.xpath.XPathExpressionException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_AFFILIATION;
@@ -39,64 +36,53 @@ import static nl.knaw.dans.ingest.core.service.mapping.Contributor.contributorRo
 @Slf4j
 public final class DcxDaiAuthor extends Base {
     public static CompoundFieldGenerator<Node> toAuthorValueObject = (builder, node) -> {
-        try {
-            var author = parseAuthor(node);
-            var name = formatName(author);
+        var author = parseAuthor(node);
+        var name = formatName(author);
 
-            if (StringUtils.isNotBlank(name)) {
-                builder.addSubfield(AUTHOR_NAME, name);
-            }
-
-            if (author.getOrcid() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ORCID");
-                builder.addSubfield(AUTHOR_IDENTIFIER, author.getOrcid());
-            }
-
-            else if (author.getIsni() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ISNI");
-                builder.addSubfield(AUTHOR_IDENTIFIER, author.getIsni());
-            }
-
-            else if (author.getDai() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "DAI");
-                builder.addSubfield(AUTHOR_IDENTIFIER, author.getDai());
-            }
-
-            if (author.getOrganization() != null) {
-                builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "DAI");
-                builder.addSubfield(AUTHOR_AFFILIATION, author.getOrganization());
-            }
+        if (StringUtils.isNotBlank(name)) {
+            builder.addSubfield(AUTHOR_NAME, name);
         }
-        catch (XPathExpressionException e) {
-            log.error("Xpath exception", e);
+
+        if (author.getOrcid() != null) {
+            builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ORCID");
+            builder.addSubfield(AUTHOR_IDENTIFIER, author.getOrcid());
+        }
+
+        else if (author.getIsni() != null) {
+            builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ISNI");
+            builder.addSubfield(AUTHOR_IDENTIFIER, author.getIsni());
+        }
+
+        else if (author.getDai() != null) {
+            builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "DAI");
+            builder.addSubfield(AUTHOR_IDENTIFIER, author.getDai());
+        }
+
+        if (author.getOrganization() != null) {
+            builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "DAI");
+            builder.addSubfield(AUTHOR_AFFILIATION, author.getOrganization());
         }
     };
 
     public static CompoundFieldGenerator<Node> toContributorValueObject = (builder, node) -> {
-        try {
-            var author = parseAuthor(node);
-            var name = formatName(author);
+        var author = parseAuthor(node);
+        var name = formatName(author);
 
-            if (StringUtils.isNotBlank(name)) {
-                var completeName = author.getOrganization() != null
-                    ? String.format("%s (%s)", name, author.getOrganization())
-                    : name;
+        if (StringUtils.isNotBlank(name)) {
+            var completeName = author.getOrganization() != null
+                ? String.format("%s (%s)", name, author.getOrganization())
+                : name;
 
-                builder.addSubfield(CONTRIBUTOR_NAME, completeName);
-            }
-            else if (StringUtils.isNotBlank(author.getOrganization())) {
-                builder.addSubfield(CONTRIBUTOR_NAME, author.getOrganization());
-            }
-            if (StringUtils.isNotBlank(author.getRole())) {
-                var value = contributorRoleToContributorType.getOrDefault(author.getRole(), "Other");
-                builder.addSubfield(CONTRIBUTOR_TYPE, value);
-            }
+            builder.addSubfield(CONTRIBUTOR_NAME, completeName);
         }
-        catch (XPathExpressionException e) {
-            throw new RuntimeException("Unable to parse author", e);
+        else if (StringUtils.isNotBlank(author.getOrganization())) {
+            builder.addSubfield(CONTRIBUTOR_NAME, author.getOrganization());
+        }
+        if (StringUtils.isNotBlank(author.getRole())) {
+            var value = contributorRoleToContributorType.getOrDefault(author.getRole(), "Other");
+            builder.addSubfield(CONTRIBUTOR_TYPE, value);
         }
     };
-
 
     private static String formatName(DatasetAuthor author) {
         return String.join(" ", List.of(
@@ -107,11 +93,11 @@ public final class DcxDaiAuthor extends Base {
             .trim().replaceAll("\\s+", " ");
     }
 
-    private static String getFirstValue(Node node, String expression) throws XPathExpressionException {
+    private static String getFirstValue(Node node, String expression) {
         return XPathEvaluator.strings(node, expression).map(String::trim).findFirst().orElse(null);
     }
 
-    private static DatasetAuthor parseAuthor(Node node) throws XPathExpressionException {
+    private static DatasetAuthor parseAuthor(Node node) {
         return DatasetAuthor.builder()
             .titles(getFirstValue(node, "dcx-dai:titles"))
             .initials(getFirstValue(node, "dcx-dai:initials"))
@@ -126,23 +112,13 @@ public final class DcxDaiAuthor extends Base {
     }
 
     public static boolean isRightsHolder(Node node) {
-        try {
-            var author = parseAuthor(node);
-            return StringUtils.contains(author.getRole(), "RightsHolder");
-        }
-        catch (XPathExpressionException e) {
-            throw new RuntimeException(e);
-        }
+        var author = parseAuthor(node);
+        return StringUtils.contains(author.getRole(), "RightsHolder");
     }
 
     public static String toRightsHolder(Node node) {
-        try {
-            var author = parseAuthor(node);
-            return formatRightsHolder(author);
-        }
-        catch (XPathExpressionException e) {
-            throw new RuntimeException(e);
-        }
+        var author = parseAuthor(node);
+        return formatRightsHolder(author);
     }
 
     private static String formatRightsHolder(DatasetAuthor author) {

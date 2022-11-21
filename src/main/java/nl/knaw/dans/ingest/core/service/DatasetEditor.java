@@ -18,24 +18,26 @@ package nl.knaw.dans.ingest.core.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
+import nl.knaw.dans.ingest.core.service.mapping.AccessRights;
+import nl.knaw.dans.ingest.core.service.mapping.FileElement;
+import nl.knaw.dans.ingest.core.service.mapping.License;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.Embargo;
 import org.apache.commons.lang3.ArrayUtils;
-import scala.collection.JavaConverters;
-import scala.xml.Node;
+import org.w3c.dom.Node;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +62,7 @@ public abstract class DatasetEditor {
     protected final ZipFileHandler zipFileHandler;
 
     protected final ObjectMapper objectMapper;
-    private final DateFormat dateAvailableFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final DateTimeFormatter dateAvailableFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     protected DatasetEditor(DataverseClient dataverseClient,
         boolean isMigration,
@@ -121,15 +123,12 @@ public abstract class DatasetEditor {
     }
 
     protected String getLicense(Node node) {
-        // TODO get license from XPath expression
-        var licenseNode = node.$bslash("dcmiMetadata").$bslash("license")
-            .find(License::isLicenseUri);
-
-        if (licenseNode.isEmpty()) {
-            throw new RejectedDepositException(deposit, "no license specified", null);
-        }
-
-        return License.getLicenseUri(supportedLicenses, variantToLicense, licenseNode).toASCIIString();
+        return XPathEvaluator.nodes(node, "//ddm:dcmiMetadata/dct:license")
+            .filter(License::isLicenseUri)
+            .findFirst()
+            .map(n -> License.getLicenseUri(supportedLicenses, variantToLicense, n))
+            .map(URI::toASCIIString)
+            .orElseThrow(() -> new RejectedDepositException(deposit, "no license specified"));
     }
 
     protected String toJson(Map<String, String> input) throws JsonProcessingException {
@@ -137,17 +136,13 @@ public abstract class DatasetEditor {
     }
 
     Map<Path, FileInfo> getFileInfo() {
-        return JavaConverters.mapAsJavaMap(deposit.getPathToFileInfo().get())
-            .entrySet().stream()
-            .map(entry -> {
-                // conver to new FileInfo class
-                var f = entry.getValue();
-                var fileInfo = new FileInfo(f.file().toJava().toPath(), f.checksum(), f.metadata());
 
-                return Map.entry(entry.getKey(), fileInfo);
-            })
+        var files = FileElement.pathToFileInfo(deposit);
+
+        return files.entrySet().stream()
             .map(entry -> {
                 // relativize the path
+                // TODO check if this still works
                 var bagPath = entry.getKey();
                 var fileInfo = entry.getValue();
                 var newKey = Paths.get("data").relativize(bagPath);
@@ -157,16 +152,20 @@ public abstract class DatasetEditor {
             .filter(entry -> {
                 // remove entries that match the file exclusion pattern
                 var path = entry.getKey().toString();
+
                 if (fileExclusionPattern != null) {
                     return !fileExclusionPattern.matcher(path).matches();
                 }
+
                 return true;
             })
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    void embargoFiles(String persistentId, Date dateAvailable) throws IOException, DataverseException {
-        if (!dateAvailable.after(new Date())) {
+    void embargoFiles(String persistentId, OffsetDateTime dateAvailable) throws IOException, DataverseException {
+        var now = OffsetDateTime.now();
+
+        if (!dateAvailable.isAfter(now)) {
             log.debug("Date available in the past, no embargo: {}", dateAvailable);
         }
         else {
@@ -182,8 +181,10 @@ public abstract class DatasetEditor {
         }
     }
 
-    void embargoFiles(String persistentId, Date dateAvailable, Collection<Integer> fileIds) throws IOException, DataverseException {
-        if (!dateAvailable.after(new Date())) {
+    void embargoFiles(String persistentId, OffsetDateTime dateAvailable, Collection<Integer> fileIds) throws IOException, DataverseException {
+        var now = OffsetDateTime.now();
+
+        if (!dateAvailable.isAfter(now)) {
             log.debug("Date available in the past, no embargo: {}", dateAvailable);
         }
         else {
@@ -193,6 +194,36 @@ public abstract class DatasetEditor {
 
             api.setEmbargo(embargo);
             api.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
+        }
+    }
+
+    OffsetDateTime getDateAvailable(Deposit deposit) {
+
+        return XPathEvaluator.strings(deposit.getDdm(), "//ddm:profile/ddm:available")
+            .map(item -> OffsetDateTime.parse(item, dateAvailableFormat))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Deposit without a ddm:available element"));
+    }
+
+    void configureEnableAccessRequests(String persistentId, boolean canEnable) throws IOException, DataverseException {
+        var api = dataverseClient.accessRequests(persistentId);
+
+        var ddm = deposit.getDdm();
+        var files = deposit.getFilesXml();
+
+        var accessRights = XPathEvaluator.nodes(ddm, "//ddm:profile/ddm:accessRights")
+            .findFirst()
+            .orElseThrow();
+
+        var enable = AccessRights.isEnableRequests(accessRights, files);
+
+        log.trace("AccessRequests enable {} can {}", enable, canEnable);
+
+        if (!enable) {
+            api.disable();
+        }
+        else if (canEnable) {
+            api.enable();
         }
     }
 }

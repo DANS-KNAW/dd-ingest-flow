@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class DepositManagerImpl implements DepositManager {
@@ -150,7 +151,7 @@ public class DepositManagerImpl implements DepositManager {
         deposit.setDoi(config.getString("identifier.doi"));
         deposit.setUrn(config.getString("identifier.urn"));
         deposit.setId(config.getString("bag-store.bag-id"));
-        deposit.setCreated(OffsetDateTime.parse(config.getString("creation.timestamp")));
+        deposit.setCreated(Optional.ofNullable(config.getString("creation.timestamp")).map(OffsetDateTime::parse).orElse(null));
         deposit.setDepositorUserId(config.getString("depositor.userId"));
         deposit.setState(DepositState.valueOf(config.getString("state.label")));
         deposit.setStateDescription(config.getString("state.description"));
@@ -166,14 +167,17 @@ public class DepositManagerImpl implements DepositManager {
         deposit.setDataverseOtherIdVersion(config.getString("dataverse.other-id-version", ""));
         deposit.setDataverseSwordToken(config.getString("dataverse.sword-token", ""));
 
-        bag.getMetadata().get("Is-Version-Of")
-            .stream()
-            .filter(StringUtils::isNotBlank)
-            .findFirst()
-            .ifPresent(item -> {
-                deposit.setUpdate(true);
-                deposit.setIsVersionOf(item);
-            });
+        var isVersionOf = bag.getMetadata().get("Is-Version-Of");
+
+        if (isVersionOf != null) {
+            isVersionOf.stream()
+                .filter(StringUtils::isNotBlank)
+                .findFirst()
+                .ifPresent(item -> {
+                    deposit.setUpdate(true);
+                    deposit.setIsVersionOf(item);
+                });
+        }
 
         var created = getUniqueValue(bag, "Created");
         deposit.setBagCreated(OffsetDateTime.parse(created).toInstant());

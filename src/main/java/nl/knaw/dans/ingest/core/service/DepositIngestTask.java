@@ -105,9 +105,9 @@ public class DepositIngestTask implements TargetedTask {
     }
 
     void moveDepositToOutbox(OutboxSubDir subDir) throws IOException {
-
         var deposit = getDeposit();
-        var target = this.outboxDir.resolve(subDir.getValue());
+        var target = this.outboxDir.resolve(subDir.getValue())
+            .resolve(deposit.getDir().getFileName());
 
         Files.move(deposit.getDir(), target);
     }
@@ -136,7 +136,7 @@ public class DepositIngestTask implements TargetedTask {
 
     @Override
     public String getTarget() {
-        return getDeposit().getOtherId();
+        return Optional.ofNullable(getDeposit().getDoi()).orElse("");
     }
 
     @Override
@@ -145,7 +145,7 @@ public class DepositIngestTask implements TargetedTask {
     }
 
     private UUID getDepositId() {
-        return UUID.fromString(deposit.getId());
+        return UUID.fromString(deposit.getDepositId());
     }
 
     void doRun() throws Exception {

@@ -32,7 +32,7 @@ public class License extends Base {
             return false;
         }
 
-        if (XmlReader.NAMESPACE_DCTERMS.equals(node.getNamespaceURI())) {
+        if (!XmlReader.NAMESPACE_DCTERMS.equals(node.getNamespaceURI())) {
             return false;
         }
 
@@ -46,6 +46,7 @@ public class License extends Base {
             return true;
         }
         catch (URISyntaxException e) {
+            e.printStackTrace();
             return false;
         }
     }

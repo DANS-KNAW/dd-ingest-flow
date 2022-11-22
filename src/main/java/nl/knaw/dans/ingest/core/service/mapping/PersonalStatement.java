@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.service.mapping;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.ToString;
-import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
+import lombok.extern.slf4j.Slf4j;
+import org.w3c.dom.Node;
 
-import java.nio.file.Path;
+@Slf4j
+public class PersonalStatement extends Base {
+    public static String toHasPersonalDataValue(Node node) {
+        if (hasChildNode(node, "notAvailable")) {
+            return "Unknown";
+        }
 
-@Data
-@ToString
-@AllArgsConstructor
-public class FileInfo {
-
-    private Path path;
-    private String checksum;
-    private FileMeta metadata;
+        return getChildNode(node, "containsPrivacySensitiveData")
+            .map(Node::getTextContent)
+            .map(Boolean::parseBoolean)
+            .map(n -> n ? "Yes" : "No")
+            .orElse("Unknown");
+    }
 
 }

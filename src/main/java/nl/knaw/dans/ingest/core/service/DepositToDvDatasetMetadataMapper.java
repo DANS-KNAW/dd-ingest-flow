@@ -15,11 +15,13 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.builder.ArchaeologyFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.CitationFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.DataVaultFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.FieldBuilder;
+import nl.knaw.dans.ingest.core.service.builder.PrimitiveFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.RelationFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.RightsFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.TemporalSpatialFieldBuilder;
@@ -40,6 +42,7 @@ import nl.knaw.dans.ingest.core.service.mapping.Description;
 import nl.knaw.dans.ingest.core.service.mapping.Identifier;
 import nl.knaw.dans.ingest.core.service.mapping.InCollection;
 import nl.knaw.dans.ingest.core.service.mapping.Language;
+import nl.knaw.dans.ingest.core.service.mapping.PersonalStatement;
 import nl.knaw.dans.ingest.core.service.mapping.Publisher;
 import nl.knaw.dans.ingest.core.service.mapping.Relation;
 import nl.knaw.dans.ingest.core.service.mapping.SpatialBox;
@@ -62,6 +65,7 @@ import org.w3c.dom.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -148,7 +152,7 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addDistributor(getPublishers(ddm).filter(Publisher::isNotDans), Publisher.toDistributorValueObject);
             citationFields.addDistributionDate(getAvailable(ddm).map(Base::toYearMonthDayFormat));
 
-            // TODO add DATE_OF_DEPOSIT from arguments
+            citationFields.addDateOfDeposit(dateOfDeposit);
 
             citationFields.addDateOfCollections(getDatesOfCollection(ddm)
                 .filter(DatesOfCollection::isValidDistributorDate), DatesOfCollection.toDistributorValueObject);
@@ -161,11 +165,7 @@ public class DepositToDvDatasetMetadataMapper {
         if (activeMetadataBlocks.contains("dansRights")) {
             rightsFields.addRightsHolders(getRightsHolders(ddm));
 
-            // TODO check how this works
-            //            OptionExtensions(optAgreements.map { agreements =>
-            //                addCvFieldSingleValue(rightsFields, PERSONAL_DATA_PRESENT, agreements \ "personalDataStatement", PersonalStatement toHasPersonalDataValue)
-            //            }).doIfNone(() => addCvFieldSingleValue(rightsFields, PERSONAL_DATA_PRESENT, "Unknown"))
-
+            rightsFields.addPersonalDataPresent(getPersonalDataPresent(agreements).map(PersonalStatement::toHasPersonalDataValue));
             rightsFields.addRightsHolders(getContributorDetailsAuthors(ddm).filter(DcxDaiAuthor::isRightsHolder).map(DcxDaiAuthor::toRightsHolder));
             rightsFields.addRightsHolders(getContributorDetailsOrganizations(ddm).filter(DcxDaiOrganization::isRightsHolder).map(DcxDaiOrganization::toRightsHolder));
             rightsFields.addLanguageOfMetadata(getLanguageAttributes(ddm)
@@ -216,16 +216,28 @@ public class DepositToDvDatasetMetadataMapper {
         return assembleDataverseDataset();
     }
 
-    void processMetadataBlock(Map<String, MetadataBlock> fields, String title, String displayName, FieldBuilder builder) {
-        var values = builder.getFields().values();
-
-        if (values.size() == 0) {
-            return;
+    private Stream<Node> getPersonalDataPresent(Document agreements) {
+        if (agreements == null) {
+            return Stream.empty();
         }
 
-        var result = values.stream()
+        return XPathEvaluator.nodes(agreements, "//personalDataStatement");
+    }
+
+    void processMetadataBlock(Map<String, MetadataBlock> fields, String title, String displayName, FieldBuilder builder) {
+        var compoundFields = builder.getCompoundFields().values()
+            .stream()
             .map(CompoundFieldBuilder::build)
-            .map(item -> (MetadataField) item)
+            .map(m -> (MetadataField) m);
+
+        var primitiveFields = builder.getPrimitiveFields()
+            .values()
+            .stream()
+            .map(PrimitiveFieldBuilder::build);
+
+        var result = Stream.of(compoundFields, primitiveFields)
+            .flatMap(i -> i)
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
         var block = new MetadataBlock();
@@ -251,6 +263,17 @@ public class DepositToDvDatasetMetadataMapper {
 
         var dataset = new Dataset();
         dataset.setDatasetVersion(version);
+
+        try {
+            var str = new ObjectMapper()
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(fields);
+
+            System.out.println("STR: " + str);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return dataset;
     }

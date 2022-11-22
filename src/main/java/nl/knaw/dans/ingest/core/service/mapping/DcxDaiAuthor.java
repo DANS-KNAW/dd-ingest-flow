@@ -59,7 +59,6 @@ public final class DcxDaiAuthor extends Base {
         }
 
         if (author.getOrganization() != null) {
-            builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "DAI");
             builder.addSubfield(AUTHOR_AFFILIATION, author.getOrganization());
         }
     };
@@ -84,7 +83,7 @@ public final class DcxDaiAuthor extends Base {
         }
     };
 
-    private static String formatName(DatasetAuthor author) {
+    static String formatName(DatasetAuthor author) {
         return String.join(" ", List.of(
                 Optional.ofNullable(author.getInitials()).orElse(""),
                 Optional.ofNullable(author.getInsertions()).orElse(""),
@@ -93,11 +92,11 @@ public final class DcxDaiAuthor extends Base {
             .trim().replaceAll("\\s+", " ");
     }
 
-    private static String getFirstValue(Node node, String expression) {
+    static String getFirstValue(Node node, String expression) {
         return XPathEvaluator.strings(node, expression).map(String::trim).findFirst().orElse(null);
     }
 
-    private static DatasetAuthor parseAuthor(Node node) {
+    static DatasetAuthor parseAuthor(Node node) {
         return DatasetAuthor.builder()
             .titles(getFirstValue(node, "dcx-dai:titles"))
             .initials(getFirstValue(node, "dcx-dai:initials"))
@@ -121,7 +120,7 @@ public final class DcxDaiAuthor extends Base {
         return formatRightsHolder(author);
     }
 
-    private static String formatRightsHolder(DatasetAuthor author) {
+    static String formatRightsHolder(DatasetAuthor author) {
         if (author.getSurname() == null || author.getSurname().isBlank()) {
             return Optional.ofNullable(author.getOrganization()).orElse("");
         }

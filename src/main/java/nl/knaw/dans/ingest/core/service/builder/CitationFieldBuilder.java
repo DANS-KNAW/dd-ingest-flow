@@ -27,6 +27,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBU
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATASET_CONTACT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATA_SOURCES;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_COLLECTION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_DEPOSIT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTION_DATE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTOR;
@@ -111,8 +112,12 @@ public class CitationFieldBuilder extends FieldBuilder {
 
     public void addDatasetContact(Stream<AuthenticatedUser> data, CompoundFieldGenerator<AuthenticatedUser> generator) {
         data.forEach(value -> {
-            var builder = getBuilder(DATASET_CONTACT, true);
+            var builder = getCompoundBuilder(DATASET_CONTACT, true);
             generator.build(builder, value);
         });
+    }
+
+    public void addDateOfDeposit(String value) {
+        addSingleString(DATE_OF_DEPOSIT, Stream.ofNullable(value));
     }
 }

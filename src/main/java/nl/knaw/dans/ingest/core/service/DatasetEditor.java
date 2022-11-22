@@ -35,7 +35,9 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashMap;
@@ -85,6 +87,10 @@ public abstract class DatasetEditor {
         this.objectMapper = objectMapper;
     }
 
+    static Instant parseDate(String value) {
+        return LocalDate.parse(value).atStartOfDay(ZoneId.systemDefault()).toInstant();
+    }
+
     public abstract String performEdit() throws IOException, DataverseException, InterruptedException;
 
     Map<Integer, FileInfo> addFiles(String persistentId, Collection<FileInfo> fileInfos) throws IOException, DataverseException {
@@ -123,7 +129,7 @@ public abstract class DatasetEditor {
     }
 
     protected String getLicense(Node node) {
-        return XPathEvaluator.nodes(node, "//ddm:dcmiMetadata/dct:license")
+        return XPathEvaluator.nodes(node, "//ddm:dcmiMetadata/dcterms:license")
             .filter(License::isLicenseUri)
             .findFirst()
             .map(n -> License.getLicenseUri(supportedLicenses, variantToLicense, n))
@@ -162,8 +168,8 @@ public abstract class DatasetEditor {
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    void embargoFiles(String persistentId, OffsetDateTime dateAvailable) throws IOException, DataverseException {
-        var now = OffsetDateTime.now();
+    void embargoFiles(String persistentId, Instant dateAvailable) throws IOException, DataverseException {
+        var now = Instant.now();
 
         if (!dateAvailable.isAfter(now)) {
             log.debug("Date available in the past, no embargo: {}", dateAvailable);
@@ -181,8 +187,8 @@ public abstract class DatasetEditor {
         }
     }
 
-    void embargoFiles(String persistentId, OffsetDateTime dateAvailable, Collection<Integer> fileIds) throws IOException, DataverseException {
-        var now = OffsetDateTime.now();
+    void embargoFiles(String persistentId, Instant dateAvailable, Collection<Integer> fileIds) throws IOException, DataverseException {
+        var now = Instant.now();
 
         if (!dateAvailable.isAfter(now)) {
             log.debug("Date available in the past, no embargo: {}", dateAvailable);
@@ -197,10 +203,9 @@ public abstract class DatasetEditor {
         }
     }
 
-    OffsetDateTime getDateAvailable(Deposit deposit) {
-
+    Instant getDateAvailable(Deposit deposit) {
         return XPathEvaluator.strings(deposit.getDdm(), "//ddm:profile/ddm:available")
-            .map(item -> OffsetDateTime.parse(item, dateAvailableFormat))
+            .map(DatasetEditor::parseDate)
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Deposit without a ddm:available element"));
     }

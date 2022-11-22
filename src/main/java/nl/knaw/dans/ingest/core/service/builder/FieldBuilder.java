@@ -20,47 +20,82 @@ import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FieldBuilder {
-    private final Map<String, CompoundFieldBuilder> fields;
+    private final Map<String, CompoundFieldBuilder> compoundFields;
+    private final Map<String, PrimitiveFieldBuilder> primitiveFields;
 
     public FieldBuilder() {
-        this.fields = new HashMap<>();
+        this.compoundFields = new HashMap<>();
+        this.primitiveFields = new HashMap<>();
     }
 
-    public Map<String, CompoundFieldBuilder> getFields() {
-        return fields;
+    public Map<String, PrimitiveFieldBuilder> getPrimitiveFields() {
+        return primitiveFields;
     }
 
-    CompoundFieldBuilder getBuilder(String name, boolean multiple) {
-        var result = Optional.ofNullable(fields.get(name))
+    public Map<String, CompoundFieldBuilder> getCompoundFields() {
+        return compoundFields;
+    }
+
+    CompoundFieldBuilder getCompoundBuilder(String name, boolean multiple) {
+        var result = Optional.ofNullable(compoundFields.get(name))
             .map(CompoundFieldBuilder::nextValue)
             .orElse(new CompoundFieldBuilder(name, multiple));
 
-        fields.put(name, result);
+        compoundFields.put(name, result);
         return result;
+    }
+
+    PrimitiveFieldBuilder getPrimitiveBuilder(String name, boolean multiple, boolean controlled) {
+        var result = Optional.ofNullable(primitiveFields.get(name))
+            .orElse(new PrimitiveFieldBuilder(name, multiple, controlled));
+
+        primitiveFields.put(name, result);
+        return result;
+    }
+
+    void setPrimitiveField(String name, String value) {
+        getPrimitiveBuilder(name, false, false)
+            .addValue(value);
+    }
+
+    void setPrimitiveFields(String name, List<String> values) {
+        getPrimitiveBuilder(name, true, false)
+            .addValues(values);
+    }
+
+    void setControlledField(String name, String value) {
+        getPrimitiveBuilder(name, false, true)
+            .addValue(value);
+    }
+
+    void setControlledFields(String name, List<String> values) {
+        getPrimitiveBuilder(name, true, true)
+            .addValues(values);
     }
 
     public void addSingleString(String name, Stream<String> data) {
         data
             .filter(Objects::nonNull)
             .filter(StringUtils::isNotBlank)
-            .findFirst().ifPresent(value -> getBuilder(name, false).addSubfield(name, value));
+            .findFirst().ifPresent(value -> setPrimitiveField(name, value)); //getCompoundBuilder(name, false).addSubfield(name, value));
 
     }
 
     public void addMultipleControlledFields(String name, Stream<String> data) {
-        data
+        var values = data
             .filter(Objects::nonNull)
             .filter(StringUtils::isNotBlank)
-            .forEach(value -> {
-                getBuilder(name, true).addControlledSubfield(name, value);
-            });
+            .collect(Collectors.toList());
 
+        setControlledFields(name, values);
     }
 
     public void addSingleControlledField(String name, Stream<String> data) {
@@ -69,28 +104,31 @@ public class FieldBuilder {
             .filter(StringUtils::isNotBlank)
             .findFirst()
             .ifPresent(value -> {
-                getBuilder(name, true).addControlledSubfield(name, value);
+                System.out.println("SETTING CONTROLLED FIELD " + name + " " + value);
+                setControlledField(name, value);
             });
 
     }
 
+    public void addSingleControlledField(String name, String data) {
+        setControlledField(name, data);
+    }
+
     public void addMultiplePrimitivesString(String name, Stream<String> data) {
-        data.forEach(value -> {
-            var builder = getBuilder(name, true);
-            builder.addSubfield(name, value);
-        });
+        var values = data.collect(Collectors.toList());
+        setPrimitiveFields(name, values);
     }
 
     public void addMultiple(String name, Stream<Node> data, CompoundFieldGenerator<Node> generator) {
         data.forEach(value -> {
-            var builder = getBuilder(name, true);
+            var builder = getCompoundBuilder(name, true);
             generator.build(builder, value);
         });
     }
 
     public void addMultipleString(String name, Stream<String> data, CompoundFieldGenerator<String> generator) {
         data.forEach(value -> {
-            var builder = getBuilder(name, true);
+            var builder = getCompoundBuilder(name, true);
             generator.build(builder, value);
         });
     }

@@ -28,7 +28,8 @@ public class RightsFieldBuilder extends FieldBuilder {
     }
 
     public void addPersonalDataPresent(Stream<String> values) {
-        addSingleControlledField(PERSONAL_DATA_PRESENT, values);
+        var v = values.findFirst().orElse("Unknown");
+        addSingleControlledField(PERSONAL_DATA_PRESENT, v);
     }
 
     public void addLanguageOfMetadata(Stream<String> stream) {

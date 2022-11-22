@@ -15,20 +15,13 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.ToString;
-import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
+import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
+class DatasetEditorTest {
 
-@Data
-@ToString
-@AllArgsConstructor
-public class FileInfo {
-
-    private Path path;
-    private String checksum;
-    private FileMeta metadata;
-
+    @Test
+    void parseDate() {
+        var value = DatasetEditor.parseDate("2022-01-05");
+        System.out.println("value: " + value);
+    }
 }

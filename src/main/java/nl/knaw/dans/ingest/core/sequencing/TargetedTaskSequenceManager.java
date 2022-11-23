@@ -37,7 +37,8 @@ public class TargetedTaskSequenceManager {
     public synchronized void scheduleTask(TargetedTask targetedTask) {
         log.trace("Scheduling targeted task {}", targetedTask);
         // TODO: Use Is-Version-Of in autoIngest service (DOI is not available there)
-        TargetedTaskSequencer sequencer = sequencers.get(targetedTask.getTarget());
+        var sequencer = sequencers.get(targetedTask.getTarget());
+
         if (sequencer == null) {
             log.debug("Creating NEW sequencer for target {}", targetedTask.getTarget());
             sequencer = new TargetedTaskSequencer(this, targetedTask);

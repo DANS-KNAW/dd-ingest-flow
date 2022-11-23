@@ -96,8 +96,6 @@ public class DatasetCreator extends DatasetEditor {
         var databaseIds = addFiles(persistentId, pathToFileInfo.values());
 
         log.debug("Database ID's: {}", databaseIds);
-        // TODO fix files not being uploaded
-        // TODO fix deposit.properties not being saved after changing properties
         // update individual files metadata
         updateFileMetadata(databaseIds);
         api.awaitUnlock();

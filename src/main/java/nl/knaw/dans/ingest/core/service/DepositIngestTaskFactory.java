@@ -105,7 +105,7 @@ public class DepositIngestTaskFactory {
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir,
                 eventWriter,
-                xmlReader
+                depositManager
             );
         }
         else {

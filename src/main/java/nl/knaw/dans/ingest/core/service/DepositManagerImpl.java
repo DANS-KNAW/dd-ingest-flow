@@ -203,9 +203,9 @@ public class DepositManagerImpl implements DepositManager {
     void mapToConfig(Configuration config, Deposit deposit) {
         config.clearProperty("state.label");
         config.clearProperty("state.description");
-        config.addProperty("state.label", deposit.getState().toString());
-        config.addProperty("state.description", deposit.getStateDescription());
-        config.addProperty("identifier.doi", deposit.getDoi());
-        config.addProperty("identifier.urn", deposit.getUrn());
+        config.setProperty("state.label", deposit.getState().toString());
+        config.setProperty("state.description", deposit.getStateDescription());
+        config.setProperty("identifier.doi", deposit.getDoi());
+        config.setProperty("identifier.urn", deposit.getUrn());
     }
 }

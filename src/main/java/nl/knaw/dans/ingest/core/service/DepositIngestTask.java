@@ -100,7 +100,7 @@ public class DepositIngestTask implements TargetedTask {
             log.error("deposit was rejected", e);
             updateDepositFromResult(DepositState.REJECTED, e.getMessage());
         }
-        catch (Exception e) {
+        catch (Throwable e) {
             log.error("deposit failed", e);
             updateDepositFromResult(DepositState.FAILED, e.getMessage());
         }
@@ -171,6 +171,9 @@ public class DepositIngestTask implements TargetedTask {
             ? newDatasetUpdater(dataverseDataset).performEdit()
             : newDatasetCreator(dataverseDataset, depositorRole).performEdit();
 
+        if (1 == 1) {
+            throw new RuntimeException("Oh no");
+        }
         publishDataset(persistentId);
         postPublication(persistentId);
     }

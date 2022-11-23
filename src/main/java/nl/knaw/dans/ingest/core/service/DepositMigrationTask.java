@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 public class DepositMigrationTask extends DepositIngestTask {
     public DepositMigrationTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, XmlReader xmlReader) {
+        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, DepositManager depositManager) {
 
         super(
             datasetMetadataMapper, deposit, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,

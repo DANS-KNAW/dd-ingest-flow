@@ -30,33 +30,13 @@ public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportT
     private boolean depositsReadInInitialization = false;
     private boolean keepRunning = true;
 
-    private class EventHandler extends FileAlterationListenerAdaptor {
-        @Override
-        public void onStart(FileAlterationObserver observer) {
-            log.trace("onStart called");
-            if (!initialized) {
-                initialized = true;
-                depositsReadInInitialization = readAllDepositsFromInbox();
-            }
-        }
-
-        @Override
-        public void onDirectoryCreate(File file) {
-            log.trace("onDirectoryCreate: {}", file);
-            if (depositsReadInInitialization) {
-                depositsReadInInitialization = false;
-                return; // file already added to queue by onStart
-            }
-            addTaskForDeposit(file.toPath());
-        }
-    }
-
     public UnboundedDepositsImportTaskIterator(Path inboxDir, Path outBox, int pollingInterval, DepositIngestTaskFactory taskFactory, EventWriter eventWriter) {
         super(inboxDir, outBox, taskFactory, eventWriter);
-        FileAlterationObserver observer = new FileAlterationObserver(inboxDir.toFile(), f -> f.isDirectory() && f.getParentFile().equals(inboxDir.toFile()));
+        var observer = new FileAlterationObserver(inboxDir.toFile(), f -> f.isDirectory() && f.getParentFile().equals(inboxDir.toFile()));
         observer.addListener(new EventHandler());
-        FileAlterationMonitor monitor = new FileAlterationMonitor(pollingInterval);
+        var monitor = new FileAlterationMonitor(pollingInterval);
         monitor.addObserver(observer);
+
         try {
             monitor.start();
         }
@@ -73,5 +53,30 @@ public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportT
 
     public void stop() {
         keepRunning = false;
+    }
+
+    private class EventHandler extends FileAlterationListenerAdaptor {
+        @Override
+        public void onStart(FileAlterationObserver observer) {
+            log.trace("onStart called");
+            if (!initialized) {
+                initialized = true;
+                depositsReadInInitialization = readAllDepositsFromInbox();
+            }
+        }
+
+        @Override
+        public void onDirectoryCreate(File file) {
+            // TODO bug: this will not trigger if a new file appears in the inbox and
+            // the initial state also had one or more deposits in it
+            // to reproduce: put deposit in inbox, start process and then add another deposit to inbox
+            // possible solution: just remove this logic, it doesnt seem to be triggered on initial start anyway?
+            log.trace("onDirectoryCreate: {}", file);
+            if (depositsReadInInitialization) {
+                depositsReadInInitialization = false;
+                return; // file already added to queue by onStart
+            }
+            addTaskForDeposit(file.toPath());
+        }
     }
 }

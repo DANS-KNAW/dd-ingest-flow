@@ -22,6 +22,5 @@ class DatasetEditorTest {
     @Test
     void parseDate() {
         var value = DatasetEditor.parseDate("2022-01-05");
-        System.out.println("value: " + value);
     }
 }

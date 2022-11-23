@@ -113,6 +113,7 @@ public abstract class DatasetEditor {
 
         var file = wrappedZip.orElse(fileInfo.getPath());
         var metadata = objectMapper.writeValueAsString(fileInfo.getMetadata());
+        log.info("Adding file {} with metadata {}", file, metadata);
         var result = dataset.addFileItem(Optional.of(file.toFile()), Optional.of(metadata));
 
         if (wrappedZip.isPresent()) {
@@ -151,7 +152,7 @@ public abstract class DatasetEditor {
                 // TODO check if this still works
                 var bagPath = entry.getKey();
                 var fileInfo = entry.getValue();
-                var newKey = Paths.get("data").relativize(bagPath);
+                var newKey = Path.of("data").relativize(bagPath);
 
                 return Map.entry(newKey, fileInfo);
             })

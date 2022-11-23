@@ -98,18 +98,6 @@ public class FieldBuilder {
         setControlledFields(name, values);
     }
 
-    public void addSingleControlledField(String name, Stream<String> data) {
-        data
-            .filter(Objects::nonNull)
-            .filter(StringUtils::isNotBlank)
-            .findFirst()
-            .ifPresent(value -> {
-                System.out.println("SETTING CONTROLLED FIELD " + name + " " + value);
-                setControlledField(name, value);
-            });
-
-    }
-
     public void addSingleControlledField(String name, String data) {
         setControlledField(name, data);
     }

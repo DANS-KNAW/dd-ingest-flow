@@ -26,6 +26,7 @@ import org.w3c.dom.Node;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static nl.knaw.dans.ingest.core.service.XmlReader.NAMESPACE_XSI;
 
@@ -87,6 +88,10 @@ public class Base {
 
     public static Optional<Node> getChildNode(Node node, String xpath) {
         return XPathEvaluator.nodes(node, xpath).findAny();
+    }
+
+    public static Stream<Node> getChildNodes(Node node, String xpath) {
+        return XPathEvaluator.nodes(node, xpath);
     }
 
     public static String toYearMonthDayFormat(Node node) {

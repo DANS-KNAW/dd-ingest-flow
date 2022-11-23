@@ -67,12 +67,16 @@ public class DatasetCreator extends DatasetEditor {
     public String performEdit() {
         var api = dataverseClient.dataverse("root");
 
+        log.info("Creating new dataset");
+
         try {
             var persistentId = importDataset(api);
+            log.debug("New persistent ID: {}", persistentId);
             modifyDataset(persistentId);
             return persistentId;
         }
         catch (Exception e) {
+            log.error("Error creating dataset", e);
             throw new FailedDepositException(deposit, "could not import/create dataset", e);
         }
     }
@@ -82,22 +86,27 @@ public class DatasetCreator extends DatasetEditor {
 
         // license stuff
         var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.getDdm())));
+        log.info("Setting license to {}", license);
         api.updateMetadataFromJsonLd(license, true);
-        api.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
+        api.awaitUnlock();
 
         // add files to dataset
         var pathToFileInfo = getFileInfo();
+        log.debug("File info: {}", pathToFileInfo);
         var databaseIds = addFiles(persistentId, pathToFileInfo.values());
 
+        log.debug("Database ID's: {}", databaseIds);
+        // TODO fix files not being uploaded
+        // TODO fix deposit.properties not being saved after changing properties
         // update individual files metadata
         updateFileMetadata(databaseIds);
-        api.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
+        api.awaitUnlock();
 
         configureEnableAccessRequests(persistentId, true);
-        api.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
+        api.awaitUnlock();
 
         api.assignRole(getRoleAssignment());
-        api.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
+        api.awaitUnlock();
 
         var dateAvailable = getDateAvailable(deposit); //deposit.getDateAvailable().get();
         embargoFiles(persistentId, dateAvailable);

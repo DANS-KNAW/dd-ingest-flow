@@ -108,7 +108,7 @@ public class DatasetUpdater extends DatasetEditor {
                 log.debug("fileMovements = {}", fileMovements);
 
                 /*
-                 * File replacement can only happen on files with paths that are not also involved in a rename/move action. Otherwise we end up with:
+                 * File replacement can only happen on files with paths that are not also involved in a rename/move action. Otherwise, we end up with:
                  *
                  * - trying to update the file metadata by a database ID that is not the "HEAD" of a file version history (which Dataverse doesn't allow anyway, it
                  * fails with "You cannot edit metadata on a dataFile that has been replaced"). This happens when a file A is renamed to B, but a different file A
@@ -128,7 +128,7 @@ public class DatasetUpdater extends DatasetEditor {
                 /*
                  * To find the files to delete we start from the paths in the deposit payload. In principle, these paths are remaining, so should NOT be deleted.
                  * However, if a file is moved/renamed to a path that was also present in the latest version, then the old file at that path must first be deleted
-                 * (and must therefore NOT included in candidateRemainingFiles). Otherwise we'll end up trying to use an existing (directoryLabel, label) pair.
+                 * (and must therefore NOT be included in candidateRemainingFiles). Otherwise, we'll end up trying to use an existing (directoryLabel, label) pair.
                  */
                 var oldToNewPathMovedSet = new HashSet<>(oldToNewPathMovedFiles.values());
                 var candidateRemainingFiles = diff(pathToFileInfo.keySet(), oldToNewPathMovedSet);
@@ -183,7 +183,7 @@ public class DatasetUpdater extends DatasetEditor {
                     .stream()
                     .map(key -> Map.entry(key, fileReplacements.getOrDefault(key, fileAdditions.get(key))))
                     .filter(entry -> !"easy-migration".equals(entry.getValue().getDirectoryLabel()))
-                    .map(entry -> entry.getKey())
+                    .map(Map.Entry::getKey)
                     .collect(Collectors.toSet());
 
                 embargoFiles(doi, dateAvailable, fileIdsToEmbargo);

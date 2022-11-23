@@ -43,13 +43,13 @@ public class Amd extends Base {
         var result = getFirstChangeToState(node, PUBLISHED.name());
 
         if (result.isEmpty()) {
-            return getChildNode(node, "lastStateChange").map(Base::toYearMonthDayFormat);
+            return getChildNode(node, "//lastStateChange").map(Base::toYearMonthDayFormat);
         }
 
         return result;
     }
 
-    private static Optional<String> getFirstChangeToState(Node node, String state) {
+    static Optional<String> getFirstChangeToState(Node node, String state) {
         return XPathEvaluator.nodes(node, "//stateChangeDates/damd:stateChangeDate")
             .filter(n -> {
                 var toState = getChildNode(n, "toState")

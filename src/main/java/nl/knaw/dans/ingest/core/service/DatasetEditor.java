@@ -149,7 +149,7 @@ public abstract class DatasetEditor {
         return files.entrySet().stream()
             .map(entry -> {
                 // relativize the path
-                // TODO check if this still works
+                // TODO make this all tested
                 var bagPath = entry.getKey();
                 var fileInfo = entry.getValue();
                 var newKey = Path.of("data").relativize(bagPath);

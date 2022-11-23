@@ -25,6 +25,6 @@ public interface DepositManager {
 
     Deposit loadDeposit(Path path) throws InvalidDepositException, IOException;
 
-    void saveProperties(Path path, Deposit deposit) throws InvalidDepositException;
+    void saveDeposit(Deposit deposit) throws InvalidDepositException;
 
 }

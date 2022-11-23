@@ -21,6 +21,7 @@ import nl.knaw.dans.ingest.core.DepositState;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 import nl.knaw.dans.ingest.core.service.exception.FailedDepositException;
+import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
@@ -61,11 +62,12 @@ public class DepositIngestTask implements TargetedTask {
     private final Deposit deposit;
 
     private final EventWriter eventWriter;
-    private final XmlReader xmlReader;
+
+    private final DepositManager depositManager;
 
     public DepositIngestTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, XmlReader xmlReader) {
+        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, DepositManager depositManager) {
         this.datasetMetadataMapper = datasetMetadataMapper;
         this.deposit = deposit;
         this.dataverseClient = dataverseClient;
@@ -81,7 +83,7 @@ public class DepositIngestTask implements TargetedTask {
         this.publishAwaitUnlockMaxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries;
         this.outboxDir = outboxDir;
         this.eventWriter = eventWriter;
-        this.xmlReader = xmlReader;
+        this.depositManager = depositManager;
     }
 
     public Deposit getDeposit() {
@@ -117,6 +119,8 @@ public class DepositIngestTask implements TargetedTask {
         deposit.setStateDescription(message);
 
         try {
+            depositManager.saveDeposit(deposit);
+
             switch (depositState) {
                 case ARCHIVED:
                     moveDepositToOutbox(OutboxSubDir.PROCESSED);
@@ -131,6 +135,9 @@ public class DepositIngestTask implements TargetedTask {
         }
         catch (IOException e) {
             log.error("Unable to move directory for deposit {}", deposit.getDir(), e);
+        }
+        catch (InvalidDepositException e) {
+            log.error("Unable to save deposit for deposit {}", deposit.getDir(), e);
         }
     }
 
@@ -330,7 +337,6 @@ public class DepositIngestTask implements TargetedTask {
         // do nothing
     }
 
-    // TODO convert to Optional
     Optional<String> getDateOfDeposit() {
         return Optional.empty();
     }

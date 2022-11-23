@@ -25,8 +25,8 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -43,6 +43,8 @@ public final class XPathEvaluator {
     public static final String NAMESPACE_DCX_GML = "http://easy.dans.knaw.nl/schemas/dcx/gml/";
     public static final String NAMESPACE_FILES_XML = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/";
     public static final String NAMESPACE_OPEN_GIS = "http://www.opengis.net/gml";
+    public static final String NAMESPACE_EASY_WORKFLOW = "http://easy.dans.knaw.nl/easy/workflow/";
+    public static final String NAMESPACE_DAMD = "http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/";
 
     private static XPath xpath;
 
@@ -52,18 +54,19 @@ public final class XPathEvaluator {
                 .newInstance()
                 .newXPath();
 
-            final var namespaceMap = Map.of(
-                "xml", NAMESPACE_XML,
-                "dc", NAMESPACE_DC,
-                "dcx-dai", NAMESPACE_DCX_DAI,
-                "ddm", NAMESPACE_DDM,
-                "dcterms", NAMESPACE_DCTERMS,
-                "xsi", NAMESPACE_XSI,
-                "id-type", NAMESPACE_ID_TYPE,
-                "dcx-gml", NAMESPACE_DCX_GML,
-                "files", NAMESPACE_FILES_XML,
-                "gml", NAMESPACE_OPEN_GIS
-            );
+            final var namespaceMap = new HashMap<String, String>();
+            namespaceMap.put("xml", NAMESPACE_XML);
+            namespaceMap.put("dc", NAMESPACE_DC);
+            namespaceMap.put("dcx-dai", NAMESPACE_DCX_DAI);
+            namespaceMap.put("ddm", NAMESPACE_DDM);
+            namespaceMap.put("dcterms", NAMESPACE_DCTERMS);
+            namespaceMap.put("xsi", NAMESPACE_XSI);
+            namespaceMap.put("id-type", NAMESPACE_ID_TYPE);
+            namespaceMap.put("dcx-gml", NAMESPACE_DCX_GML);
+            namespaceMap.put("files", NAMESPACE_FILES_XML);
+            namespaceMap.put("gml", NAMESPACE_OPEN_GIS);
+            namespaceMap.put("wfs", NAMESPACE_EASY_WORKFLOW);
+            namespaceMap.put("damd", NAMESPACE_DAMD);
 
             xpath.setNamespaceContext(new NamespaceContext() {
 

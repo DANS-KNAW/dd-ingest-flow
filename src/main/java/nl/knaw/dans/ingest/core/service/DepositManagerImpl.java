@@ -51,8 +51,8 @@ public class DepositManagerImpl implements DepositManager {
     }
 
     @Override
-    public void saveProperties(Path path, Deposit deposit) throws InvalidDepositException {
-        var propertiesFile = getDepositPath(path);
+    public void saveDeposit(Deposit deposit) throws InvalidDepositException {
+        var propertiesFile = getDepositPath(deposit.getDir());
 
         var params = new Parameters();
         var paramConfig = params.properties()
@@ -201,29 +201,11 @@ public class DepositManagerImpl implements DepositManager {
     }
 
     void mapToConfig(Configuration config, Deposit deposit) {
-        config.setProperty("bag-store.bag-id", deposit.getId());
-        config.setProperty("dataverse.bag-id", String.format("urn:uuid:%s", deposit.getId()));
-        config.setProperty("creation.timestamp", deposit.getCreated());
-        config.setProperty("deposit.origin", "SWORD2");
-        config.setProperty("depositor.userId", deposit.getDepositorUserId());
-        config.setProperty("state.label", deposit.getState().toString());
-        config.setProperty("state.description", deposit.getStateDescription());
-        config.setProperty("bag-store.bag-name", deposit.getBagName());
-        config.setProperty("dataverse.sword-token", deposit.getDataverseSwordToken());
-
-        if (deposit.getOtherId() != null && !deposit.getOtherId().isEmpty()) {
-            config.setProperty("dataverse.other-id", deposit.getOtherId());
-        }
-
-        if (deposit.getOtherIdVersion() != null && !deposit.getOtherIdVersion().isEmpty()) {
-            config.setProperty("dataverse.other-id-version", deposit.getOtherIdVersion());
-        }
-
-        if (deposit.getMimeType() != null) {
-            config.setProperty("easy-sword2.client-message.content-type", deposit.getMimeType());
-        }
-        else {
-            config.clearProperty("easy-sword2.client-message.content-type");
-        }
+        config.clearProperty("state.label");
+        config.clearProperty("state.description");
+        config.addProperty("state.label", deposit.getState().toString());
+        config.addProperty("state.description", deposit.getStateDescription());
+        config.addProperty("identifier.doi", deposit.getDoi());
+        config.addProperty("identifier.urn", deposit.getUrn());
     }
 }

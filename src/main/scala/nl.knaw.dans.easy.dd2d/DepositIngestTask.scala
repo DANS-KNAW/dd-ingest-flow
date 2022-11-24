@@ -74,7 +74,7 @@ case class DepositIngestTask(deposit: Deposit,
     doRun()
       .doIfSuccess(_ => {
         logger.info(s"SUCCESS: $deposit")
-        deposit.setState("ARCHIVED", "The deposit was successfully ingested in the Data Station and will be automatically archived")
+        deposit.setState("PUBLISHED", "The deposit was successfully ingested in the Data Station and will be automatically archived")
         moveDepositToOutbox(PROCESSED)
       })
       .doIfFailure {

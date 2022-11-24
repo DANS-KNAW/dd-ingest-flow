@@ -15,21 +15,15 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.w3c.dom.Node;
+import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
-public class PersonalStatement extends Base {
-    public static String toHasPersonalDataValue(Node node) {
-        if (hasChildNode(node, "notAvailable")) {
-            return "Unknown";
-        }
-
-        return getChildNode(node, "containsPrivacySensitiveData")
-            .map(Node::getTextContent)
-            .map(Boolean::parseBoolean)
-            .map(n -> n ? "Yes" : "No")
-            .orElse(null);
-    }
-
+class SpatialPointTest extends BaseTest {
+    // TODO make this
 }

@@ -46,8 +46,8 @@ public class AbrReportType extends Base {
 
     public static boolean isAbrReportType(Node node) {
         return "reportNumber".equals(node.getLocalName())
-            && hasAttribute(node, XmlReader.NAMESPACE_DDM, "subjectScheme", SCHEME_ABR_RAPPORT_TYPE)
-            && hasAttribute(node, XmlReader.NAMESPACE_DDM, "schemeURI", SCHEME_URI_ABR_RAPPORT_TYPE);
+            && hasAttributeValue(node, XmlReader.NAMESPACE_DDM, "subjectScheme", SCHEME_ABR_RAPPORT_TYPE)
+            && hasAttributeValue(node, XmlReader.NAMESPACE_DDM, "schemeURI", SCHEME_URI_ABR_RAPPORT_TYPE);
 
     }
 

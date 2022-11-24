@@ -15,21 +15,14 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import lombok.extern.slf4j.Slf4j;
-import org.w3c.dom.Node;
+import nl.knaw.dans.ingest.core.service.XPathEvaluator;
+import org.junit.jupiter.api.Test;
 
-@Slf4j
-public class PersonalStatement extends Base {
-    public static String toHasPersonalDataValue(Node node) {
-        if (hasChildNode(node, "notAvailable")) {
-            return "Unknown";
-        }
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-        return getChildNode(node, "containsPrivacySensitiveData")
-            .map(Node::getTextContent)
-            .map(Boolean::parseBoolean)
-            .map(n -> n ? "Yes" : "No")
-            .orElse(null);
-    }
+class LanguageTest extends BaseTest {
+
+ // TODO make it
 
 }

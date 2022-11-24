@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.builder;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE_OF_METADATA;
@@ -28,7 +29,7 @@ public class RightsFieldBuilder extends FieldBuilder {
     }
 
     public void addPersonalDataPresent(Stream<String> values) {
-        var v = values.findFirst().orElse("Unknown");
+        var v = values.filter(Objects::nonNull).findFirst().orElse("Unknown");
         addSingleControlledField(PERSONAL_DATA_PRESENT, v);
     }
 

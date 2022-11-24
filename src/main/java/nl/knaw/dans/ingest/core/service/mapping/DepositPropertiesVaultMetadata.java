@@ -18,13 +18,15 @@ package nl.knaw.dans.ingest.core.service.mapping;
 import nl.knaw.dans.ingest.core.service.builder.CompoundFieldGenerator;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Optional;
+
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_AGENCY;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
 
 public class DepositPropertiesVaultMetadata extends Base {
 
     public static CompoundFieldGenerator<String> toOtherIdValue = (builder, value) -> {
-        var str = value.trim();
+        var str = Optional.ofNullable(value).orElse("").trim();
 
         if (StringUtils.containsWhitespace(str)) {
             throw new IllegalArgumentException("Identifier must not contain whitespace");
@@ -41,6 +43,6 @@ public class DepositPropertiesVaultMetadata extends Base {
     };
 
     public static boolean isValidOtherIdValue(String value) {
-        return StringUtils.isNotBlank(value);
+        return StringUtils.isNotBlank(value) && value.split(":").length == 2;
     }
 };

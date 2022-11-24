@@ -49,15 +49,4 @@ class FileElementTest extends BaseTest {
         assertEquals(true, result.getRestricted());
     }
 
-    @Test
-    void testPathToFileInfo() throws Exception{
-        var doc = readDocument("files.xml");
-        var ddm = readDocument("dataset.xml");
-        var deposit = new Deposit();
-        deposit.setFilesXml(doc);
-        deposit.setDdm(ddm);
-
-        var result = FileElement.pathToFileInfo(deposit);
-
-    }
 }

@@ -37,12 +37,12 @@ public class AccessRights extends Base {
     }
 
     public static boolean isEnableRequests(Node accessRightsNode, Node filesNode) {
-        var accessibleToRights = XPathEvaluator.strings(filesNode, "//file/accessibleToRights")
+        var accessibleToRights = XPathEvaluator.strings(filesNode, "//files:file/ddm:accessibleToRights")
             .collect(Collectors.toList());
 
-        var numberOfFiles = XPathEvaluator.strings(filesNode, "//file").count();
+        var numberOfFiles = XPathEvaluator.strings(filesNode, "//files:file").count();
 
-        var isImplicit = numberOfFiles > accessibleToRights.size() && "NO_ACCESS".equals(accessRightsNode.getTextContent());
+        var isImplicit = numberOfFiles > accessibleToRights.size() && "NO_ACCESS".equals(accessRightsNode.getTextContent().trim());
         var isExplicit = accessibleToRights.stream()
             .anyMatch("NONE"::equals);
 

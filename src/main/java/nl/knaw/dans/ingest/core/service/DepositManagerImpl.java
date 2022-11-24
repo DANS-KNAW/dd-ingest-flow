@@ -153,10 +153,6 @@ public class DepositManagerImpl implements DepositManager {
         deposit.setId(config.getString("bag-store.bag-id"));
         deposit.setCreated(Optional.ofNullable(config.getString("creation.timestamp")).map(OffsetDateTime::parse).orElse(null));
         deposit.setDepositorUserId(config.getString("depositor.userId"));
-//        deposit.setState(DepositState.valueOf(config.getString("state.label")));
-//        deposit.setStateDescription(config.getString("state.description"));
-//        deposit.setBagName(config.getString("bag-store.bag-name"));
-//        deposit.setMimeType(config.getString("easy-sword2.client-message.content-type"));
 
         deposit.setDataverseIdProtocol(config.getString("dataverse.id-protocol", ""));
         deposit.setDataverseIdAuthority(config.getString("dataverse.id-authority", ""));
@@ -205,6 +201,7 @@ public class DepositManagerImpl implements DepositManager {
     }
 
     void mapToConfig(Configuration config, Deposit deposit) {
+        // TODO do we need to clear it if we use setProperty?
         config.clearProperty("state.label");
         config.clearProperty("state.description");
         config.setProperty("state.label", deposit.getState().toString());

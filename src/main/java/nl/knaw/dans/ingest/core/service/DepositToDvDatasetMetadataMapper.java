@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.builder.ArchaeologyFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.CitationFieldBuilder;
@@ -144,12 +143,11 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addKeywords(getSubjects(ddm).filter(Subject::isPanTerm), Subject.toPanKeywordValue);
             citationFields.addKeywords(getSubjects(ddm).filter(Subject::isAatTerm), Subject.toAatKeywordValue);
             citationFields.addKeywords(getLanguages(ddm).filter(Language::isNotIsoLanguage), Language.toKeywordValue);
-            citationFields.addPublications(getIdentifiers(ddm).filter(Identifier::isRelatedPublication), Language.toKeywordValue);
+            citationFields.addPublications(getIdentifiers(ddm).filter(Identifier::isRelatedPublication), Identifier.toRelatedPublicationValue);
             citationFields.addLanguages(getLanguages(ddm), node -> Language.isoToDataverse(node.getTextContent(), iso1ToDataverseLanguage, iso2ToDataverseLanguage));
             citationFields.addProductionDate(getCreated(ddm).map(Base::toYearMonthDayFormat));
             citationFields.addContributors(getContributorDetails(ddm), Contributor.toAuthorValueObject);
-            citationFields.addGrantNumbers(getContributorDetailsOrganizations(ddm)
-                .filter(DcxDaiOrganization::isFunder), DcxDaiOrganization.toGrantNumberValueObject);
+            citationFields.addGrantNumbers(getIdentifiers(ddm).filter(Identifier::isNwoGrantNumber), Identifier.toNwoGrantNumber);
 
             citationFields.addDistributor(getPublishers(ddm).filter(Publisher::isNotDans), Publisher.toDistributorValueObject);
             citationFields.addDistributionDate(getAvailable(ddm).map(Base::toYearMonthDayFormat));
@@ -265,17 +263,6 @@ public class DepositToDvDatasetMetadataMapper {
 
         var dataset = new Dataset();
         dataset.setDatasetVersion(version);
-
-        try {
-            var str = new ObjectMapper()
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(fields);
-
-            System.out.println("STR: " + str);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
 
         return dataset;
     }

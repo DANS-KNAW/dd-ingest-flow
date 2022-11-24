@@ -130,7 +130,8 @@ public final class DcxDaiAuthor extends Base {
                 Optional.ofNullable(author.getInitials()).orElse(""),
                 Optional.ofNullable(author.getInsertions()).orElse(""),
                 Optional.ofNullable(author.getSurname()).orElse(""),
-                Optional.ofNullable(author.getOrganization()).orElse("")
+                Optional.ofNullable(author.getOrganization())
+                    .map(s -> String.format("(%s)", s)).orElse("")
             ))
             .trim().replaceAll("\\s+", " ");
     }

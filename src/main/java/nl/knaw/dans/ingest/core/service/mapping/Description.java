@@ -65,6 +65,6 @@ public class Description extends Base {
     }
 
     public static boolean isTechnicalInfo(Node node) {
-        return hasAttribute(node, "descriptionType", "TechnicalInfo");
+        return hasAttributeValue(node, "descriptionType", "TechnicalInfo");
     }
 }

@@ -40,6 +40,7 @@ class SpatialCoverageTest extends BaseTest {
         assertFalse(SpatialCoverage.hasChildElement(root));
     }
 
+    // TODO this should not be here
     @Test
     void testFieldBuilder() throws Exception {
         var builder = new CompoundFieldBuilder("TEST", true);

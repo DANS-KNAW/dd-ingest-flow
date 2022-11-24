@@ -29,6 +29,7 @@ class RelationTest extends BaseTest {
 
     @Test
     void testToRelationObject() throws Exception {
+        // TODO inline XML
         var doc = readDocument("dataset.xml");
         var items = XPathEvaluator.nodes(doc, "//ddm:dcmiMetadata//*")
             .filter(Relation::isRelation)

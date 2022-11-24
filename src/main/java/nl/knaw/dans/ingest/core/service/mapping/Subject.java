@@ -70,13 +70,13 @@ public class Subject extends Base {
 
     public static boolean isPanTerm(Node node) {
         return node.getLocalName().equals("subject")
-            && hasAttribute(node, "subjectScheme", SCHEME_PAN)
-            && hasAttribute(node, "schemeURI", SCHEME_URI_PAN);
+            && hasAttributeValue(node, "subjectScheme", SCHEME_PAN)
+            && hasAttributeValue(node, "schemeURI", SCHEME_URI_PAN);
     }
 
     public static boolean isAatTerm(Node node) {
         return node.getLocalName().equals("subject")
-            && hasAttribute(node, "subjectScheme", SCHEME_AAT)
-            && hasAttribute(node, "schemeURI", SCHEME_URI_AAT);
+            && hasAttributeValue(node, "subjectScheme", SCHEME_AAT)
+            && hasAttributeValue(node, "schemeURI", SCHEME_URI_AAT);
     }
 }

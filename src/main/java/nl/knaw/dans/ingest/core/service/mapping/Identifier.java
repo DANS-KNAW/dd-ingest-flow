@@ -28,6 +28,8 @@ import java.util.Optional;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ARCHIS_NUMBER_ID;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ARCHIS_NUMBER_TYPE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER_AGENCY;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_AGENCY;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_CITATION;
@@ -46,7 +48,7 @@ public class Identifier extends Base {
     );
 
     public static CompoundFieldGenerator<Node> toRelatedPublicationValue = (builder, node) -> {
-        var text = node.getTextContent();
+        var text = node.getTextContent().trim();
 
         builder.addSubfield(PUBLICATION_CITATION, "");
         builder.addSubfield(PUBLICATION_ID_NUMBER, text);
@@ -54,21 +56,29 @@ public class Identifier extends Base {
         builder.addSubfield(PUBLICATION_URL, "");
     };
 
+
+    public static CompoundFieldGenerator<Node> toNwoGrantNumber = (builder, node) -> {
+        var text = node.getTextContent().trim();
+
+        builder.addSubfield(GRANT_NUMBER_AGENCY, "NWO");
+        builder.addSubfield(GRANT_NUMBER_VALUE, text);
+    };
+
     public static CompoundFieldGenerator<Node> toOtherIdValue = (builder, node) -> {
-        var text = node.getTextContent();
+        var text = node.getTextContent().trim();
 
         if (hasXsiType(node, "EASY2")) {
             builder.addSubfield(OTHER_ID_AGENCY, "DANS-KNAW");
             builder.addSubfield(OTHER_ID_VALUE, text);
         }
-        else if (!hasAttribute(node, XmlReader.NAMESPACE_XML, "type")) {
+        else if (!hasAttribute(node, XmlReader.NAMESPACE_XSI, "type")) {
             builder.addSubfield(OTHER_ID_AGENCY, "");
             builder.addSubfield(OTHER_ID_VALUE, text);
         }
     };
 
     public static CompoundFieldGenerator<Node> toArchisNumberValue = (builder, node) -> {
-        var numberType = getAttribute(node, XmlReader.NAMESPACE_XML, "type")
+        var numberType = getAttribute(node, NAMESPACE_XSI, "type")
             .map(Node::getTextContent)
             .map(String::trim)
             .filter(s -> !s.isEmpty())
@@ -90,6 +100,7 @@ public class Identifier extends Base {
                 var text = item.getTextContent();
                 return text.substring(text.indexOf(':') + 1);
             })
+            .map(String::toLowerCase)
             .orElse("");
     }
 
@@ -127,7 +138,7 @@ public class Identifier extends Base {
     }
 
     public static boolean canBeMappedToOtherId(Node node) {
-        return hasXsiType(node, "EASY2") || !hasAttribute(node, XmlReader.NAMESPACE_XML, "type");
+        return hasXsiType(node, "EASY2") || !hasAttribute(node, NAMESPACE_XSI, "type");
     }
 
     public static boolean isArchisNumber(Node node) {
@@ -135,5 +146,9 @@ public class Identifier extends Base {
             hasXsiType(node, "ARCHIS-VONDSTMELDING") ||
             hasXsiType(node, "ARCHIS-MONUMENT") ||
             hasXsiType(node, "ARCHIS-WAARNEMING");
+    }
+
+    public static boolean isNwoGrantNumber(Node node) {
+        return hasXsiType(node, "NWO-PROJECTNR");
     }
 }

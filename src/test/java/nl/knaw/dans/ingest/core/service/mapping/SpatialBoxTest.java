@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpatialBoxTest extends BaseTest {
 
+    // TODO inline xml
     @Test
     void testToEasyTsmSpatialBoxValueObject() throws Exception {
         var doc = readDocument("spatial.xml");

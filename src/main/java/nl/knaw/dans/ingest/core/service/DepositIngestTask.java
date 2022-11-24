@@ -94,7 +94,7 @@ public class DepositIngestTask implements TargetedTask {
     public void run() {
         try {
             doRun();
-            updateDepositFromResult(DepositState.ARCHIVED, "The deposit was successfully ingested in the Data Station and will be automatically archived");
+            updateDepositFromResult(DepositState.PUBLISHED, "The deposit was successfully ingested in the Data Station and will be automatically archived");
         }
         catch (RejectedDepositException e) {
             log.error("deposit was rejected", e);

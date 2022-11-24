@@ -29,7 +29,7 @@ public class PersonalStatement extends Base {
             .map(Node::getTextContent)
             .map(Boolean::parseBoolean)
             .map(n -> n ? "Yes" : "No")
-            .orElse("Unknown");
+            .orElse(null);
     }
 
 }

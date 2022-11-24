@@ -16,8 +16,12 @@
 package nl.knaw.dans.ingest.core;
 
 import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
+import nl.knaw.dans.ingest.core.service.Deposit;
+import nl.knaw.dans.ingest.core.service.DepositMigrationTask;
+import nl.knaw.dans.ingest.core.service.DepositToDvDatasetMetadataMapper;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.format.DateTimeParseException;
@@ -48,25 +52,34 @@ public class DepositStartImportTaskWrapperTest {
      */
 
     private static DepositImportTaskWrapper createTaskWrapper(String depositName) {
-        //        return new DepositImportTaskWrapper(new DepositMigrationTask(
-        //            new Deposit(File.apply(testDepositsBasedir.resolve(depositName))),
-        //            Option.empty(),
-        //            new ZipFileHandler(File.apply(Paths.get("dummy"))),
-        //            "dummy",
-        //            false,
-        //            null,
-        //            Option.empty(),
-        //            null,
-        //            0,
-        //            0,
-        //            null,
-        //            null,
-        //            null,
-        //            null,
-        //            null,
-        //            null,
-        //            null
-        //        ), null);
+        var deposit = new Deposit();
+        deposit.setDir(testDepositsBasedir.resolve(depositName));
+
+        var mapper = new DepositToDvDatasetMetadataMapper(
+            true,
+            Set.of("")
+        )
+        return new DepositImportTaskWrapper(new DepositMigrationTask(
+            deposit,
+            new DepositToDvDatasetMetadataMapper(true, )
+
+            Option.empty(),
+            new ZipFileHandler(File.apply(Paths.get("dummy"))),
+            "dummy",
+            false,
+            null,
+            Option.empty(),
+            null,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        ), null);
         return null;
     }
 

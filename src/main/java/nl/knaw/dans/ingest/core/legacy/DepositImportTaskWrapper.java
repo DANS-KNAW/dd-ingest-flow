@@ -39,6 +39,8 @@ public class DepositImportTaskWrapper implements TargetedTask, Comparable<Deposi
     }
 
     private static Instant getCreatedInstant(DepositIngestTask t) {
+
+        System.out.println("DEPOSIT: " + t.getDeposit());
         return t.getDeposit().getBagCreated();
     }
 

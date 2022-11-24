@@ -133,7 +133,7 @@ public class DepositManagerImpl implements DepositManager {
             return deposit;
         }
         catch (Throwable cex) {
-            throw new InvalidDepositException("Unable to load deposit properties", cex);
+            throw new InvalidDepositException(cex.getMessage(), cex);
         }
     }
 
@@ -153,10 +153,10 @@ public class DepositManagerImpl implements DepositManager {
         deposit.setId(config.getString("bag-store.bag-id"));
         deposit.setCreated(Optional.ofNullable(config.getString("creation.timestamp")).map(OffsetDateTime::parse).orElse(null));
         deposit.setDepositorUserId(config.getString("depositor.userId"));
-        deposit.setState(DepositState.valueOf(config.getString("state.label")));
-        deposit.setStateDescription(config.getString("state.description"));
-        deposit.setBagName(config.getString("bag-store.bag-name"));
-        deposit.setMimeType(config.getString("easy-sword2.client-message.content-type"));
+//        deposit.setState(DepositState.valueOf(config.getString("state.label")));
+//        deposit.setStateDescription(config.getString("state.description"));
+//        deposit.setBagName(config.getString("bag-store.bag-name"));
+//        deposit.setMimeType(config.getString("easy-sword2.client-message.content-type"));
 
         deposit.setDataverseIdProtocol(config.getString("dataverse.id-protocol", ""));
         deposit.setDataverseIdAuthority(config.getString("dataverse.id-authority", ""));
@@ -189,6 +189,10 @@ public class DepositManagerImpl implements DepositManager {
         var metadata = bag.getMetadata();
         var value = metadata.get(key);
 
+        if (value == null) {
+
+            throw new IllegalArgumentException(String.format("No '%s' value found in bag", key));
+        }
         if (value.size() != 1) {
             throw new IllegalArgumentException(String.format("Value '%s' should contain exactly 1 value in bag; %s found", key, value.size()));
         }

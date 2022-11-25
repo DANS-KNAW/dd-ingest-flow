@@ -45,6 +45,7 @@ public final class XPathEvaluator {
     public static final String NAMESPACE_OPEN_GIS = "http://www.opengis.net/gml";
     public static final String NAMESPACE_EASY_WORKFLOW = "http://easy.dans.knaw.nl/easy/workflow/";
     public static final String NAMESPACE_DAMD = "http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/";
+    public static final String NAMESPACE_AGREEMENTS = "http://easy.dans.knaw.nl/schemas/bag/metadata/agreements/";
 
     private static XPath xpath;
 
@@ -67,6 +68,7 @@ public final class XPathEvaluator {
             namespaceMap.put("gml", NAMESPACE_OPEN_GIS);
             namespaceMap.put("wfs", NAMESPACE_EASY_WORKFLOW);
             namespaceMap.put("damd", NAMESPACE_DAMD);
+            namespaceMap.put("agreements", NAMESPACE_AGREEMENTS);
 
             xpath.setNamespaceContext(new NamespaceContext() {
 

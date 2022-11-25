@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.builder.ArchaeologyFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.CitationFieldBuilder;
@@ -174,7 +175,7 @@ public class DepositToDvDatasetMetadataMapper {
 
         if (activeMetadataBlocks.contains("dansRelationMetadata")) {
             relationFields.addAudiences(getAudiences(ddm).map(Audience::toNarcisTerm));
-            relationFields.addAudiences(getInCollections(ddm).map(InCollection::toCollection));
+            relationFields.addCollections(getInCollections(ddm).map(InCollection::toCollection));
             relationFields.addRelations(getRelations(ddm)
                 .filter(Relation::isRelation), Relation.toRelationObject);
         }
@@ -221,7 +222,7 @@ public class DepositToDvDatasetMetadataMapper {
             return Stream.empty();
         }
 
-        return XPathEvaluator.nodes(agreements, "//personalDataStatement");
+        return XPathEvaluator.nodes(agreements, "//agreements:personalDataStatement");
     }
 
     void processMetadataBlock(Map<String, MetadataBlock> fields, String title, String displayName, FieldBuilder builder) {
@@ -264,11 +265,23 @@ public class DepositToDvDatasetMetadataMapper {
         var dataset = new Dataset();
         dataset.setDatasetVersion(version);
 
+        try {
+            var str = new ObjectMapper()
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(version);
+
+            System.out.println("STR: " + str);
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+
+        }
         return dataset;
     }
 
     Stream<Node> getDescriptions(Document ddm) {
-        return XPathEvaluator.nodes(ddm, "//ddm:profile/dc:description");
+        return XPathEvaluator.nodes(ddm, "//ddm:profile/dcterms:description");
     }
 
     Stream<Node> getMetadataDescriptions(Document ddm) {

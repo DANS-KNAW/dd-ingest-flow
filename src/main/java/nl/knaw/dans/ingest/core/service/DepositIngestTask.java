@@ -171,9 +171,6 @@ public class DepositIngestTask implements TargetedTask {
             ? newDatasetUpdater(dataverseDataset).performEdit()
             : newDatasetCreator(dataverseDataset, depositorRole).performEdit();
 
-        if (1 == 1) {
-            throw new RuntimeException("Oh no");
-        }
         publishDataset(persistentId);
         postPublication(persistentId);
     }
@@ -331,7 +328,7 @@ public class DepositIngestTask implements TargetedTask {
             deposit.getOtherDoiId(),
             deposit.getAgreements(),
             date.orElse(null),
-            contact,
+            contact.orElse(null),
             deposit.getVaultMetadata()
         );
     }
@@ -344,9 +341,19 @@ public class DepositIngestTask implements TargetedTask {
         return Optional.empty();
     }
 
-    AuthenticatedUser getDatasetContact() throws IOException, DataverseException {
+    Optional<AuthenticatedUser> getDatasetContact() {
         var deposit = getDeposit();
-        return dataverseClient.admin().listSingleUser(deposit.getDepositorUserId()).getData();
+        return Optional.ofNullable(deposit.getDepositorUserId())
+            .filter(StringUtils::isNotBlank)
+            .map(userId -> {
+                try {
+                    return dataverseClient.admin().listSingleUser(userId).getData();
+                }
+                catch (IOException | DataverseException e) {
+                    log.error("Unable to fetch user with id {}", userId, e);
+                    throw new RuntimeException(e);
+                }
+            });
     }
 
 }

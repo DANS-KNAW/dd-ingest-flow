@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.api.ValidateCommand;
 import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapping.Amd;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class DepositMigrationTask extends DepositIngestTask {
@@ -140,5 +142,26 @@ public class DepositMigrationTask extends DepositIngestTask {
     void postPublication(String persistentId) {
         // do nothing
     }
+
+    void validateDeposit() {
+        var deposit = getDeposit();
+
+        if (dansBagValidator != null) {
+            var result = dansBagValidator.validateBag(
+                deposit.getBagDir(), ValidateCommand.PackageTypeEnum.MIGRATION, 1);
+
+            if (!result.getIsCompliant()) {
+                var violations = result.getRuleViolations().stream()
+                    .map(r -> String.format("- [%s] %s", r.getRule(), r.getViolation()))
+                    .collect(Collectors.joining("\n"));
+
+                throw new RejectedDepositException(deposit, String.format(
+                    "Bag was not valid according to Profile Version %s. Violations: %s",
+                    result.getProfileVersion(), violations)
+                );
+            }
+        }
+    }
+
 }
 

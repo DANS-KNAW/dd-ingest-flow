@@ -71,6 +71,8 @@ public class DansBagValidatorImpl implements DansBagValidator {
             .bagLocation(bagDir.toString())
             .packageType(informationPackageType);
 
+        log.info("Validating bag {} with command {}", bagDir, command);
+
         // TODO why is this not in the configuration
         var uri = serviceUri.resolve("validate");
 

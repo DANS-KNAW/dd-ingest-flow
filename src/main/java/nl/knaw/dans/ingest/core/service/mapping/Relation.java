@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RELATION;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RELATION_TEXT;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RELATION_TYPE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RELATION_URI;
 
 public class Relation extends Base {
@@ -39,7 +40,7 @@ public class Relation extends Base {
 
         var nodeName = node.getLocalName();
 
-        builder.addControlledSubfield(RELATION, labelToType.getOrDefault(nodeName, nodeName));
+        builder.addControlledSubfield(RELATION_TYPE, labelToType.getOrDefault(nodeName, nodeName));
         builder.addSubfield(RELATION_URI, href);
         builder.addSubfield(RELATION_TEXT, node.getTextContent());
     };

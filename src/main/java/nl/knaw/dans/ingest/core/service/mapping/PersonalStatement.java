@@ -21,11 +21,11 @@ import org.w3c.dom.Node;
 @Slf4j
 public class PersonalStatement extends Base {
     public static String toHasPersonalDataValue(Node node) {
-        if (hasChildNode(node, "notAvailable")) {
+        if (hasChildNode(node, "agreements:notAvailable")) {
             return "Unknown";
         }
 
-        return getChildNode(node, "containsPrivacySensitiveData")
+        return getChildNode(node, "agreements:containsPrivacySensitiveData")
             .map(Node::getTextContent)
             .map(Boolean::parseBoolean)
             .map(n -> n ? "Yes" : "No")

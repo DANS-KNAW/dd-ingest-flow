@@ -90,6 +90,7 @@ public class DepositIngestTaskFactory {
             .map(Pattern::compile)
             .orElse(null);
 
+        log.info("Creating deposit ingest task, isMigration = {}", this.isMigration);
         if (this.isMigration) {
             return new DepositMigrationTask(
                 depositToDvDatasetMetadataMapper,

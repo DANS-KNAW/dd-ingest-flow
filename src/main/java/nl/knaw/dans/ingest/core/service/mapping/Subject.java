@@ -35,17 +35,17 @@ public class Subject extends Base {
 
     private final static Pattern matchPrefix = Pattern.compile("^\\s*[a-zA-Z]+\\s+Match:\\s*");
     public static CompoundFieldGenerator<Node> toKeywordValue = (builder, value) -> {
-        builder.addSubfield(KEYWORD_VALUE, value.getTextContent());
+        builder.addSubfield(KEYWORD_VALUE, value.getTextContent().trim());
         builder.addSubfield(KEYWORD_VOCABULARY, "");
         builder.addSubfield(KEYWORD_VOCABULARY_URI, "");
     };
     public static CompoundFieldGenerator<Node> toPanKeywordValue = (builder, value) -> {
-        builder.addSubfield(KEYWORD_VALUE, removeMatchPrefix(value.getTextContent()));
+        builder.addSubfield(KEYWORD_VALUE, removeMatchPrefix(value.getTextContent().trim()));
         builder.addSubfield(KEYWORD_VOCABULARY, SCHEME_PAN);
         builder.addSubfield(KEYWORD_VOCABULARY_URI, SCHEME_URI_PAN);
     };
     public static CompoundFieldGenerator<Node> toAatKeywordValue = (builder, value) -> {
-        builder.addSubfield(KEYWORD_VALUE, removeMatchPrefix(value.getTextContent()));
+        builder.addSubfield(KEYWORD_VALUE, removeMatchPrefix(value.getTextContent().trim()));
         builder.addSubfield(KEYWORD_VOCABULARY, SCHEME_PAN);
         builder.addSubfield(KEYWORD_VOCABULARY_URI, SCHEME_URI_PAN);
     };

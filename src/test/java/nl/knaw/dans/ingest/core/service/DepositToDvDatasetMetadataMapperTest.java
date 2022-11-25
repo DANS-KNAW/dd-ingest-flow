@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -28,6 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DepositToDvDatasetMetadataMapperTest {
 
@@ -75,7 +78,7 @@ class DepositToDvDatasetMetadataMapperTest {
             .withDefaultPrettyPrinter()
             .writeValueAsString(result);
 
-
+        System.out.println("STR: " + str);
     }
     //
     //    @Test
@@ -437,16 +440,16 @@ class DepositToDvDatasetMetadataMapperTest {
     //            .containsOnly("en", "la", "nl", "de");
     //    }
     //
-    //    @Test
-    //    void testGetAcquisitionMethods()  throws Exception{
-    //        var mapper = getMapper();
-    //        var doc = readDocument("dataset.xml");
-    //
-    //        var result = mapper.getAcquisitionMethods(doc);
-    //
-    //        assertThat(result)
-    //            .map(Node::getTextContent)
-    //            .map(String::trim)
-    //            .containsOnly("Method 1");
-    //    }
+        @Test
+        void testGetAcquisitionMethods()  throws Exception{
+            var mapper = getMapper();
+            var doc = readDocument("abrs.xml");
+
+            var result = mapper.getAcquisitionMethods(doc);
+
+            assertThat(result)
+                .map(Node::getTextContent)
+                .map(String::trim)
+                .containsOnly("Method 1");
+        }
 }

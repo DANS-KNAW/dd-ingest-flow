@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.builder.ArchaeologyFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.CitationFieldBuilder;
@@ -147,7 +146,7 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addPublications(getIdentifiers(ddm).filter(Identifier::isRelatedPublication), Identifier.toRelatedPublicationValue);
             citationFields.addLanguages(getLanguages(ddm), node -> Language.isoToDataverse(node.getTextContent(), iso1ToDataverseLanguage, iso2ToDataverseLanguage));
             citationFields.addProductionDate(getCreated(ddm).map(Base::toYearMonthDayFormat));
-            citationFields.addContributors(getContributorDetails(ddm), Contributor.toAuthorValueObject);
+            citationFields.addContributors(getContributorDetails(ddm).filter(Contributor::isValidContributor), Contributor.toContributorValueObject);
             citationFields.addGrantNumbers(getIdentifiers(ddm).filter(Identifier::isNwoGrantNumber), Identifier.toNwoGrantNumber);
 
             citationFields.addDistributor(getPublishers(ddm).filter(Publisher::isNotDans), Publisher.toDistributorValueObject);
@@ -265,18 +264,6 @@ public class DepositToDvDatasetMetadataMapper {
         var dataset = new Dataset();
         dataset.setDatasetVersion(version);
 
-        try {
-            var str = new ObjectMapper()
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(version);
-
-            System.out.println("STR: " + str);
-
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-
-        }
         return dataset;
     }
 
@@ -353,7 +340,7 @@ public class DepositToDvDatasetMetadataMapper {
     }
 
     Stream<Node> getContributorDetails(Document ddm) {
-        return XPathEvaluator.nodes(ddm, "//ddm:dcmiMetadata/dcx-dai:contributorDetails/dcx-dai:author | //ddm:dcmiMetadata/dcx-dai:contributorDetails/dcx-dai:organization");
+        return XPathEvaluator.nodes(ddm, "//ddm:dcmiMetadata/dcx-dai:contributorDetails[dcx-dai:author] | //ddm:dcmiMetadata/dcx-dai:contributorDetails[dcx-dai:organization]");
     }
 
     Stream<Node> getCreated(Document ddm) {

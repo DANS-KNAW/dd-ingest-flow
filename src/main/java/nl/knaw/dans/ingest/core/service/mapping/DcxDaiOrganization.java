@@ -22,7 +22,6 @@ import nl.knaw.dans.ingest.core.service.builder.CompoundFieldGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
-import javax.xml.xpath.XPathExpressionException;
 import java.util.Set;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER;
@@ -65,12 +64,16 @@ public final class DcxDaiOrganization {
             builder.addSubfield(CONTRIBUTOR_TYPE, value);
         }
     };
-
     public static CompoundFieldGenerator<Node> toGrantNumberValueObject = (builder, node) -> {
         var org = parseOrganization(node);
         builder.addSubfield(GRANT_NUMBER_AGENCY, org.getName().trim());
         builder.addSubfield(GRANT_NUMBER_VALUE, "");
     };
+
+    public static boolean isValidContributor(Node node) {
+        var org = parseOrganization(node);
+        return StringUtils.isNotBlank(org.getName()) || StringUtils.isNotBlank(org.getRole());
+    }
 
     private static String getFirstValue(Node node, String expression) {
         return XPathEvaluator.strings(node, expression).map(String::trim).findFirst().orElse(null);

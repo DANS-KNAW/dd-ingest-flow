@@ -62,7 +62,6 @@ public final class DcxDaiAuthor extends Base {
             builder.addSubfield(AUTHOR_AFFILIATION, author.getOrganization());
         }
     };
-
     public static CompoundFieldGenerator<Node> toContributorValueObject = (builder, node) -> {
         var author = parseAuthor(node);
         var name = formatName(author);
@@ -82,6 +81,13 @@ public final class DcxDaiAuthor extends Base {
             builder.addSubfield(CONTRIBUTOR_TYPE, value);
         }
     };
+
+    public static boolean isValidContributor(Node node) {
+        var author = parseAuthor(node);
+        var name = formatName(author);
+
+        return (StringUtils.isNotBlank(name) || StringUtils.isNotBlank(author.getOrganization())) || StringUtils.isNotBlank(author.getRole());
+    }
 
     static String formatName(DatasetAuthor author) {
         return String.join(" ", List.of(

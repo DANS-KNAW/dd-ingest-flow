@@ -25,15 +25,14 @@ import java.util.Map;
 @Slf4j
 public final class Contributor extends Base {
     public static Map<String, String> contributorRoleToContributorType = new HashMap<>();
-
-    public static CompoundFieldGenerator<Node> toAuthorValueObject = (builder, node) -> {
+    public static CompoundFieldGenerator<Node> toContributorValueObject = (builder, node) -> {
         getChildNode(node, "dcx-dai:author")
             .filter(n -> !DcxDaiAuthor.isRightsHolder(n))
-            .ifPresent(n -> DcxDaiAuthor.toContributorValueObject.build(builder, node));
+            .ifPresent(n -> DcxDaiAuthor.toContributorValueObject.build(builder, n));
 
         getChildNode(node, "dcx-dai:organization")
             .filter(n -> !DcxDaiOrganization.isRightsHolderOrFunder(n))
-            .ifPresent(n -> DcxDaiOrganization.toContributorValueObject.build(builder, node));
+            .ifPresent(n -> DcxDaiOrganization.toContributorValueObject.build(builder, n));
 
     };
 
@@ -59,6 +58,21 @@ public final class Contributor extends Base {
         contributorRoleToContributorType.put("Distributor", "Other");
         contributorRoleToContributorType.put("DataCollector", "Other");
         contributorRoleToContributorType.put("ContactPerson", "Other");
+    }
+
+    public static boolean isValidContributor(Node node) {
+
+        var isValidAuthor = getChildNode(node, "dcx-dai:author")
+            .filter(n -> !DcxDaiAuthor.isRightsHolder(n))
+            .map(DcxDaiAuthor::isValidContributor)
+            .orElse(false);
+
+        var isValidOrg = getChildNode(node, "dcx-dai:organization")
+            .filter(n -> !DcxDaiOrganization.isRightsHolderOrFunder(n))
+            .map(DcxDaiOrganization::isValidContributor)
+            .orElse(false);
+
+        return isValidAuthor || isValidOrg;
     }
 
 }

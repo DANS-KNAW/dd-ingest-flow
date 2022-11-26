@@ -32,7 +32,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RELATION
 
 public class Relation extends Base {
 
-    private static Map<String, String> labelToType = new HashMap<>();
+    private static final Map<String, String> labelToType = new HashMap<>();
     public static CompoundFieldGenerator<Node> toRelationObject = (builder, node) -> {
         var href = getAttribute(node, "href")
             .map(Node::getTextContent)

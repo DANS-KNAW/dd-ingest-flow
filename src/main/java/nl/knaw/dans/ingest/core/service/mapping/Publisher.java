@@ -38,7 +38,7 @@ public class Publisher extends Base {
         builder.addSubfield(DISTRIBUTOR_AFFILIATION, "");
     };
 
-    private static Set<String> dansNames = Set.of("DANS", "DANS-KNAW", "DANS/KNAW");
+    private static final Set<String> dansNames = Set.of("DANS", "DANS-KNAW", "DANS/KNAW");
 
     public static boolean isDans(Node node) {
         return dansNames.contains(node.getTextContent());

@@ -30,7 +30,7 @@ public class Description extends Base {
         var text = newlineToHtml(value.getTextContent());
         builder.addSubfield(DESCRIPTION_VALUE, text);
     };
-    private static Map<String, String> labelToPrefix = Map.of(
+    private static final Map<String, String> labelToPrefix = Map.of(
         "date", "Date",
         "valid", "Valid",
         "issued", "Issued",

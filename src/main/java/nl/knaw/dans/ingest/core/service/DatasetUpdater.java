@@ -309,17 +309,10 @@ public class DatasetUpdater extends DatasetEditor {
 
         log.debug("Intersection paths for replacing = {}", intersection);
 
-        var checksumsDiffer = intersection.stream()
+        return intersection.stream()
             .filter(p -> !pathToFileInfo.get(p).getChecksum().equals(fileReplacementCandidates.get(p).getDataFile().getChecksum().getValue()))
             .map(p -> Map.entry(fileReplacementCandidates.get(p).getDataFile().getId(), pathToFileInfo.get(p)))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        return checksumsDiffer;
-        //        val intersection = pathToFileInfo.keySet intersect pathToFileMetaInLatestVersion.keySet
-        //            debug(s"The following files are in both deposit and latest published version: ${ intersection.mkString(", ") }")
-        //        val checksumsDiffer = intersection.filter(p => pathToFileInfo(p).checksum != pathToFileMetaInLatestVersion(p).getDataFile.getChecksum.getValue)
-        //        debug(s"The following files are in both deposit and latest published version AND have a different checksum: ${ checksumsDiffer.mkString(", ") }")
-        //        checksumsDiffer.map(p => (pathToFileMetaInLatestVersion(p).getDataFile.getId, pathToFileInfo(p))).toMap
     }
 
     /**
@@ -348,25 +341,10 @@ public class DatasetUpdater extends DatasetEditor {
             .filter(checksumsToPathNonDuplicatedFilesInLatestVersion::containsKey)
             .collect(Collectors.toSet());
 
-        var oldToNewPathMovedFiles = intersects.stream()
+        return intersects.stream()
             .map(c -> Map.entry(checksumsToPathNonDuplicatedFilesInLatestVersion.get(c), checksumsToPathNonDuplicatedFilesInDeposit.get(c)))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        return oldToNewPathMovedFiles;
-        //        for {
-        //            checksumsToPathNonDuplicatedFilesInDeposit <- getChecksumsToPathOfNonDuplicateFiles(pathToFileInfo.mapValues(_.checksum))
-        //            checksumsToPathNonDuplicatedFilesInLatestVersion <- getChecksumsToPathOfNonDuplicateFiles(pathToFileMetaInLatestVersion.mapValues(_.getDataFile.getChecksum.getValue))
-        //            checksumsOfPotentiallyMovedFiles = checksumsToPathNonDuplicatedFilesInDeposit.keySet intersect checksumsToPathNonDuplicatedFilesInLatestVersion.keySet
-        //                oldToNewPathMovedFiles = checksumsOfPotentiallyMovedFiles
-        //                .map(c => (checksumsToPathNonDuplicatedFilesInLatestVersion(c), checksumsToPathNonDuplicatedFilesInDeposit(c)))
-        //            /*
-        //             * Work-around for a bug in Dataverse. The API seems to lose the directoryLabel when the draft of a second version is started. For now, we therefore don't filter
-        //             * away files that have kept the same path. They will be "moved" in place, making sure the directoryLabel is reconfirmed.
-        //             *
-        //             * For files with duplicates in the same dataset this will not work, because those are not collected above.
-        //             */
-        //            //        .filter { case (pathInLatestVersion, pathInDeposit) => pathInLatestVersion != pathInDeposit }
-        //        } yield oldToNewPathMovedFiles.toMap
     }
 
     private Map<String, Path> getChecksumsToPathOfNonDuplicateFiles(Map<Path, String> pathToChecksum) {
@@ -380,12 +358,6 @@ public class DatasetUpdater extends DatasetEditor {
             .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
     }
 
-    //    private def getChecksumsToPathOfNonDuplicateFiles(pathToChecksum: Map[Path, String]): Try[Map[String, Path]] = Try {
-    //        pathToChecksum
-    //            .groupBy { case (_, c) => c }
-    //      .filter { case (_, pathToFileInfoMappings) => pathToFileInfoMappings.size == 1 }
-    //      .map { case (c, m) => (c, m.head._1) }
-    //    }
     private void validateFileMetas(Map<Path, FileMeta> pathToFileInfoInLatestVersion) {
         // check for nulls
         for (var fileMeta : pathToFileInfoInLatestVersion.values()) {

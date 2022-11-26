@@ -25,7 +25,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID
 
 public class DepositPropertiesVaultMetadata extends Base {
 
-    public static CompoundFieldGenerator<String> toOtherIdValue = (builder, value) -> {
+    public static final CompoundFieldGenerator<String> toOtherIdValue = (builder, value) -> {
         var str = Optional.ofNullable(value).orElse("").trim();
 
         if (StringUtils.containsWhitespace(str)) {
@@ -45,4 +45,4 @@ public class DepositPropertiesVaultMetadata extends Base {
     public static boolean isValidOtherIdValue(String value) {
         return StringUtils.isNotBlank(value) && value.split(":").length == 2;
     }
-};
+}

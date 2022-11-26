@@ -20,7 +20,7 @@ public enum OutboxSubDir {
     REJECTED("rejected"),
     FAILED("failed");
 
-    private String value;
+    private final String value;
 
     OutboxSubDir(String value) {
         this.value = value;

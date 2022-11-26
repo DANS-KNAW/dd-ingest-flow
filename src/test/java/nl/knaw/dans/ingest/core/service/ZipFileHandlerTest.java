@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ZipFileHandlerTest {
 
     @Test
-    void wrapIfZipFile() throws IOException {
+    void wrap_if_zip_file() throws IOException {
         var path = Path.of(Objects.requireNonNull(getClass().getResource("/zip/test.zip")).getPath());
         var handler = new ZipFileHandler(Path.of("/tmp"));
 
@@ -49,7 +49,7 @@ class ZipFileHandlerTest {
     }
 
     @Test
-    void needsToBeWrappedEndsWithZip() throws Exception {
+    void needs_to_be_wrapped_ends_with_zip() throws Exception {
         var handler = new ZipFileHandler(Path.of("/tmp"));
         var spied = Mockito.spy(handler);
 
@@ -60,7 +60,7 @@ class ZipFileHandlerTest {
     }
 
     @Test
-    void needsToBeWrappedEndsWithNonZip() throws Exception {
+    void needs_to_be_wrapped_ends_with_non_zip() throws Exception {
         var handler = new ZipFileHandler(Path.of("/tmp"));
         var spied = Mockito.spy(handler);
         Mockito.doReturn("unrelated")
@@ -70,7 +70,7 @@ class ZipFileHandlerTest {
     }
 
     @Test
-    void needsToBeWrappedEndsWithNonZipButHasCorrectMimetype() throws Exception {
+    void needs_to_be_wrapped_ends_with_non_zip_but_has_correct_mimetype() throws Exception {
         var handler = new ZipFileHandler(Path.of("/tmp"));
         var spied = Mockito.spy(handler);
         Mockito.doReturn("application/zip")

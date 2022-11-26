@@ -27,14 +27,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SpatialCoverageTest extends BaseTest {
 
     @Test
-    void hasChildElement() throws Exception {
+    void has_child_element() throws Exception {
         var doc = readDocumentFromString("<node><child>text</child> text</node>");
         var root = doc.getDocumentElement();
         assertTrue(SpatialCoverage.hasChildElement(root));
     }
 
     @Test
-    void hasNoChildElement() throws Exception {
+    void has_no_child_element() throws Exception {
         var doc = readDocumentFromString("<node><child>text</child> text</node>");
         var root = doc.getDocumentElement().getFirstChild();
         assertFalse(SpatialCoverage.hasChildElement(root));
@@ -42,7 +42,7 @@ class SpatialCoverageTest extends BaseTest {
 
     // TODO this should not be here
     @Test
-    void testFieldBuilder() throws Exception {
+    void test_field_builder() throws Exception {
         var builder = new CompoundFieldBuilder("TEST", true);
         builder.addSubfield("field1", "value1")
             .addSubfield("field2", "value2")

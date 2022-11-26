@@ -50,7 +50,7 @@ public class Subject extends Base {
         builder.addSubfield(KEYWORD_VOCABULARY_URI, SCHEME_URI_PAN);
     };
 
-    private static final String removeMatchPrefix(String input) {
+    private static String removeMatchPrefix(String input) {
         return matchPrefix.matcher(input).replaceAll("");
     }
 

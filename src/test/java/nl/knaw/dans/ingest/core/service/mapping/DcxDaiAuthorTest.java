@@ -25,13 +25,12 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_N
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_NAME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DcxDaiAuthorTest extends BaseTest {
 
     @Test
-    void testCreateCorrectAuthorDetails() throws Exception {
+    void test_create_correct_author_details() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:titles>Prof.</dcx-dai:titles>\n"
             + "                <dcx-dai:initials>D.N.</dcx-dai:initials>\n"
@@ -63,7 +62,7 @@ class DcxDaiAuthorTest extends BaseTest {
             .containsOnly("0000-0001-6438-5123");
     }
     @Test
-    void testCreateContributorObject() throws Exception {
+    void test_create_contributor_object() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:titles>Prof.</dcx-dai:titles>\n"
             + "                <dcx-dai:initials>D.N.</dcx-dai:initials>\n"
@@ -90,7 +89,7 @@ class DcxDaiAuthorTest extends BaseTest {
     }
 
     @Test
-    void testCreateContributorObjectOrganizationNameAsContributorAndOtherAsType() throws Exception {
+    void test_create_contributor_object_organization_name_as_contributor_and_other_as_type() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:role>Contributor</dcx-dai:role>\n"
             + "                <dcx-dai:organization>\n"
@@ -109,7 +108,7 @@ class DcxDaiAuthorTest extends BaseTest {
             .containsOnly("Other");
     }
     @Test
-    void testToRightsHolder() throws Exception {
+    void test_to_rights_holder() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:titles>Prof.</dcx-dai:titles>\n"
             + "                <dcx-dai:initials>D.N.</dcx-dai:initials>\n"
@@ -128,7 +127,7 @@ class DcxDaiAuthorTest extends BaseTest {
             DcxDaiAuthor.toRightsHolder(doc.getDocumentElement()));
     }
     @Test
-    void testToRightsHolderWithoutBracketsIfNoSurnameExists() throws Exception {
+    void test_to_rights_holder_without_brackets_if_no_surname_exists() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:organization>\n"
             + "                    <dcx-dai:name xml:lang=\"en\">Utrecht University</dcx-dai:name>\n"

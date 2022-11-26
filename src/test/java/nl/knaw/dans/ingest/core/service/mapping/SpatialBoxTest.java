@@ -33,7 +33,7 @@ class SpatialBoxTest extends BaseTest {
 
     // TODO inline xml
     @Test
-    void testToEasyTsmSpatialBoxValueObject() throws Exception {
+    void test_to_easy_tsm_spatial_box_value_object() throws Exception {
         var doc = readDocument("spatial.xml");
         var node = XPathEvaluator.nodes(doc, "//gml:boundedBy[1]")
             .findFirst().orElseThrow();
@@ -68,7 +68,7 @@ class SpatialBoxTest extends BaseTest {
     }
 
     @Test
-    void testToEasyTsmSpatialBoxValueObjectWithRd() throws Exception {
+    void test_to_easy_tsm_spatial_box_value_object_with_rd() throws Exception {
         var doc = readDocument("spatial.xml");
         var node = XPathEvaluator.nodes(doc, "//gml:boundedBy[2]")
             .findFirst().orElseThrow();
@@ -83,7 +83,7 @@ class SpatialBoxTest extends BaseTest {
     }
 
     @Test
-    void testToEasyTsmSpatialBoxValueObjectWithInvalidPairs() throws Exception {
+    void test_to_easy_tsm_spatial_box_value_object_with_invalid_pairs() throws Exception {
         var doc = readDocument("spatial.xml");
         var node = XPathEvaluator.nodes(doc, "//gml:boundedBy[3]")
             .findFirst().orElseThrow();

@@ -15,12 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import nl.knaw.dans.ingest.core.service.XPathEvaluator;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 class LanguageTest extends BaseTest {
 
  // TODO make it

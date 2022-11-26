@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 class DatasetEditorTest {
 
     @Test
-    void parseDate() {
+    void parse_date() {
         var value = DatasetEditor.parseDate("2022-01-05");
     }
 }

@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import nl.knaw.dans.ingest.core.service.Deposit;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class FileElementTest extends BaseTest {
 
     @Test
-    void toFileMeta() throws Exception {
+    void to_file_meta() throws Exception {
         var doc = readDocument("files.xml");
         var node = XPathEvaluator.nodes(doc, "//files:files/files:file[1]").findFirst().orElseThrow();
 
@@ -37,7 +36,7 @@ class FileElementTest extends BaseTest {
         assertEquals(true, result.getRestricted());
     }
     @Test
-    void toFileMetaWithSubdir() throws Exception {
+    void to_file_meta_with_subdir() throws Exception {
         var doc = readDocument("files.xml");
         var node = XPathEvaluator.nodes(doc, "//files:files/files:file[4]").findFirst().orElseThrow();
 

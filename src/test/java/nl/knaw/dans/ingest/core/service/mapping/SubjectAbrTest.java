@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SubjectAbrTest extends BaseTest {
 
     @Test
-    void isAbrComplex() throws Exception {
+    void is_abr_complex() throws Exception {
         var doc = readDocument("abrs.xml");
         var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isAbrComplex)
@@ -40,7 +40,7 @@ class SubjectAbrTest extends BaseTest {
     }
 
     @Test
-    void isOldAbr() throws Exception {
+    void is_old_abr() throws Exception {
         var doc = readDocument("abrs.xml");
         var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isOldAbr)
@@ -53,7 +53,7 @@ class SubjectAbrTest extends BaseTest {
     }
 
     @Test
-    void isAbrArtifact() throws Exception {
+    void is_abr_artifact() throws Exception {
         var doc = readDocument("abrs.xml");
         var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isAbrArtifact)
@@ -66,7 +66,7 @@ class SubjectAbrTest extends BaseTest {
     }
 
     @Test
-    void toAbrComplex() throws Exception {
+    void to_abr_complex() throws Exception {
         var doc = readDocument("abrs.xml");
         var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isAbrComplex)
@@ -79,7 +79,7 @@ class SubjectAbrTest extends BaseTest {
     }
 
     @Test
-    void toAbrArtifact() throws Exception {
+    void to_abr_artifact() throws Exception {
         var doc = readDocument("abrs.xml");
         var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isAbrArtifact)
@@ -92,7 +92,7 @@ class SubjectAbrTest extends BaseTest {
     }
 
     @Test
-    void fromAbrOldToAbrArtifact() throws Exception {
+    void from_abr_old_to_abr_artifact() throws Exception {
         var doc = readDocument("abrs.xml");
         var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
             .filter(SubjectAbr::isOldAbr)

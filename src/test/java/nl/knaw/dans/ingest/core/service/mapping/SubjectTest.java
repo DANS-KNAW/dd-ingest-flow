@@ -15,14 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import nl.knaw.dans.ingest.core.service.XPathEvaluator;
-import org.junit.jupiter.api.Test;
-import org.w3c.dom.Node;
-
-import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 class SubjectTest extends BaseTest {
 
     // TODO make this

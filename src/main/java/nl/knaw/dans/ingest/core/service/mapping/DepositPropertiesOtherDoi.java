@@ -26,4 +26,4 @@ public class DepositPropertiesOtherDoi extends Base {
         builder.addSubfield(OTHER_ID_AGENCY, "");
         builder.addSubfield(OTHER_ID_VALUE, value);
     };
-};
+}

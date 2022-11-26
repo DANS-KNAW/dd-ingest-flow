@@ -79,7 +79,7 @@ public class DepositStartImportTaskWrapperTest {
         var task = new DepositMigrationTask(
             mapper, deposit, client, "dummy",
             null,
-            new ZipFileHandler(Path.of("/tmp")),
+            new ZipFileHandler(Path.of("target/test")),
             Map.of(),
             List.of(),
             validator,
@@ -90,25 +90,6 @@ public class DepositStartImportTaskWrapperTest {
             depositManager
         );
         return new DepositImportTaskWrapper(task, eventWriter);
-        //        return new DepositImportTaskWrapper(new DepositMigrationTask(
-        //            new Deposit(File.apply(testDepositsBasedir.resolve(depositName))),
-        //            Option.empty(),
-        //            new ZipFileHandler(File.apply(Paths.get("dummy"))),
-        //            "dummy",
-        //            false,
-        //            null,
-        //            Option.empty(),
-        //            null,
-        //            0,
-        //            0,
-        //            null,
-        //            null,
-        //            null,
-        //            null,
-        //            null,
-        //            null,
-        //            null
-        //        ), null);
     }
 
     @BeforeEach
@@ -127,7 +108,7 @@ public class DepositStartImportTaskWrapperTest {
     }
 
     @Test
-    public void depositsShouldBeOrderedByCreatedTimestamp() throws Throwable {
+    void deposits_should_be_ordered_by_created_timestamp() throws Throwable {
         List<DepositImportTaskWrapper> sorted = Stream.of(
             createTaskWrapper("deposit2_a"),
             createTaskWrapper("deposit1_b"),
@@ -144,7 +125,7 @@ public class DepositStartImportTaskWrapperTest {
     }
 
     @Test
-    public void failFastIfNoTimeZoneInCreatedTimestamp() {
+    void fail_fast_if_no_time_zone_in_created_timestamp() {
         var thrown = assertThrows(InvalidDepositException.class,
             () -> createTaskWrapper("deposit3_notimezone"));
 
@@ -152,14 +133,14 @@ public class DepositStartImportTaskWrapperTest {
     }
 
     @Test
-    public void failFastIfNoCreatedTimestamp() {
+    void fail_fast_if_no_created_timestamp() {
         var thrown = assertThrows(InvalidDepositException.class,
             () -> createTaskWrapper("deposit3_nocreated"));
         assertTrue(thrown.getMessage().contains("No 'Created' value found in bag"));
     }
 
     @Test
-    public void failFastIfMultipleCreatedTimestamps() {
+    void fail_fast_if_multiple_created_timestamps() {
         var thrown = assertThrows(InvalidDepositException.class,
             () -> createTaskWrapper("deposit3_2created"));
         assertTrue(thrown.getMessage().contains("Value 'Created' should contain exactly 1 value in bag; 2 found"));

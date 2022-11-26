@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class AudienceTest {
 
     @Test
-    void mapNarcisClassification() {
+    void map_narcis_classification() {
         var tests = new HashMap<String, String>();
         tests.put("D11000", "Mathematical Sciences");
         tests.put("D12300", "Physics");
@@ -49,12 +49,12 @@ class AudienceTest {
     }
 
     @Test
-    void mapNarcisClassificationToOther() {
+    void map_narcis_classification_to_other() {
         assertEquals("Other", Audience.toCitationBlockSubject("D99999"));
     }
 
     @Test
-    void mapNarcisClassificationInvalid() {
+    void map_narcis_classification_invalid() {
         assertThrows(RuntimeException.class, () -> Audience.toCitationBlockSubject("INVALID"));
     }
 

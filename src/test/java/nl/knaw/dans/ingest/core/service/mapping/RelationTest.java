@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RelationTest extends BaseTest {
 
     @Test
-    void testToRelationObject() throws Exception {
+    void test_to_relation_object() throws Exception {
         // TODO inline XML
         var doc = readDocument("dataset.xml");
         var items = XPathEvaluator.nodes(doc, "//ddm:dcmiMetadata//*")

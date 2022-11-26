@@ -15,11 +15,8 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
 import org.junit.jupiter.api.Test;
-
-import java.util.stream.Collectors;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ARCHIS_NUMBER_ID;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ARCHIS_NUMBER_TYPE;
@@ -38,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class IdentifierTest extends BaseTest {
 
     @Test
-    void testOtherIdValueWithoutAgencyForIDWithoutTypeAttribute() throws Exception {
+    void test_other_id_value_without_agency_for_id_without_type_attribute() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -59,7 +56,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testOtherIdValueWithDansKnawForEASY2Attribute() throws Exception {
+    void test_other_id_value_with_dans_knaw_for_easy2_attribute() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -80,7 +77,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testCanBeMappedToOtherIdReturnTrueForEASY2type() throws Exception {
+    void test_can_be_mapped_to_other_id_return_true_for_easy2_type() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -93,7 +90,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testCanBeMappedToOtherIdIfNoTypeIsPresent() throws Exception {
+    void test_can_be_mapped_to_other_id_if_no_type_is_present() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -106,7 +103,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testCanBeMappedToOtherIdIfDifferentTypesAreSet() throws Exception {
+    void test_can_be_mapped_to_other_id_if_different_types_are_set() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -119,7 +116,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testIsRelatedPublicationIfIdTypeIsISBN() throws Exception {
+    void test_is_related_publication_if_id_type_is_isbn() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -132,7 +129,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testIsRelatedPublicationIfIdTypeIsISBNPrefixed() throws Exception {
+    void test_is_related_publication_if_id_type_is_isbn_prefixed() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -145,7 +142,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testIsRelatedPublicationIfIdTypeIsISSN() throws Exception {
+    void test_is_related_publication_if_id_type_is_issn() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -158,7 +155,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testIsRelatedPublicationIfIdTypeIsISSNPrefixed() throws Exception {
+    void test_is_related_publication_if_id_type_is_issn_prefixed() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -171,7 +168,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testIsRelatedPublicationFalseIfDOI() throws Exception {
+    void test_is_related_publication_false_if_doi() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -184,7 +181,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testIsRelatedPublicationFalseIfEmpty() throws Exception {
+    void test_is_related_publication_false_if_empty() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -197,7 +194,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testIsNowGrantNumberIsTrueIfProjectNr() throws Exception {
+    void test_is_now_grant_number_is_true_if_project_nr() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -212,7 +209,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testToGrantNumber() throws Exception {
+    void test_to_grant_number() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -234,7 +231,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testToRelatedPublicationValue() throws Exception {
+    void test_to_related_publication_value() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -258,8 +255,9 @@ class IdentifierTest extends BaseTest {
             .containsOnly("");
 
     }
+
     @Test
-    void testToArchisNumberValue() throws Exception {
+    void test_to_archis_number_value() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -285,7 +283,7 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void testIsArchisNumber() throws Exception {
+    void test_is_archis_number() throws Exception {
         var doc = readDocumentFromString(
             "<dct:identifier \n"
                 + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"

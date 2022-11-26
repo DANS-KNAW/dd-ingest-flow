@@ -17,9 +17,9 @@ package nl.knaw.dans.ingest.core;
 
 import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactory;
-import nl.knaw.dans.ingest.core.service.UnboundedTargetedTaskSource;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
+import nl.knaw.dans.ingest.core.service.UnboundedTargetedTaskSource;
 
 import java.nio.file.Path;
 
@@ -40,7 +40,7 @@ public class AutoIngestArea extends AbstractIngestArea implements Managed {
     }
 
     @Override
-    public void stop() throws Exception {
+    public void stop() {
         taskSource.stop();
     }
 }

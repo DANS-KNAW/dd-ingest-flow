@@ -18,7 +18,6 @@ package nl.knaw.dans.ingest.db;
 import io.dropwizard.hibernate.AbstractDAO;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Order;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;

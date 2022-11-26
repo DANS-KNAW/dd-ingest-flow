@@ -1,6 +1,5 @@
 <ddm:DDM xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns:dct="http://purl.org/dc/terms/"
          xsi:schemaLocation="http://easy.dans.knaw.nl/schemas/md/ddm/ http://easy.dans.knaw.nl/schemas/md/2017/09/ddm.xsd">
     <ddm:dcmiMetadata>
         <ddm:subject>no tags subject</ddm:subject>

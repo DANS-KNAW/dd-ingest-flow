@@ -17,7 +17,6 @@ package nl.knaw.dans.ingest.core.service;
 
 import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.reader.BagReader;
-import nl.knaw.dans.ingest.core.DepositState;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.FileBasedConfiguration;

@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,9 +29,6 @@ import java.util.Objects;
 public class BaseTest {
     protected final XmlReader xmlReader = new XmlReaderImpl();
 
-    @BeforeEach
-    public void setUp() {
-    }
 
     Document readDocument(String name) throws ParserConfigurationException, IOException, SAXException {
         return xmlReader.readXmlFile(Path.of(

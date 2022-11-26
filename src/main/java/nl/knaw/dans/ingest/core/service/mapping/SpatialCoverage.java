@@ -21,7 +21,7 @@ import java.util.Set;
 
 public class SpatialCoverage extends Base {
 
-    private static Set<String> controlledValues = Set.of(
+    private static final Set<String> controlledValues = Set.of(
         "Netherlands",
         "United Kingdom",
         "Belgium",

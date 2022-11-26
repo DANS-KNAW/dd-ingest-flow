@@ -21,8 +21,8 @@ import io.dropwizard.Configuration;
 import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.db.DataSourceFactory;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
-import nl.knaw.dans.ingest.core.config.ValidateDansBagConfig;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.config.ValidateDansBagConfig;
 import nl.knaw.dans.lib.util.DataverseClientFactory;
 
 import javax.validation.Valid;

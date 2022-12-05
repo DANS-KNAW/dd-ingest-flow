@@ -144,7 +144,7 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addKeywords(getSubjects(ddm).filter(Subject::isAatTerm), Subject.toAatKeywordValue);
             citationFields.addKeywords(getLanguages(ddm).filter(Language::isNotIsoLanguage), Language.toKeywordValue);
             citationFields.addPublications(getIdentifiers(ddm).filter(Identifier::isRelatedPublication), Identifier.toRelatedPublicationValue);
-            citationFields.addLanguages(getLanguages(ddm), node -> Language.isoToDataverse(node.getTextContent(), iso1ToDataverseLanguage, iso2ToDataverseLanguage));
+            citationFields.addLanguages(getLanguages(ddm), node -> Language.toCitationBlockLanguage(node, iso1ToDataverseLanguage, iso2ToDataverseLanguage));
             citationFields.addProductionDate(getCreated(ddm).map(Base::toYearMonthDayFormat));
             citationFields.addContributors(getContributorDetails(ddm).filter(Contributor::isValidContributor), Contributor.toContributorValueObject);
             citationFields.addGrantNumbers(getIdentifiers(ddm).filter(Identifier::isNwoGrantNumber), Identifier.toNwoGrantNumber);

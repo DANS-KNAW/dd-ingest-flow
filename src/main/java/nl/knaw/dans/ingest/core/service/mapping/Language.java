@@ -51,6 +51,16 @@ public class Language extends Base {
         return hasTypes || hasEncoding;
     }
 
+    public static String toCitationBlockLanguage(Node node, Map<String, String> iso1ToDataverseLanguage, Map<String, String> iso2ToDataverseLanguage) {
+        if (isIsoLanguage(node)) {
+            return getAttribute(node, "code")
+                .map(n -> isoToDataverse(n.getTextContent().trim(), iso1ToDataverseLanguage, iso2ToDataverseLanguage))
+                .orElse(null);
+        }
+
+        return null;
+    }
+
     public static String isoToDataverse(String code, Map<String, String> iso1ToDataverseLanguage, Map<String, String> iso2ToDataverseLanguage) {
         if (code.length() == 2) {
             return iso1ToDataverseLanguage.get(code);

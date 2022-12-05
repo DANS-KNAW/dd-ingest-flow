@@ -17,12 +17,15 @@ package nl.knaw.dans.ingest.core.service.mapping;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.XmlReader;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class License extends Base {
@@ -42,18 +45,22 @@ public class License extends Base {
 
         // validate it is a valid URI
         try {
-            new URI(node.getTextContent());
+            new URI(node.getTextContent().trim());
             return true;
         }
         catch (URISyntaxException e) {
-            e.printStackTrace();
+            log.error("Invalid URI: " + node.getTextContent(), e);
             return false;
         }
     }
 
     public static URI getLicenseUri(List<URI> supportedLicenses, Map<String, String> variantToLicense, Node licenseNode) {
-        // TODO add the URI normalization
-        var licenseText = licenseNode.getTextContent();
+        var licenseText = Optional.ofNullable(licenseNode)
+            .map(Node::getTextContent)
+            .map(String::trim)
+            .map(License::removeTrailingSlash)
+            .map(s -> variantToLicense.getOrDefault(s, s))
+            .orElseThrow(() -> new IllegalArgumentException("License node is null"));
 
         try {
             if (!isLicenseUri(licenseNode)) {
@@ -61,6 +68,11 @@ public class License extends Base {
             }
 
             var licenseUri = new URI(licenseText);
+            final var licenseUriFinal = licenseUri;
+
+            licenseUri = normalizeScheme(supportedLicenses, licenseUri)
+                .orElseThrow(() -> new IllegalArgumentException(String.format(
+                    "Unsupported license: %s", licenseUriFinal)));
 
             if (!supportedLicenses.contains(licenseUri)) {
                 throw new IllegalArgumentException(String.format("Unsupported license: %s", licenseUri));
@@ -72,5 +84,30 @@ public class License extends Base {
             log.error("Invalid license URI: {}", licenseText, e);
             throw new IllegalArgumentException("Not a valid license URI", e);
         }
+    }
+
+    private static String removeTrailingSlash(String s) {
+        if (s.endsWith("/")) {
+            return s.substring(0, s.length() - 1);
+        }
+
+        return s;
+    }
+
+    private static Optional<URI> normalizeScheme(List<URI> supportedLicenses, URI uri) {
+        var schemes = Set.of("https", "http");
+
+        for (var license : supportedLicenses) {
+            if (StringUtils.equals(license.getHost(), uri.getHost())
+                && StringUtils.equals(license.getPath(), uri.getPath())
+                && license.getPort() == uri.getPort()
+                && StringUtils.equals(license.getQuery(), uri.getQuery())
+                && schemes.contains(uri.getScheme())
+            ) {
+                return Optional.of(license);
+            }
+        }
+
+        return Optional.empty();
     }
 }

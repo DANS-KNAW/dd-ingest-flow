@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DcxDaiOrganizationTest extends BaseTest {
 
     @Test
-    void test_to_contributor_value_object() throws Exception {
+    void toContributorValueObject_should_create_correct_contributor_details_in_Json_object() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:organization xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "    <dcx-dai:name xml:lang=\"en\">Anti-Vampire League</dcx-dai:name>\n"
             + "    <dcx-dai:role xml:lang=\"en\">DataCurator</dcx-dai:role>\n"
@@ -49,7 +49,7 @@ class DcxDaiOrganizationTest extends BaseTest {
     }
 
     @Test
-    void test_to_contributor_value_object_gives_other_as_type() throws Exception {
+    void toContributorValueObject_should_give_other_as_contributor_type() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:organization xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "    <dcx-dai:role xml:lang=\"en\">ContactPerson</dcx-dai:role>\n"
             + "</dcx-dai:organization>\n");
@@ -63,7 +63,7 @@ class DcxDaiOrganizationTest extends BaseTest {
     }
 
     @Test
-    void test_to_author_value_object_uses_organization_name_as_author_name() throws Exception {
+    void toAuthorValueObject_should_use_organization_name_as_author_name() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:organization xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "    <dcx-dai:name xml:lang=\"en\">Anti-Vampire League</dcx-dai:name>\n"
             + "</dcx-dai:organization>\n");
@@ -77,7 +77,7 @@ class DcxDaiOrganizationTest extends BaseTest {
     }
 
     @Test
-    void test_to_author_value_object_uses_ISNI_if_present() throws Exception {
+    void toAuthorValueObject_should_use_ISNI_if_present() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:organization xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "    <dcx-dai:name xml:lang=\"en\">Anti-Vampire League</dcx-dai:name>\n"
             + "    <dcx-dai:ISNI>http://isni.org/isni/0000000121032683</dcx-dai:ISNI>"
@@ -96,7 +96,7 @@ class DcxDaiOrganizationTest extends BaseTest {
     }
 
     @Test
-    void test_to_grant_number_value_should_create_a_grant_number_with_only_an_organization_subfield() throws Exception {
+    void toGrantNumberValueObject_should_create_a_grantnumber_with_only_an_organization_subfield() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:organization xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "    <dcx-dai:name xml:lang=\"en\">Anti-Vampire League</dcx-dai:name>\n"
             + "    <dcx-dai:role xml:lang=\"en\">Funder</dcx-dai:role>\n"

@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class DcxDaiAuthorTest extends BaseTest {
 
     @Test
-    void test_create_correct_author_details() throws Exception {
+    void toAuthorValueObject_should_create_correct_author_details_in_Json_object() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:titles>Prof.</dcx-dai:titles>\n"
             + "                <dcx-dai:initials>D.N.</dcx-dai:initials>\n"
@@ -62,7 +62,7 @@ class DcxDaiAuthorTest extends BaseTest {
             .containsOnly("0000-0001-6438-5123");
     }
     @Test
-    void test_create_contributor_object() throws Exception {
+    void toContributorValueObject_should_create_correct_contributor_details_in_Json_object() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:titles>Prof.</dcx-dai:titles>\n"
             + "                <dcx-dai:initials>D.N.</dcx-dai:initials>\n"
@@ -89,7 +89,7 @@ class DcxDaiAuthorTest extends BaseTest {
     }
 
     @Test
-    void test_create_contributor_object_organization_name_as_contributor_and_other_as_type() throws Exception {
+    void toContributorValueObject_should_give_organization_name_as_contributor_name_and_other_as_contributor_type() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:role>Contributor</dcx-dai:role>\n"
             + "                <dcx-dai:organization>\n"
@@ -108,7 +108,7 @@ class DcxDaiAuthorTest extends BaseTest {
             .containsOnly("Other");
     }
     @Test
-    void test_to_rights_holder() throws Exception {
+    void toRightsHolder_should_create_rights_holder_with_organization_in_brackets() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:titles>Prof.</dcx-dai:titles>\n"
             + "                <dcx-dai:initials>D.N.</dcx-dai:initials>\n"
@@ -127,7 +127,7 @@ class DcxDaiAuthorTest extends BaseTest {
             DcxDaiAuthor.toRightsHolder(doc.getDocumentElement()));
     }
     @Test
-    void test_to_rights_holder_without_brackets_if_no_surname_exists() throws Exception {
+    void toRightsHolder_should_create_rights_holder_with_organization_without_brackets_when_no_surname_is_given() throws Exception {
         var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "                <dcx-dai:organization>\n"
             + "                    <dcx-dai:name xml:lang=\"en\">Utrecht University</dcx-dai:name>\n"

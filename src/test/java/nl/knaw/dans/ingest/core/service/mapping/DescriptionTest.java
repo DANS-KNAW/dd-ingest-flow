@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DescriptionTest extends BaseTest {
 
     @Test
-    void get_description_should_return_a_html_formatted_response() throws Exception {
+    void getDescription_should_return_a_html_formatted_response() throws Exception {
         var doc = readDocumentFromString("<dc:description xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
             + "    Lorem ipsum dolor sit amet,\n"
             + "\n"

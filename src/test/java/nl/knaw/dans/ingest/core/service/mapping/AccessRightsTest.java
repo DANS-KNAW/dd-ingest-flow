@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AccessRightsTest extends BaseTest {
 
     @Test
-    void test_to_default_restrict_return_false_when_access_rights_is_open_access() throws Exception {
+    void toDefaultRestrict_should_return_false_when_access_rights_is_OPEN_ACCESS() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\">\n"
             + "  OPEN_ACCESS"
@@ -33,7 +33,7 @@ class AccessRightsTest extends BaseTest {
     }
 
     @Test
-    void test_to_default_restrict_return_false_when_access_rights_is_open_access_for_registered_users() throws Exception {
+    void toDefaultRestrict_should_return_true_when_access_rights_is_OPEN_ACCESS_FOR_REGISTERED_USERS() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\">\n"
             + "  OPEN_ACCESS_FOR_REGISTERED_USERS"
@@ -43,7 +43,7 @@ class AccessRightsTest extends BaseTest {
     }
 
     @Test
-    void test_to_default_restrict_return_false_when_access_rights_is_request_permission() throws Exception {
+    void toDefaultRestrict_should_return_true_when_access_rights_is_REQUEST_PERMISSION() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\">\n"
             + "  REQUEST_PERMISSION"
@@ -53,7 +53,7 @@ class AccessRightsTest extends BaseTest {
     }
 
     @Test
-    void test_to_default_restrict_return_false_when_access_rights_is_no_access() throws Exception {
+    void toDefaultRestrict_should_return_true_when_access_rights_is_NO_ACCESS() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\">\n"
             + "  NO_ACCESS"
@@ -63,7 +63,7 @@ class AccessRightsTest extends BaseTest {
     }
 
     @Test
-    void test_to_default_restrict_return_false_when_access_rights_is_something_else() throws Exception {
+    void toDefaultRestrict_should_return_true_when_access_rights_is_something_else() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\">\n"
             + "  SOMETHING"
@@ -73,7 +73,7 @@ class AccessRightsTest extends BaseTest {
     }
 
     @Test
-    void test_is_enable_request_is_false_if_one_file_has_accessible_to_set_to_none() throws Exception {
+    void isEnableRequests_should_be_false_if_one_file_has_explicitly_accessibleTo_equals_NONE() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\">\n"
             + "  OPEN_ACCESS"
@@ -97,7 +97,7 @@ class AccessRightsTest extends BaseTest {
     }
 
     @Test
-    void test_is_enable_request_is_false_if_one_file_has_implicit_accessible_to_is_none() throws Exception {
+    void isEnableRequests_should_be_false_if_one_file_has_implicitly_accessibleTo_equals_NONE() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\">\n"
             + "  NO_ACCESS"
@@ -117,7 +117,7 @@ class AccessRightsTest extends BaseTest {
     }
 
     @Test
-    void test_is_enable_request_is_true_if_all_files_explicitly_permission_request() throws Exception {
+    void isEnableRequests_should_be_true_if_all_files_explicitly_permission_request() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\">\n"
             + "  NO_ACCESS"
@@ -138,7 +138,7 @@ class AccessRightsTest extends BaseTest {
     }
 
     @Test
-    void test_is_enable_request_is_true_if_all_implicitly_and_explicitly_defined_accessible_to_is_restricted_request_or_more_open() throws Exception {
+    void isEnableRequests_should_be_true_if_all_implicitly_and_explicitly_defined_accessibleTo_is_RESTRICTED_REQUEST_or_more_open() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\">\n"
             + "  REQUEST_PERMISSION"

@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class AmdTest extends BaseTest {
 
     @Test
-    void test_get_first_change_to_state() throws Exception {
+    void toDateOfDeposit_should_use_date_of_first_change_to_SUBMITTED_state() throws Exception {
         var str =
             "<damd:administrative-md version=\"0.1\" xmlns:damd=\"http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:foxml=\"info:fedora/fedora-system:def/foxml#\">\n"
                 + "      <datasetState>PUBLISHED</datasetState>\n"
@@ -70,7 +70,7 @@ class AmdTest extends BaseTest {
     }
 
     @Test()
-    void test_use_date_of_first_chang_to_published_state_if_no_change_to_submitted_state_is_found() throws Exception {
+    void toDateOfDeposit_should_use_date_of_first_change_to_PUBLISHED_state_if_no_change_to_SUBMITTED_state_is_found() throws Exception {
         var xml = "<damd:administrative-md xmlns:damd=\"http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/\" version=\"0.1\">\n"
             + "                <datasetState>PUBLISHED</datasetState>\n"
             + "                <previousState>DRAFT</previousState>\n"
@@ -93,7 +93,7 @@ class AmdTest extends BaseTest {
     }
 
     @Test
-    void test_use_date_last_state_change_if_no_state_change_dates_are_available() throws Exception {
+    void toDateOfDeposit_should_use_date_lastStateChange_if_no_stateChangeDates_are_available() throws Exception {
         var xml = "<damd:administrative-md xmlns:damd=\"http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/\" version=\"0.1\">\n"
             + "                <datasetState>PUBLISHED</datasetState>\n"
             + "                <previousState>DRAFT</previousState>\n"
@@ -111,7 +111,7 @@ class AmdTest extends BaseTest {
     }
 
     @Test
-    void test_use_date_last_state_change_if_no_non_blank_state_change_dates_are_available() throws Exception {
+    void toDateOfDeposit_should_use_date_lastStateChange_if_no_NONBLANK_stateChangeDates_are_available() throws Exception {
         var xml = "<damd:administrative-md xmlns:damd=\"http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/\" version=\"0.1\">\n"
             + "                <datasetState>PUBLISHED</datasetState>\n"
             + "                <previousState>DRAFT</previousState>\n"
@@ -134,7 +134,7 @@ class AmdTest extends BaseTest {
     }
 
     @Test
-    void test_use_date_last_state_change_if_no_state_change_dates_element_is_present() throws Exception {
+    void toDateOfDeposit_should_use_date_lastStateChange_if_no_StateChangeDates_ELEMENT_is_present() throws Exception {
         var xml = "<damd:administrative-md xmlns:damd=\"http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/\" version=\"0.1\">\n"
             + "                <datasetState>PUBLISHED</datasetState>\n"
             + "                <previousState>DRAFT</previousState>\n"
@@ -150,7 +150,7 @@ class AmdTest extends BaseTest {
     }
 
     @Test
-    void to_publication_date_should_u_se_date_of_first_change_to_published_state() throws Exception {
+    void toPublicationDate_should_use_date_of_first_change_to_PUBLISHEd_state() throws Exception {
         var xml =
             "    <damd:administrative-md version=\"0.1\" xmlns:damd=\"http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:foxml=\"info:fedora/fedora-system:def/foxml#\">\n"
                 + "      <datasetState>PUBLISHED</datasetState>\n"
@@ -198,7 +198,7 @@ class AmdTest extends BaseTest {
     }
 
     @Test
-    void use_date_last_state_change_if_no_state_change_dates_are_available() throws Exception {
+    void toPublicationDate_should_use_date_lastStateChange_if_no_stateChangeDates_are_available() throws Exception {
         var xml = "<damd:administrative-md xmlns:damd=\"http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/\" version=\"0.1\">\n"
             + "                <datasetState>PUBLISHED</datasetState>\n"
             + "                <previousState>DRAFT</previousState>\n"
@@ -216,7 +216,7 @@ class AmdTest extends BaseTest {
     }
 
     @Test
-    void use_date_last_state_change_if_no_non_blank_state_change_dates_are_available() throws Exception {
+    void toPublicationDate_should_use_date_lastStateChange_if_no_NONBLANK_stateChangeDates_are_available() throws Exception {
         var xml = "<damd:administrative-md xmlns:damd=\"http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/\" version=\"0.1\">\n"
             + "                <datasetState>PUBLISHED</datasetState>\n"
             + "                <previousState>DRAFT</previousState>\n"
@@ -238,7 +238,7 @@ class AmdTest extends BaseTest {
     }
 
     @Test
-    void use_date_last_state_change_if_no_state_change_dates_element_is_present() throws Exception {
+    void toPublicationDate_should_use_date_lastStateChange_if_no_StateChangeDates_ELEMENT_is_present() throws Exception {
         var xml = "<damd:administrative-md xmlns:damd=\"http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/\" version=\"0.1\">\n"
             + "                <datasetState>PUBLISHED</datasetState>\n"
             + "                <previousState>DRAFT</previousState>\n"

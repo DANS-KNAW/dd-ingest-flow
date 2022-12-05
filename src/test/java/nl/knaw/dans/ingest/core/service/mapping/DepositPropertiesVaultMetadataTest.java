@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DepositPropertiesVaultMetadataTest extends BaseTest {
 
     @Test
-    void to_other_id_value_should_create_correct_value() {
+    void toOtherIdValue_should_create_OtherId_Json_object_for_other_ID_if_specified_in_correct_format() {
         var builder = new CompoundFieldBuilder("", false);
         DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, "PAN:123");
         var field = builder.build();
@@ -49,7 +49,7 @@ class DepositPropertiesVaultMetadataTest extends BaseTest {
     }
 
     @Test
-    void to_other_id_value_should_throw_error_with_empty_values() {
+    void toOtherIdValue_should_throw_error_with_empty_values() {
         var builder = new CompoundFieldBuilder("", false);
 
         assertThrows(IllegalArgumentException.class,
@@ -61,7 +61,7 @@ class DepositPropertiesVaultMetadataTest extends BaseTest {
     }
 
     @Test
-    void test_is_valid_other_id_for_invalid_other_ids() {
+    void isValidOtherIdValue_should_return_false_for_invalid_other_ids() {
         assertFalse(DepositPropertiesVaultMetadata.isValidOtherIdValue(""));
         assertFalse(DepositPropertiesVaultMetadata.isValidOtherIdValue(" "));
         assertFalse(DepositPropertiesVaultMetadata.isValidOtherIdValue("   \n"));
@@ -70,7 +70,7 @@ class DepositPropertiesVaultMetadataTest extends BaseTest {
     }
 
     @Test
-    void test_is_valid_other_id_for_valid_ids() {
+    void isValidOtherIdValue_should_return_true_for_valid_other_ids() {
         assertTrue(DepositPropertiesVaultMetadata.isValidOtherIdValue("x:y"));
         assertTrue(DepositPropertiesVaultMetadata.isValidOtherIdValue("  test:123 "));
     }

@@ -56,6 +56,7 @@ import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.w3c.dom.Document;
@@ -69,8 +70,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_HOLDER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_VERWERVINGSWIJZE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_VERWERVINGSWIJZE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
 
 @Slf4j
 public class DepositToDvDatasetMetadataMapper {
@@ -110,6 +114,10 @@ public class DepositToDvDatasetMetadataMapper {
 
         // TODO check for required fields (title?)
         if (activeMetadataBlocks.contains("citation")) {
+            // this is not very java-esque
+            checkRequiredField(TITLE, getTitles(ddm));
+            checkRequiredField(SUBJECT, getAudiences(ddm));
+
             var alternativeTitles = getAlternativeTitles(ddm).collect(Collectors.toList());
             citationFields.addTitle(getTitles(ddm));
             citationFields.addAlternativeTitle(alternativeTitles.stream().map(Node::getTextContent));
@@ -163,6 +171,7 @@ public class DepositToDvDatasetMetadataMapper {
         }
 
         if (activeMetadataBlocks.contains("dansRights")) {
+            checkRequiredField(RIGHTS_HOLDER, getRightsHolders(ddm));
             rightsFields.addRightsHolders(getRightsHolders(ddm));
 
             rightsFields.addPersonalDataPresent(getPersonalDataPresent(agreements).map(PersonalStatement::toHasPersonalDataValue));
@@ -243,6 +252,8 @@ public class DepositToDvDatasetMetadataMapper {
         var block = new MetadataBlock();
         block.setDisplayName(displayName);
         block.setFields(result);
+
+        // TODO add de-duplication here
 
         fields.put(title, block);
     }
@@ -391,7 +402,6 @@ public class DepositToDvDatasetMetadataMapper {
     }
 
     Stream<String> getDataSources(Document ddm) {
-        // TODO verify the correct namespace, there are no examples?
         return XPathEvaluator.strings(ddm, "//ddm:dcmiMetadata/dcterms:source");
     }
 
@@ -399,4 +409,14 @@ public class DepositToDvDatasetMetadataMapper {
         return XPathEvaluator.strings(ddm, "//ddm:dcmiMetadata/dcterms:rightsHolder");
     }
 
+    void checkRequiredField(String fieldName, Stream<String> nodes) {
+        var result = nodes
+            .map(String::trim)
+            .filter(StringUtils::isNotBlank)
+            .findFirst();
+
+        if (result.isEmpty()) {
+            throw new MissingRequiredFieldException(fieldName);
+        }
+    }
 }

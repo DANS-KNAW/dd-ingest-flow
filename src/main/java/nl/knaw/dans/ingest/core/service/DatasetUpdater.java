@@ -378,7 +378,7 @@ public class DatasetUpdater extends DatasetEditor {
 
     private Map<Path, FileMeta> getFilesInfoInLatestVersion(DatasetApi datasetApi) throws IOException, DataverseException {
         // N.B. If LATEST_PUBLISHED is not specified, it almost works, but the directoryLabel is not picked up somehow.
-        // N.B.2 for some files it still returns a NULL value for directoryLabel? TODO investigate
+        // N.B.2 it still returns an empty (null) directoryLabel if there is no directoryLabel (file is in root of file structure)
         var response = datasetApi.getFiles(Version.LATEST_PUBLISHED.toString());
 
         return response.getData().stream()

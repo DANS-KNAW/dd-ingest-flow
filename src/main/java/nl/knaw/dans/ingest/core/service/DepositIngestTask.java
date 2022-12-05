@@ -306,16 +306,6 @@ public class DepositIngestTask implements TargetedTask {
     }
 
     Dataset getMetadata() throws IOException, DataverseException {
-
-        /*
-
-      optDateOfDeposit <- getDateOfDeposit
-      datasetContacts <- getDatasetContacts
-      ddm <- deposit.tryDdm
-      optAgreements <- deposit.tryOptAgreementsXml
-      _ <- checkPersonalDataPresent(optAgreements)
-      dataverseDataset <- datasetMetadataMapper.toDataverseDataset(ddm, deposit.getOptOtherDoiId, optAgreements, optDateOfDeposit, datasetContacts, deposit.vaultMetadata)
-         */
         var date = getDateOfDeposit();
         var contact = getDatasetContact();
         var deposit = getDeposit();

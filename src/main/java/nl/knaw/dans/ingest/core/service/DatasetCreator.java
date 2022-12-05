@@ -119,8 +119,6 @@ public class DatasetCreator extends DatasetEditor {
     }
 
     private void updateFileMetadata(Map<Integer, FileInfo> databaseIds) throws IOException, DataverseException {
-        // TODO check if we need to return the results; in the scala version it does return
-        // but the results are never used
         for (var entry : databaseIds.entrySet()) {
             var id = entry.getKey();
             var fileMeta = objectMapper.writeValueAsString(entry.getValue().getMetadata());

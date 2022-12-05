@@ -26,10 +26,9 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_
 @Slf4j
 public class SpatialPoint extends Spatial {
 
-    // TODO test this with the right XML
     public static CompoundFieldGenerator<Node> toEasyTsmSpatialPointValueObject = (builder, node) -> {
         var isRd = SpatialPoint.isRd(node);
-        var point = getChildNode(node, "/Point")
+        var point = getChildNode(node, "//Point")
             .map(n -> getPoint(n, isRd))
             .orElseThrow(() -> new RuntimeException(String.format("No point node found in node %s", node.getNodeName())));
 
@@ -37,5 +36,4 @@ public class SpatialPoint extends Spatial {
         builder.addSubfield(SPATIAL_POINT_X, point.getX());
         builder.addSubfield(SPATIAL_POINT_Y, point.getY());
     };
-
 }

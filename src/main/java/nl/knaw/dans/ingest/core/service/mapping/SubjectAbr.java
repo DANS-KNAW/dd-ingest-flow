@@ -88,6 +88,9 @@ public class SubjectAbr extends Base {
     }
 
     public static String fromAbrOldToAbrArtifact(Node node) {
+        if (!isOldAbr(node)) {
+            return null;
+        }
         return Optional.ofNullable(attributeToText(node, "valueURI"))
             .map(value -> {
                 try {

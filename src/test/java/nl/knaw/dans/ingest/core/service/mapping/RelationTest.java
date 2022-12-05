@@ -29,8 +29,20 @@ class RelationTest extends BaseTest {
 
     @Test
     void test_to_relation_object() throws Exception {
-        // TODO inline XML
-        var doc = readDocument("dataset.xml");
+
+        var doc = readDocumentFromString(
+            "<ddm:DDM xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + "         xmlns:dct=\"http://purl.org/dc/terms/\"\n"
+                + "         xsi:schemaLocation=\"http://easy.dans.knaw.nl/schemas/md/ddm/ http://easy.dans.knaw.nl/schemas/md/2017/09/ddm.xsd\">\n"
+                + "    <ddm:dcmiMetadata>\n"
+                + "        <dct:license xsi:type=\"dct:URI\">http://creativecommons.org/licenses/by-sa/4.0</dct:license>\n"
+                + "        <dct:rightsHolder>Mr. Rights</dct:rightsHolder>\n"
+                + "        <ddm:relation href=\"https://knaw.nl/\">Relation</ddm:relation>\n"
+                + "        <ddm:conformsTo>Conforms To</ddm:conformsTo>\n"
+                + "    </ddm:dcmiMetadata>\n"
+                + "</ddm:DDM>\n");
+
         var items = XPathEvaluator.nodes(doc, "//ddm:dcmiMetadata//*")
             .filter(Relation::isRelation)
             .map(Relation::toRelationObject)

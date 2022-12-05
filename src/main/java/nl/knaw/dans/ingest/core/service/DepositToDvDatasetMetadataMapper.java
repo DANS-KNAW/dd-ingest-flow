@@ -276,7 +276,6 @@ public class DepositToDvDatasetMetadataMapper {
     }
 
     Stream<Node> getTemporal(Document ddm) {
-        // TODO verify namespace
         return XPathEvaluator.nodes(ddm, "//ddm:dcmiMetadata/ddm:temporal");
     }
 
@@ -310,7 +309,6 @@ public class DepositToDvDatasetMetadataMapper {
     }
 
     Stream<Node> getReportNumbers(Document ddm) {
-        // TODO verify namespace
         return XPathEvaluator.nodes(ddm,
             "//ddm:dcmiMetadata/ddm:reportNumber");
     }

@@ -27,11 +27,11 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_U
 @Slf4j
 public class TemporalAbr extends Base {
     private static boolean hasAttributes(Node node, String a1, String v1, String a2, String v2) {
-        var r1 = getAttribute(node, XmlReader.NAMESPACE_DDM, a1)
+        var r1 = getAttribute(node, a1)
             .map(item -> v1.equals(item.getTextContent()))
             .orElse(false);
 
-        var r2 = getAttribute(node, XmlReader.NAMESPACE_DDM, a2)
+        var r2 = getAttribute(node,  a2)
             .map(item -> v2.equals(item.getTextContent()))
             .orElse(false);
 

@@ -27,11 +27,11 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD_
 
 @Slf4j
 public class Subject extends Base {
-    private final static String SCHEME_PAN = "PAN thesaurus ideaaltypes";
-    private final static String SCHEME_URI_PAN = "https://data.cultureelerfgoed.nl/term/id/pan/PAN";
+    final static String SCHEME_PAN = "PAN thesaurus ideaaltypes";
+    final static String SCHEME_URI_PAN = "https://data.cultureelerfgoed.nl/term/id/pan/PAN";
 
-    private final static String SCHEME_AAT = "Art and Architecture Thesaurus";
-    private final static String SCHEME_URI_AAT = "http://vocab.getty.edu/aat/";
+    final static String SCHEME_AAT = "Art and Architecture Thesaurus";
+    final static String SCHEME_URI_AAT = "http://vocab.getty.edu/aat/";
 
     private final static Pattern matchPrefix = Pattern.compile("^\\s*[a-zA-Z]+\\s+Match:\\s*");
     public static CompoundFieldGenerator<Node> toKeywordValue = (builder, value) -> {
@@ -50,7 +50,7 @@ public class Subject extends Base {
         builder.addSubfield(KEYWORD_VOCABULARY_URI, SCHEME_URI_PAN);
     };
 
-    private static String removeMatchPrefix(String input) {
+    static String removeMatchPrefix(String input) {
         return matchPrefix.matcher(input).replaceAll("");
     }
 

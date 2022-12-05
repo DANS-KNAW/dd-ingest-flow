@@ -15,92 +15,223 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import org.junit.jupiter.api.Test;
-import org.w3c.dom.Node;
 
-import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_ARTIFACT;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_COMPLEX;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_OLD;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_ARTIFACT;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_COMPLEX;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_OLD;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SubjectAbrTest extends BaseTest {
 
     @Test
-    void is_abr_complex() throws Exception {
-        var doc = readDocument("abrs.xml");
-        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
-            .filter(SubjectAbr::isAbrComplex)
-            .collect(Collectors.toList());
+    void isOldAbr_should_return_true_if_schemeURI_of_old_ABR_is_used_and_subjectScheme_matches_name() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"https://test4.com/supersecret/\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            SCHEME_URI_ABR_OLD, SCHEME_ABR_OLD
+        ));
 
-        assertThat(nodes)
-            .map(Node::getTextContent)
-            .map(String::trim)
-            .containsOnly("ABR COMPLEX");
-
+        assertTrue(SubjectAbr.isOldAbr(doc.getDocumentElement()));
     }
 
     @Test
-    void is_old_abr() throws Exception {
-        var doc = readDocument("abrs.xml");
-        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
-            .filter(SubjectAbr::isOldAbr)
-            .collect(Collectors.toList());
+    void isOldAbr_should_return_false_if_schemeURI_does_not_match() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"https://test4.com/supersecret/\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            "http://notabr", SCHEME_ABR_OLD
+        ));
 
-        assertThat(nodes)
-            .map(Node::getTextContent)
-            .map(String::trim)
-            .containsOnly("ABR BASIS REGISTER OLD");
+        assertFalse(SubjectAbr.isOldAbr(doc.getDocumentElement()));
     }
 
     @Test
-    void is_abr_artifact() throws Exception {
-        var doc = readDocument("abrs.xml");
-        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
-            .filter(SubjectAbr::isAbrArtifact)
-            .collect(Collectors.toList());
+    void isOldAbr_should_return_false_if_subjectScheme_does_not_match() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"https://test4.com/supersecret/\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            SCHEME_URI_ABR_OLD, "NO MATCH"
+        ));
 
-        assertThat(nodes)
-            .map(Node::getTextContent)
-            .map(String::trim)
-            .containsOnly("ABR ARTEFACTEN");
+        assertFalse(SubjectAbr.isOldAbr(doc.getDocumentElement()));
     }
 
     @Test
-    void to_abr_complex() throws Exception {
-        var doc = readDocument("abrs.xml");
-        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
-            .filter(SubjectAbr::isAbrComplex)
-            .map(SubjectAbr::toAbrComplex)
-            .collect(Collectors.toList());
+    void fromAbrOldToAbrArtifact_should_create_artifact_termURI_from_legacy_URI_by_using_the_UUID_from_the_legacy_URI() throws Exception {
+        var abrBaseUrl = "https://data.cultureelerfgoed.nl/term/id/abr";
+        var termUuid = "ea77d56e-1475-4e4c-94f5-489bd3d9a3e7";
+        var valueUri = "https://data.cultureelerfgoed.nl/term/id/rn/" + termUuid;
 
-        assertThat(nodes)
-            .map(String::trim)
-            .containsOnly("https://test3.com/");
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"%s\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            SCHEME_URI_ABR_OLD, SCHEME_ABR_OLD, valueUri
+        ));
+
+        assertEquals(abrBaseUrl + "/" + termUuid,
+            SubjectAbr.fromAbrOldToAbrArtifact(doc.getDocumentElement()));
     }
 
     @Test
-    void to_abr_artifact() throws Exception {
-        var doc = readDocument("abrs.xml");
-        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
-            .filter(SubjectAbr::isAbrArtifact)
-            .map(SubjectAbr::toAbrArtifact)
-            .collect(Collectors.toList());
+    void fromAbrOldToAbrArtifact_should_return_None_for_an_element_that_is_not_an_old_ABR_element() throws Exception {
+        var termUuid = "ea77d56e-1475-4e4c-94f5-489bd3d9a3e7";
+        var valueUri = "https://data.cultureelerfgoed.nl/term/id/rn/" + termUuid;
 
-        assertThat(nodes)
-            .map(String::trim)
-            .containsOnly("https://test5.com/");
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"%s\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            "http://somethingelse", SCHEME_ABR_OLD, valueUri
+        ));
+
+        assertNull(SubjectAbr.fromAbrOldToAbrArtifact(doc.getDocumentElement()));
     }
 
     @Test
-    void from_abr_old_to_abr_artifact() throws Exception {
-        var doc = readDocument("abrs.xml");
-        var nodes = XPathEvaluator.nodes(doc, "//ddm:subject")
-            .filter(SubjectAbr::isOldAbr)
-            .map(SubjectAbr::fromAbrOldToAbrArtifact)
-            .collect(Collectors.toList());
+    void isAbrArtifact_should_return_true_for_subject_element_matching_schemeURI_and_subjectScheme_attributes() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"https://test4.com/supersecret/\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            SCHEME_URI_ABR_ARTIFACT, SCHEME_ABR_ARTIFACT
+        ));
 
-        assertThat(nodes)
-            .map(String::trim)
-            .containsOnly("https://data.cultureelerfgoed.nl/term/id/abr/supersecret");
+        assertTrue(SubjectAbr.isAbrArtifact(doc.getDocumentElement()));
+    }
+
+    @Test
+    void isAbrArtifact_should_return_false_for_wrong_schemeURI() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"https://test4.com/supersecret/\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            "https://fake", SCHEME_ABR_ARTIFACT
+        ));
+
+        assertFalse(SubjectAbr.isAbrArtifact(doc.getDocumentElement()));
+    }
+
+    @Test
+    void isAbrArtifact_should_return_false_for_wrong_subjectScheme() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"https://test4.com/supersecret/\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            SCHEME_URI_ABR_ARTIFACT, "NO MATCH"
+        ));
+
+        assertFalse(SubjectAbr.isAbrArtifact(doc.getDocumentElement()));
+    }
+
+    @Test
+    void isAbrComplex_should_return_true_for_subject_element_matching_schemeURI_and_subjectScheme_attributes() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"https://test4.com/supersecret/\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            SCHEME_URI_ABR_COMPLEX, SCHEME_ABR_COMPLEX
+        ));
+
+        assertTrue(SubjectAbr.isAbrComplex(doc.getDocumentElement()));
+    }
+
+    @Test
+    void isAbrComplex_should_return_false_for_wrong_schemeURI() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"https://test4.com/supersecret/\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            "https://fake", SCHEME_ABR_COMPLEX
+        ));
+
+        assertFalse(SubjectAbr.isAbrComplex(doc.getDocumentElement()));
+    }
+
+    @Test
+    void isAbrComplex_should_return_false_for_wrong_subjectScheme() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"https://test4.com/supersecret/\"\n"
+                + "    >\n"
+                + "    ABR BASIS REGISTER OLD\n"
+                + "</ddm:subject>",
+            SCHEME_URI_ABR_COMPLEX, "NO MATCH"
+        ));
+
+        assertFalse(SubjectAbr.isAbrComplex(doc.getDocumentElement()));
+    }
+
+    @Test
+    void toAbrComplex_should_create_artifact_termURI_from_legacy_URI_by_using_the_UUID_from_the_legacy_URI() throws Exception {
+        var abrBaseUrl = "https://data.cultureelerfgoed.nl/term/id/rn";
+        var termUuid = "ea77d56e-1475-4e4c-94f5-489bd3d9a3e7";
+        var valueUri = "https://data.cultureelerfgoed.nl/term/id/rn/" + termUuid;
+
+        var doc = readDocumentFromString(String.format(
+            "<ddm:subject xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "    schemeURI=\"%s\"\n"
+                + "    subjectScheme=\"%s\"\n"
+                + "    valueURI=\"%s\"\n"
+                + "    >\n"
+                + "    ABR COMPLEX\n"
+                + "</ddm:subject>",
+            SCHEME_URI_ABR_COMPLEX, SCHEME_ABR_COMPLEX, valueUri
+        ));
+
+        assertEquals(abrBaseUrl + "/" + termUuid,
+            SubjectAbr.toAbrComplex(doc.getDocumentElement()));
     }
 }

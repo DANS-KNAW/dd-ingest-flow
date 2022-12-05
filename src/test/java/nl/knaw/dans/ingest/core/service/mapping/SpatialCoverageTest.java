@@ -15,9 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,27 +36,5 @@ class SpatialCoverageTest extends BaseTest {
         var doc = readDocumentFromString("<node><child>text</child> text</node>");
         var root = doc.getDocumentElement().getFirstChild();
         assertFalse(SpatialCoverage.hasChildElement(root));
-    }
-
-    // TODO this should not be here
-    @Test
-    void test_field_builder() throws Exception {
-        var builder = new CompoundFieldBuilder("TEST", true);
-        builder.addSubfield("field1", "value1")
-            .addSubfield("field2", "value2")
-            .addControlledSubfield("field3", "x");
-
-        builder.nextValue();
-        builder.addSubfield("field1", "value3")
-            .addSubfield("field2", "value4")
-            .addControlledSubfield("field3", "x");
-
-        builder.nextValue();
-        var result = builder.build();
-        var str = new ObjectMapper()
-            .writer()
-            .withDefaultPrettyPrinter()
-            .writeValueAsString(result);
-        log.debug("result: {}", str);
     }
 }

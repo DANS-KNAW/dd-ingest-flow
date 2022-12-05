@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service.mapping;
 
-import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -31,50 +30,58 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpatialBoxTest extends BaseTest {
 
-    // TODO inline xml
     @Test
-    void test_to_easy_tsm_spatial_box_value_object() throws Exception {
-        var doc = readDocument("spatial.xml");
-        var node = XPathEvaluator.nodes(doc, "//gml:boundedBy[1]")
-            .findFirst().orElseThrow();
+    void toEasyTsmSpatialBoxValueObject_should_create_correct_spatial_box_details_in_Json_object() throws Exception {
+        var doc = readDocumentFromString(
+            "        <gml:boundedBy xmlns:gml=\"http://www.opengis.net/gml\">\n"
+                + "            <gml:Envelope>\n"
+                + "                <gml:lowerCorner>45.555 -100.666</gml:lowerCorner>\n"
+                + "                <gml:upperCorner>90.0 179.999</gml:upperCorner>\n"
+                + "            </gml:Envelope>\n"
+                + "        </gml:boundedBy>");
 
         var builder = new CompoundFieldBuilder(SPATIAL_BOX, true);
-        SpatialBox.toEasyTsmSpatialBoxValueObject.build(builder, node);
+        SpatialBox.toEasyTsmSpatialBoxValueObject.build(builder, doc.getDocumentElement());
+        var value = builder.build().getValue();
 
-        assertThat(builder.build().getValue())
+        assertThat(value)
             .extracting(x -> x.get(SPATIAL_BOX_SCHEME))
             .extracting("value")
             .containsOnly("longitude/latitude (degrees)");
 
-        assertThat(builder.build().getValue())
+        assertThat(value)
             .extracting(x -> x.get(SPATIAL_BOX_NORTH))
             .extracting("value")
             .containsOnly("90.0");
 
-        assertThat(builder.build().getValue())
+        assertThat(value)
             .extracting(x -> x.get(SPATIAL_BOX_EAST))
             .extracting("value")
             .containsOnly("179.999");
 
-        assertThat(builder.build().getValue())
+        assertThat(value)
             .extracting(x -> x.get(SPATIAL_BOX_SOUTH))
             .extracting("value")
             .containsOnly("45.555");
 
-        assertThat(builder.build().getValue())
+        assertThat(value)
             .extracting(x -> x.get(SPATIAL_BOX_WEST))
             .extracting("value")
             .containsOnly("-100.666");
     }
 
     @Test
-    void test_to_easy_tsm_spatial_box_value_object_with_rd() throws Exception {
-        var doc = readDocument("spatial.xml");
-        var node = XPathEvaluator.nodes(doc, "//gml:boundedBy[2]")
-            .findFirst().orElseThrow();
+    void toEasyTsmSpatialBoxValueObject_should_give_RD_in_m_as_spatial_box_scheme() throws Exception {
+        var doc = readDocumentFromString(
+            "        <gml:boundedBy xmlns:gml=\"http://www.opengis.net/gml\">\n"
+                + "            <gml:Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/28992\">\n"
+                + "                <gml:lowerCorner>469470 209942</gml:lowerCorner>\n"
+                + "                <gml:upperCorner>469890 209914</gml:upperCorner>\n"
+                + "            </gml:Envelope>\n"
+                + "        </gml:boundedBy>");
 
         var builder = new CompoundFieldBuilder(SPATIAL_BOX, true);
-        SpatialBox.toEasyTsmSpatialBoxValueObject.build(builder, node);
+        SpatialBox.toEasyTsmSpatialBoxValueObject.build(builder, doc.getDocumentElement());
 
         assertThat(builder.build().getValue())
             .extracting(x -> x.get(SPATIAL_BOX_SCHEME))
@@ -83,13 +90,17 @@ class SpatialBoxTest extends BaseTest {
     }
 
     @Test
-    void test_to_easy_tsm_spatial_box_value_object_with_invalid_pairs() throws Exception {
-        var doc = readDocument("spatial.xml");
-        var node = XPathEvaluator.nodes(doc, "//gml:boundedBy[3]")
-            .findFirst().orElseThrow();
+    void toEasyTsmSpatialBoxValueObject_should_throw_exception_when_longitude_latitude_pair_is_given_incorrectly() throws Exception {
+        var doc = readDocumentFromString(
+            "        <gml:boundedBy xmlns:gml=\"http://www.opengis.net/gml\">\n"
+                + "            <gml:Envelope>\n"
+                + "                <gml:lowerCorner>469470, 209942</gml:lowerCorner>\n"
+                + "                <gml:upperCorner>469890, 209914</gml:upperCorner>\n"
+                + "            </gml:Envelope>\n"
+                + "        </gml:boundedBy>");
 
-        var e = assertThrows(NumberFormatException.class, () -> SpatialBox.toEasyTsmSpatialBoxValueObject.build(null, node));
+        var e = assertThrows(NumberFormatException.class,
+            () -> SpatialBox.toEasyTsmSpatialBoxValueObject.build(null, doc.getDocumentElement()));
         assertTrue(e.getMessage().contains("469470,"));
     }
-
 }

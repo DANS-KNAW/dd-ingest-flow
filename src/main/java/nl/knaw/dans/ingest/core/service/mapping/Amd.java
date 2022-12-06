@@ -28,7 +28,6 @@ import static nl.knaw.dans.ingest.core.DepositState.SUBMITTED;
 @Slf4j
 public class Amd extends Base {
 
-    // TODO test these things because I have no idea if it even works
     public static Optional<String> toDateOfDeposit(Node node) {
         var result = getFirstChangeToState(node, SUBMITTED.name());
 

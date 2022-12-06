@@ -51,10 +51,12 @@ public class PrimitiveFieldBuilder {
         return this;
     }
 
-    public MetadataField build() {
+    public MetadataField build(boolean deduplicate) {
         if (this.values.size() == 0) {
             return null;
         }
+
+        var values = deduplicate ? this.values.stream().distinct().collect(Collectors.toList()) : this.values;
 
         if (this.multiple) {
             if (this.controlled) {

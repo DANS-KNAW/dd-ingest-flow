@@ -16,6 +16,8 @@
 package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.knaw.dans.ingest.core.service.builder.ArchaeologyFieldBuilder;
+import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
@@ -26,9 +28,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -90,5 +94,45 @@ class DepositToDvDatasetMetadataMapperTest {
             .map(Node::getTextContent)
             .map(String::trim)
             .containsOnly("Method 1");
+    }
+
+    @Test
+    void processMetadataBlock_should_deduplicate_items_for_PrimitiveFieldBuilder() throws Exception {
+        var fields = new HashMap<String, MetadataBlock>();
+        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), Map.of(), Map.of());
+        var builder = new ArchaeologyFieldBuilder();
+        builder.addArchisZaakId(Stream.of(
+            "TEST",
+            "TEST2",
+            "TEST3",
+            "TEST"
+        ));
+
+        mapper.processMetadataBlock(true, fields, "title", "name", builder);
+
+        // the fourth item should be removed
+        assertThat(fields.get("title").getFields())
+            .extracting("value")
+            .containsExactly(List.of("TEST", "TEST2", "TEST3"));
+    }
+
+    @Test
+    void processMetadataBlock_should_deduplicate_items_for_CompoundFieldBuilder() throws Exception {
+        var fields = new HashMap<String, MetadataBlock>();
+        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), Map.of(), Map.of());
+        var builder = new ArchaeologyFieldBuilder();
+        builder.addArchisZaakId(Stream.of(
+            "TEST",
+            "TEST2",
+            "TEST3",
+            "TEST"
+        ));
+
+        mapper.processMetadataBlock(true, fields, "title", "name", builder);
+
+        // the fourth item should be removed
+        assertThat(fields.get("title").getFields())
+            .extracting("value")
+            .containsExactly(List.of("TEST", "TEST2", "TEST3"));
     }
 }

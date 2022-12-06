@@ -177,7 +177,6 @@ public class DatasetUpdater extends DatasetEditor {
                 api.awaitUnlock();
 
                 // embargo
-                // TODO only embargo a subset of files based on previous actions
                 var dateAvailable = getDateAvailable(deposit);
                 var fileIdsToEmbargo = union(fileReplacements.keySet(), fileAdditions.keySet())
                     .stream()

@@ -16,7 +16,6 @@
 package nl.knaw.dans.ingest.core.service.mapping;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.XmlReader;
 import org.w3c.dom.Node;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_PERIOD;
@@ -26,12 +25,12 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_U
 
 @Slf4j
 public class TemporalAbr extends Base {
-    private static boolean hasAttributes(Node node, String a1, String v1, String a2, String v2) {
-        var r1 = getAttribute(node, a1)
+    private static boolean hasAttributes(Node node, String v1, String v2) {
+        var r1 = getAttribute(node, "subjectScheme")
             .map(item -> v1.equals(item.getTextContent()))
             .orElse(false);
 
-        var r2 = getAttribute(node,  a2)
+        var r2 = getAttribute(node, "schemeURI")
             .map(item -> v2.equals(item.getTextContent()))
             .orElse(false);
 
@@ -44,28 +43,28 @@ public class TemporalAbr extends Base {
 
     public static boolean isAbrPeriod(Node node) {
         var a1 = hasAttributes(node,
-            "subjectScheme", SCHEME_ABR_PERIOD,
-            "schemeURI", SCHEME_URI_ABR_PERIOD
+            SCHEME_ABR_PERIOD,
+            SCHEME_URI_ABR_PERIOD
         );
 
         var a2 = hasAttributes(node,
-            "subjectScheme", SCHEME_ABR_PLUS,
-            "schemeURI", SCHEME_URI_ABR_PLUS
+            SCHEME_ABR_PLUS,
+            SCHEME_URI_ABR_PLUS
         );
 
         return a1 || a2;
     }
 
-    private static String attributeToText(Node node, String namespace, String attribute) {
-        return getAttribute(node, namespace, attribute)
+    private static String attributeToText(Node node) {
+        return getAttribute(node, "valueURI")
             .map(Node::getTextContent)
             .orElseGet(() -> {
-                log.error("Missing {} attribute on {} node", attribute, node.getNodeName());
+                log.error("Missing {} attribute on {} node", "valueURI", node.getNodeName());
                 return null;
             });
     }
 
     public static String toAbrPeriod(Node node) {
-        return attributeToText(node, XmlReader.NAMESPACE_DDM, "valueURI");
+        return attributeToText(node);
     }
 }

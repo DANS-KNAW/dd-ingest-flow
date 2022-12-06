@@ -22,11 +22,6 @@ import org.w3c.dom.Node;
 public class Spatial extends Base {
 
     /**
-     * coordinate order y, x = latitude (DCX_SPATIAL_Y), longitude (DCX_SPATIAL_X)
-     */
-    final static String DEGREES_SRS_NAME = "http://www.opengis.net/def/crs/EPSG/0/4326";
-
-    /**
      * coordinate order x, y = longitude (DCX_SPATIAL_X), latitude (DCX_SPATIAL_Y)
      */
     final static String RD_SRS_NAME = "http://www.opengis.net/def/crs/EPSG/0/28992";

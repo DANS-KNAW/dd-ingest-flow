@@ -66,20 +66,4 @@ public class Relation extends Base {
         return labelToType.containsKey(node.getLocalName());
     }
 
-    public static Map<String, MetadataField> toRelationObject(Node node) {
-        var href = Optional.ofNullable(node.getAttributes())
-            .map(n -> Optional.ofNullable(n.getNamedItem("href")))
-            .flatMap(i -> i)
-            .map(Node::getTextContent)
-            .orElse("");
-
-        var nodeName = node.getLocalName();
-
-        var result = new HashMap<String, MetadataField>();
-        result.put(RELATION, new ControlledSingleValueField(RELATION, labelToType.getOrDefault(nodeName, nodeName)));
-        result.put(RELATION_URI, new PrimitiveSingleValueField(RELATION_URI, href));
-        result.put(RELATION_TEXT, new PrimitiveSingleValueField(RELATION_TEXT, node.getTextContent()));
-
-        return result;
-    }
 }

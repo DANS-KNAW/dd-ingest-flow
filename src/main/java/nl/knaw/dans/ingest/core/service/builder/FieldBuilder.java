@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FieldBuilder {
+public abstract class FieldBuilder {
     private final Map<String, CompoundFieldBuilder> compoundFields;
     private final Map<String, PrimitiveFieldBuilder> primitiveFields;
 

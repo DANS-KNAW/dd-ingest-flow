@@ -26,13 +26,15 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID
 public class DepositPropertiesVaultMetadata extends Base {
 
     public static final CompoundFieldGenerator<String> toOtherIdValue = (builder, value) -> {
-        var str = Optional.ofNullable(value).orElse("").trim();
+        if (StringUtils.isBlank(value)) {
+            throw new IllegalArgumentException("Identifier must not be blank");
+        }
 
-        if (StringUtils.containsWhitespace(str)) {
+        if (StringUtils.containsWhitespace(value)) {
             throw new IllegalArgumentException("Identifier must not contain whitespace");
         }
 
-        var parts = str.split(":");
+        var parts = value.split(":");
 
         if (parts.length != 2) {
             throw new IllegalArgumentException("Other ID value has invalid format. It should be '<prefix>:<suffix>'");

@@ -41,7 +41,7 @@ class DepositPropertiesVaultMetadataTest extends BaseTest {
     }
 
     @Test
-    void to_other_id_value_should_throw_error_if_value_is_empty() {
+    void toOtherIdValue_should_throw_error_if_value_is_invalid() {
         var builder = new CompoundFieldBuilder("", false);
 
         assertThrows(IllegalArgumentException.class,

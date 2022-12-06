@@ -27,6 +27,8 @@ import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.Embargo;
+import nl.knaw.dans.lib.dataverse.model.file.DataFile;
+import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 import org.apache.commons.lang3.ArrayUtils;
 import org.w3c.dom.Node;
 
@@ -180,7 +182,8 @@ public abstract class DatasetEditor {
 
             var items = files.stream()
                 .filter(f -> !"easy-migration".equals(f.getDirectoryLabel()))
-                .map(f -> f.getDataFile().getId())
+                .map(FileMeta::getDataFile)
+                .map(DataFile::getId)
                 .collect(Collectors.toList());
 
             embargoFiles(persistentId, dateAvailable, items);
@@ -192,6 +195,9 @@ public abstract class DatasetEditor {
 
         if (!dateAvailable.isAfter(now)) {
             log.debug("Date available in the past, no embargo: {}", dateAvailable);
+        }
+        else if (fileIds.size() == 0) {
+            log.debug("No files to embargo");
         }
         else {
             var api = dataverseClient.dataset(persistentId);

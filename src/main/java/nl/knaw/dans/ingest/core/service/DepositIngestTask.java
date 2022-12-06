@@ -266,13 +266,13 @@ public class DepositIngestTask implements TargetedTask {
         }
     }
 
-    DatasetEditor newDatasetUpdater(Dataset dataset) {
+    DatasetEditor newDatasetUpdater(Dataset dataset, boolean isMigration) {
         var deposit = getDeposit();
         var blocks = dataset.getDatasetVersion().getMetadataBlocks();
 
         return new DatasetUpdater(
             dataverseClient,
-            false,
+            isMigration,
             dataset,
             deposit,
             variantToLicense,
@@ -286,12 +286,16 @@ public class DepositIngestTask implements TargetedTask {
         );
     }
 
-    DatasetEditor newDatasetCreator(Dataset dataset, String depositorRole) {
+    DatasetEditor newDatasetUpdater(Dataset dataset) {
+        return newDatasetUpdater(dataset, false);
+    }
+
+    DatasetEditor newDatasetCreator(Dataset dataset, String depositorRole, boolean isMigration) {
         var deposit = getDeposit();
 
         return new DatasetCreator(
             dataverseClient,
-            false,
+            isMigration,
             dataset,
             deposit,
             new ObjectMapper(),
@@ -305,7 +309,11 @@ public class DepositIngestTask implements TargetedTask {
         );
     }
 
-    Dataset getMetadata() throws IOException, DataverseException {
+    DatasetEditor newDatasetCreator(Dataset dataset, String depositorRole) {
+        return newDatasetCreator(dataset, depositorRole, false);
+    }
+
+    Dataset getMetadata() {
         var date = getDateOfDeposit();
         var contact = getDatasetContact();
         var deposit = getDeposit();

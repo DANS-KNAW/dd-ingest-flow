@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.api.ValidateCommand;
 import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
@@ -78,24 +77,13 @@ public class DepositMigrationTask extends DepositIngestTask {
     }
 
     @Override
-    DatasetCreator newDatasetCreator(Dataset dataset, String depositorRole) {
-        // TODO this is ugly, and duplicates the parent; replace
-        var deposit = getDeposit();
-
-        // the only difference from the parent is the "isMigration" property
-        return new DatasetCreator(dataverseClient, true, dataset, deposit, new ObjectMapper(), variantToLicense, supportedLicenses, publishAwaitUnlockMillisecondsBetweenRetries,
-            publishAwaitUnlockMaxNumberOfRetries, fileExclusionPattern, zipFileHandler, depositorRole);
+    DatasetEditor newDatasetCreator(Dataset dataset, String depositorRole) {
+        return newDatasetCreator(dataset, depositorRole, true);
     }
 
     @Override
     DatasetEditor newDatasetUpdater(Dataset dataset) {
-        // TODO deduplicate all this logic
-        var deposit = getDeposit();
-        var blocks = dataset.getDatasetVersion().getMetadataBlocks();
-
-        return new DatasetUpdater(dataverseClient, true, dataset, deposit, variantToLicense, supportedLicenses, publishAwaitUnlockMillisecondsBetweenRetries,
-            publishAwaitUnlockMaxNumberOfRetries,
-            fileExclusionPattern, zipFileHandler, new ObjectMapper(), blocks);
+        return newDatasetUpdater(dataset, true);
     }
 
     @Override

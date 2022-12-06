@@ -17,12 +17,8 @@ package nl.knaw.dans.ingest.core.service.mapping;
 
 import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.builder.CompoundFieldGenerator;
-import nl.knaw.dans.lib.dataverse.model.dataset.ControlledSingleValueField;
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
-import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import org.w3c.dom.Node;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -45,15 +41,17 @@ public class Identifier extends Base {
 
         builder.addSubfield(PUBLICATION_CITATION, "");
         builder.addSubfield(PUBLICATION_ID_NUMBER, text);
-        builder.addSubfield(PUBLICATION_ID_TYPE, getIdType(node));
+        builder.addControlledSubfield(PUBLICATION_ID_TYPE, getIdType(node));
         builder.addSubfield(PUBLICATION_URL, "");
     };
+
     public static final CompoundFieldGenerator<Node> toNwoGrantNumber = (builder, node) -> {
         var text = node.getTextContent().trim();
 
         builder.addSubfield(GRANT_NUMBER_AGENCY, "NWO");
         builder.addSubfield(GRANT_NUMBER_VALUE, text);
     };
+
     public static final CompoundFieldGenerator<Node> toOtherIdValue = (builder, node) -> {
         var text = node.getTextContent().trim();
 
@@ -66,12 +64,14 @@ public class Identifier extends Base {
             builder.addSubfield(OTHER_ID_VALUE, text);
         }
     };
+
     private final static Map<String, String> archisNumberTypeToCvItem = Map.of(
         "ARCHIS-ONDERZOEK", "onderzoek",
         "ARCHIS-VONDSTMELDING", "vondstmelding",
         "ARCHIS-MONUMENT", "monument",
         "ARCHIS-WAARNEMING", "waarneming"
     );
+
     public static final CompoundFieldGenerator<Node> toArchisNumberValue = (builder, node) -> {
         var numberType = getAttribute(node, NAMESPACE_XSI, "type")
             .map(Node::getTextContent)

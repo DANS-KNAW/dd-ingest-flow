@@ -19,7 +19,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.namespace.NamespaceContext;
-import javax.xml.namespace.QName;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -30,7 +29,6 @@ import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-// TODO make singleton or something
 public final class XPathEvaluator {
 
     public static final String NAMESPACE_XML = "http://www.w3.org/XML/1998/namespace";
@@ -112,12 +110,12 @@ public final class XPathEvaluator {
         }
     }
 
-    private static synchronized Object evaluateXpath(Node node, String expr, QName type) throws XPathExpressionException {
-        return getXpath().compile(expr).evaluate(node, type);
+    private static synchronized Object evaluateXpath(Node node, String expr) throws XPathExpressionException {
+        return getXpath().compile(expr).evaluate(node, XPathConstants.NODESET);
     }
 
     private static Stream<Node> xpathToStream(Node node, String expression) throws XPathExpressionException {
-        var nodes = (NodeList) evaluateXpath(node, expression, XPathConstants.NODESET);
+        var nodes = (NodeList) evaluateXpath(node, expression);
 
         return IntStream.range(0, nodes.getLength())
             .mapToObj(nodes::item);

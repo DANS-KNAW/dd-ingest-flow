@@ -29,21 +29,17 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_
 public class SpatialBox extends Spatial {
     public static CompoundFieldGenerator<Node> toEasyTsmSpatialBoxValueObject = (builder, node) -> {
         var envelope = getChildNode(node, "gml:Envelope")
-            // TODO is it a requirement for the envelope to be there? what should happen if it is missing?
-            // does the validate-dans-bag thing validate the existence of this?
-            .orElseThrow();
+            .orElseThrow(() -> new IllegalArgumentException("Missing gml:Envelope node"));
 
         var isRd = isRd(envelope);
 
         var lowerCorner = getChildNode(envelope, "gml:lowerCorner")
             .map(n -> getPoint(n, isRd))
-            // TODO check if this should be caught
-            .orElseThrow();
+            .orElseThrow(() -> new IllegalArgumentException("Missing gml:lowerCorner node in gml:Envelope"));
 
         var upperCorner = getChildNode(envelope, "gml:upperCorner")
             .map(n -> getPoint(n, isRd))
-            // TODO check if this should be caught
-            .orElseThrow();
+            .orElseThrow(() -> new IllegalArgumentException("Missing gml:upperCorner node in gml:Envelope"));
 
         builder.addControlledSubfield(SPATIAL_BOX_SCHEME, isRd ? RD_SCHEME : LONLAT_SCHEME);
         builder.addSubfield(SPATIAL_BOX_NORTH, upperCorner.getY());

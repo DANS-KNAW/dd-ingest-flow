@@ -21,6 +21,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_A
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_PLUS;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_PERIOD;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_PLUS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -40,7 +41,7 @@ class TemporalAbrTest extends BaseTest {
     }
 
     @Test
-    void it_should_return_false_if_schemeURI_does_not_match() throws Exception {
+    void isAbrPeriod_should_return_false_if_schemeURI_does_not_match() throws Exception {
 
         var doc = readDocumentFromString(String.format(
             "    <ddm:temporal\n"
@@ -54,7 +55,7 @@ class TemporalAbrTest extends BaseTest {
     }
 
     @Test
-    void it_should_return_false_if_subjectScheme_does_not_match() throws Exception {
+    void isAbrPeriod_should_return_false_if_subjectScheme_does_not_match() throws Exception {
 
         var doc = readDocumentFromString(String.format(
             "    <ddm:temporal\n"
@@ -68,7 +69,7 @@ class TemporalAbrTest extends BaseTest {
     }
 
     @Test
-    void it_should_return_true_if_schemeURI_subjectScheme_for_ABR_is_used() throws Exception {
+    void isAbrPeriod_should_return_true_if_schemeURI_subjectScheme_for_ABR_is_used() throws Exception {
 
         var doc = readDocumentFromString(String.format(
             "    <ddm:temporal\n"
@@ -82,7 +83,7 @@ class TemporalAbrTest extends BaseTest {
     }
 
     @Test
-    void it_should_return_false_if_schemeURI_of_ABR_does_not_match() throws Exception {
+    void isAbrPeriod_should_return_false_if_schemeURI_of_ABR_does_not_match() throws Exception {
 
         var doc = readDocumentFromString(String.format(
             "    <ddm:temporal\n"
@@ -96,7 +97,7 @@ class TemporalAbrTest extends BaseTest {
     }
 
     @Test
-    void it_should_return_false_if_subjectScheme_of_ABR_does_not_match() throws Exception {
+    void isAbrPeriod_should_return_false_if_subjectScheme_of_ABR_does_not_match() throws Exception {
 
         var doc = readDocumentFromString(String.format(
             "    <ddm:temporal\n"
@@ -107,6 +108,20 @@ class TemporalAbrTest extends BaseTest {
             , SCHEME_URI_ABR_PLUS, "NO MATCH"));
 
         assertFalse(TemporalAbr.isAbrPeriod(doc.getDocumentElement()));
+    }
+
+    @Test
+    void toAbrPeriod_should_create_correct_value_object() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "    <ddm:temporal\n"
+                + "      xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"
+                + "      schemeURI=\"%s\"\n"
+                + "      subjectScheme=\"%s\"\n"
+                + "      valueURI=\"https://data.cultureelerfgoed.nl/term/id/abr/c6858173-5ca2-4319-b242-f828ec53d52d\" xml:lang=\"nl\">Nieuwe Tijd</ddm:temporal>\n"
+            , SCHEME_URI_ABR_PERIOD, SCHEME_ABR_PERIOD));
+
+        var value = TemporalAbr.toAbrPeriod(doc.getDocumentElement());
+        assertEquals("https://data.cultureelerfgoed.nl/term/id/abr/c6858173-5ca2-4319-b242-f828ec53d52d", value);
     }
 
 }

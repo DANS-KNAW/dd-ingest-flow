@@ -260,8 +260,6 @@ public class DepositToDvDatasetMetadataMapper {
         block.setDisplayName(displayName);
         block.setFields(result);
 
-        // TODO add de-duplication here
-
         fields.put(title, block);
     }
 

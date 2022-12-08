@@ -72,10 +72,10 @@ public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportT
             // to reproduce: put deposit in inbox, start process and then add another deposit to inbox
             // possible solution: just remove this logic, it doesnt seem to be triggered on initial start anyway?
             log.trace("onDirectoryCreate: {}", file);
-//            if (depositsReadInInitialization) {
-//                depositsReadInInitialization = false;
-//                return; // file already added to queue by onStart
-//            }
+            if (depositsReadInInitialization) {
+                depositsReadInInitialization = false;
+                return; // file already added to queue by onStart
+            }
             addTaskForDeposit(file.toPath());
         }
     }

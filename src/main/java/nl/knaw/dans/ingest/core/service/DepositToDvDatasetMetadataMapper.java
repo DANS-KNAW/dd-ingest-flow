@@ -372,7 +372,7 @@ public class DepositToDvDatasetMetadataMapper {
 
     Stream<Node> getCreators(Document ddm) {
         return XPathEvaluator.nodes(ddm,
-            "//ddm:profile/dcx-dai:creatorDetails | //ddm:profile/dcx-dai:creator");
+            "//ddm:profile/dcx-dai:creatorDetails | //ddm:profile/dcx-dai:creator | //ddm:profile/dc:creator");
     }
 
     Stream<Node> getOtherDescriptions(Document ddm) {

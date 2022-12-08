@@ -45,7 +45,6 @@ class RelationTest extends BaseTest {
                 + "</ddm:DDM>\n");
 
         var builder = new CompoundFieldBuilder("", true);
-
         XPathEvaluator.nodes(doc, "//ddm:dcmiMetadata//*")
             .filter(Relation::isRelation)
             .forEach(item -> {

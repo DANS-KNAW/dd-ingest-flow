@@ -42,7 +42,6 @@ class TemporalAbrTest extends BaseTest {
 
     @Test
     void isAbrPeriod_should_return_false_if_schemeURI_does_not_match() throws Exception {
-
         var doc = readDocumentFromString(String.format(
             "    <ddm:temporal\n"
                 + "      xmlns:ddm=\"http://easy.dans.knaw.nl/schemas/md/ddm/\"\n"

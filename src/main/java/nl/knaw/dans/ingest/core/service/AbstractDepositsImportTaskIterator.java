@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class AbstractDepositsImportTaskIterator implements Iterator<DepositIngestTask> {
@@ -41,11 +43,9 @@ public abstract class AbstractDepositsImportTaskIterator implements Iterator<Dep
         this.eventWriter = eventWriter;
     }
 
-    protected boolean readAllDepositsFromInbox() {
-        try (Stream<Path> paths = Files.list(inboxDir)) {
-            paths.map(d -> taskFactory.createIngestTask(d, outBox, eventWriter))
-                .sorted().forEach(deque::add);
-            return !deque.isEmpty();
+    protected List<Path> readAllDepositsFromInbox() {
+        try (Stream<Path> paths = Files.list(inboxDir).filter(Files::isDirectory)) {
+            return paths.collect(Collectors.toList());
         }
         catch (IOException e) {
             throw new IllegalStateException("Could not read deposits from inbox", e);

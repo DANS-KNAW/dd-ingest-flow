@@ -23,11 +23,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 
 public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportTaskIterator {
     private static final Logger log = LoggerFactory.getLogger(UnboundedDepositsImportTaskIterator.class);
+    private final Set<Path> initialPathsRead = new HashSet<>();
     private boolean initialized = false;
-    private boolean depositsReadInInitialization = false;
     private boolean keepRunning = true;
 
     public UnboundedDepositsImportTaskIterator(Path inboxDir, Path outBox, int pollingInterval, DepositIngestTaskFactory taskFactory, EventWriter eventWriter) {
@@ -38,6 +40,7 @@ public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportT
         monitor.addObserver(observer);
 
         try {
+            log.debug("Starting FileAlterationMonitor for directory {}", inboxDir);
             monitor.start();
         }
         catch (Exception e) {
@@ -55,28 +58,60 @@ public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportT
         keepRunning = false;
     }
 
+    // onStart is called before any other callback methods are called, so we can safely assume
+    // that while the onStart method is still running, the onDirectoryCreate method will not be called.
+    // The reason this logic is still inside this adaptor is that there might just be a new deposit
+    // between reading the directory and starting the monitor, so we switch it around. First we start
+    // the monitor, then on the first run the existing paths are processed.
     private class EventHandler extends FileAlterationListenerAdaptor {
+
+        // this is called every time the monitor runs (currently every half second), so only check existing files on the first run
         @Override
         public void onStart(FileAlterationObserver observer) {
             log.trace("onStart called");
-            if (!initialized) {
-                initialized = true;
-                depositsReadInInitialization = readAllDepositsFromInbox();
+
+            if (initialized) {
+                log.trace("onStart EventHandler is already initialized, returning");
+                return;
             }
+
+            initialized = true;
+
+            // find all deposits
+            var initialDeposits = readAllDepositsFromInbox();
+
+            for (var path : initialDeposits) {
+                log.trace("onStart initial deposit found: {}", path);
+                initialPathsRead.add(path);
+                addTaskForDeposit(path);
+            }
+
+            log.trace("onStart finished");
         }
 
         @Override
         public void onDirectoryCreate(File file) {
-            // TODO bug: this will not trigger if a new file appears in the inbox and
-            // the initial state also had one or more deposits in it
-            // to reproduce: put deposit in inbox, start process and then add another deposit to inbox
-            // possible solution: just remove this logic, it doesnt seem to be triggered on initial start anyway?
             log.trace("onDirectoryCreate: {}", file);
-            if (depositsReadInInitialization) {
-                depositsReadInInitialization = false;
-                return; // file already added to queue by onStart
+            var path = file.toPath();
+
+            // This should only happen if a new deposit was made after the monitor was initialized but before the first
+            // call to onStart was made. In that case, we ignore it as the onStart method already processed it.
+            if (initialPathsRead.contains(path)) {
+                log.warn("onDirectoryCreate called with path that was also read during startup: {}", path);
             }
-            addTaskForDeposit(file.toPath());
+            else {
+                addTaskForDeposit(file.toPath());
+            }
+        }
+
+        @Override
+        public void onStop(FileAlterationObserver observer) {
+            log.trace("onStop");
+
+            // after the first initial scan of the inbox, all paths will have been processed, and we don't need to check if they are duplicates
+            if (initialPathsRead.size() > 0) {
+                initialPathsRead.clear();
+            }
         }
     }
 }

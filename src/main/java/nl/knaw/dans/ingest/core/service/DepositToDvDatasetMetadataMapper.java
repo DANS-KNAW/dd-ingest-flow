@@ -15,6 +15,8 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.builder.ArchaeologyFieldBuilder;
 import nl.knaw.dans.ingest.core.service.builder.CitationFieldBuilder;
@@ -129,17 +131,19 @@ public class DepositToDvDatasetMetadataMapper {
 
             citationFields.addAuthors(getCreators(ddm), Author.toAuthorValueObject);
             citationFields.addDatasetContact(Stream.ofNullable(contactData), Contact.toOtherIdValue);
-            citationFields.addDescription(getDescriptions(ddm), Description.toDescription);
+            citationFields.addDescription(getDescriptions(ddm).filter(Description::isValidDescription), Description.toDescription);
 
             if (alternativeTitles.size() > 0) {
                 citationFields.addDescription(Stream.of(alternativeTitles.get(alternativeTitles.size() - 1)), Description.toDescription);
             }
 
             citationFields.addDescription(getMetadataDescriptions(ddm)
+                .filter(Description::isValidDescription)
                 .filter(Description::isNonTechnicalInfo), Description.toDescription);
 
-            citationFields.addDescription(getOtherDescriptions(ddm), Description.toPrefixedDescription);
+            citationFields.addDescription(getOtherDescriptions(ddm).filter(Description::isValidDescription), Description.toPrefixedDescription);
             citationFields.addDescription(getMetadataDescriptions(ddm)
+                .filter(Description::isValidDescription)
                 .filter(Description::isTechnicalInfo), Description.toDescription);
 
             citationFields.addSubject(getAudiences(ddm), Audience::toCitationBlockSubject);
@@ -276,11 +280,18 @@ public class DepositToDvDatasetMetadataMapper {
         var dataset = new Dataset();
         dataset.setDatasetVersion(version);
 
+        try {
+            log.trace("fields: {}", new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(fields));
+        }
+        catch (JsonProcessingException e) {
+            log.trace("error formatting fields as json", e);
+        }
+
         return dataset;
     }
 
     Stream<Node> getDescriptions(Document ddm) {
-        return XPathEvaluator.nodes(ddm, "//ddm:profile/dcterms:description");
+        return XPathEvaluator.nodes(ddm, "//ddm:profile/dcterms:description | //ddm:profile/dc:description");
     }
 
     Stream<Node> getMetadataDescriptions(Document ddm) {

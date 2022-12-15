@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.service.mapping;
 
 import nl.knaw.dans.ingest.core.service.builder.CompoundFieldGenerator;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
 import java.util.Arrays;
@@ -26,10 +27,6 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPT
 
 public class Description extends Base {
 
-    public static CompoundFieldGenerator<Node> toDescription = (builder, value) -> {
-        var text = newlineToHtml(value.getTextContent());
-        builder.addSubfield(DESCRIPTION_VALUE, text);
-    };
     private static final Map<String, String> labelToPrefix = Map.of(
         "date", "Date",
         "valid", "Valid",
@@ -40,6 +37,10 @@ public class Description extends Base {
         "dateSubmitted", "Date Submitted",
         "coverage", "Coverage"
     );
+    public static CompoundFieldGenerator<Node> toDescription = (builder, value) -> {
+        var text = newlineToHtml(value.getTextContent());
+        builder.addSubfield(DESCRIPTION_VALUE, text);
+    };
     public static CompoundFieldGenerator<Node> toPrefixedDescription = (builder, value) -> {
         var name = value.getLocalName();
         var prefix = labelToPrefix.getOrDefault(name, name);
@@ -58,6 +59,10 @@ public class Description extends Base {
                 .map(String::trim)
                 .collect(Collectors.joining("<br>")))
             .collect(Collectors.joining(""));
+    }
+
+    public static boolean isValidDescription(Node node) {
+        return StringUtils.isNotBlank(node.getTextContent());
     }
 
     public static boolean isNonTechnicalInfo(Node node) {

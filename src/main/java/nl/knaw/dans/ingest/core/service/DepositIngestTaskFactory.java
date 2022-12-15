@@ -149,7 +149,6 @@ public class DepositIngestTaskFactory {
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) {
         try {
             var deposit = depositManager.loadDeposit(depositDir);
-            //        var deposit = new Deposit(better.files.File.apply(depositDir));
             return createDepositIngestTask(deposit, outboxDir, eventWriter);
         }
         catch (InvalidDepositException | IOException e) {

@@ -92,7 +92,26 @@ class DcxDaiOrganizationTest extends BaseTest {
         assertThat(field.getValue()).extracting(AUTHOR_IDENTIFIER_SCHEME).extracting("value")
             .containsOnly("ISNI");
         assertThat(field.getValue()).extracting(AUTHOR_IDENTIFIER).extracting("value")
-            .containsOnly("http://isni.org/isni/0000000121032683");
+            .containsOnly("0000000121032683");
+    }
+
+    @Test
+    void toAuthorValueObject_should_use_VIAF_if_present() throws Exception {
+        var doc = readDocumentFromString("<dcx-dai:organization xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
+            + "    <dcx-dai:name xml:lang=\"en\">Anti-Vampire League</dcx-dai:name>\n"
+            + "    <dcx-dai:VIAF>http://viaf.org/viaf/141399695</dcx-dai:VIAF>"
+            + "</dcx-dai:organization>\n");
+
+        var builder = new CompoundFieldBuilder("", false);
+        DcxDaiOrganization.toAuthorValueObject.build(builder, doc.getDocumentElement());
+        var field = builder.build();
+
+        assertThat(field.getValue()).extracting(AUTHOR_NAME).extracting("value")
+            .containsOnly("Anti-Vampire League");
+        assertThat(field.getValue()).extracting(AUTHOR_IDENTIFIER_SCHEME).extracting("value")
+            .containsOnly("VIAF");
+        assertThat(field.getValue()).extracting(AUTHOR_IDENTIFIER).extracting("value")
+            .containsOnly("141399695");
     }
 
     @Test

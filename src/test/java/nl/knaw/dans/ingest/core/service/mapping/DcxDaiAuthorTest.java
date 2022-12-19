@@ -37,8 +37,8 @@ class DcxDaiAuthorTest extends BaseTest {
             + "                <dcx-dai:insertions>van den</dcx-dai:insertions>\n"
             + "                <dcx-dai:surname>Aarden</dcx-dai:surname>\n"
             + "                <dcx-dai:DAI>nfo:eu-repo/dai/nl/07193567X</dcx-dai:DAI>\n"
-            + "                <dcx-dai:ORCID>0000-0001-6438-5123</dcx-dai:ORCID>\n"
-            + "                <dcx-dai:ISNI>0000000396540123</dcx-dai:ISNI>\n"
+            + "                <dcx-dai:ORCID>https://orcid.org/0000-0001-6438-5123</dcx-dai:ORCID>\n"
+            + "                <dcx-dai:ISNI>http://isni.org/isni/0000000396540123</dcx-dai:ISNI>\n"
             + "                <dcx-dai:role>Distributor</dcx-dai:role>\n"
             + "                <dcx-dai:organization>\n"
             + "                    <dcx-dai:name xml:lang=\"en\">Utrecht University</dcx-dai:name>\n"
@@ -60,6 +60,38 @@ class DcxDaiAuthorTest extends BaseTest {
 
         assertThat(field.getValue()).extracting(AUTHOR_IDENTIFIER).extracting("value")
             .containsOnly("0000-0001-6438-5123");
+    }
+
+    @Test
+    void toAuthorValueObject_should_create_correct_ISNI_in_Json_object() throws Exception {
+        var doc = readDocumentFromString("<dcx-dai:author xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
+            + "                <dcx-dai:titles>Prof.</dcx-dai:titles>\n"
+            + "                <dcx-dai:initials>D.N.</dcx-dai:initials>\n"
+            + "                <dcx-dai:insertions>van den</dcx-dai:insertions>\n"
+            + "                <dcx-dai:surname>Aarden</dcx-dai:surname>\n"
+            + "                <dcx-dai:DAI>nfo:eu-repo/dai/nl/07193567X</dcx-dai:DAI>\n"
+            + "                <dcx-dai:ISNI>http://isni.org/isni/0000000396540123</dcx-dai:ISNI>\n"
+            + "                <dcx-dai:role>Distributor</dcx-dai:role>\n"
+            + "                <dcx-dai:organization>\n"
+            + "                    <dcx-dai:name xml:lang=\"en\">Utrecht University</dcx-dai:name>\n"
+            + "                </dcx-dai:organization>\n"
+            + "            </dcx-dai:author>");
+
+        var builder = new CompoundFieldBuilder("", false);
+        DcxDaiAuthor.toAuthorValueObject.build(builder, doc.getDocumentElement());
+        var field = builder.build();
+
+        assertThat(field.getValue()).extracting(AUTHOR_NAME).extracting("value")
+            .containsOnly("D.N. van den Aarden");
+
+        assertThat(field.getValue()).extracting(AUTHOR_AFFILIATION).extracting("value")
+            .containsOnly("Utrecht University");
+
+        assertThat(field.getValue()).extracting(AUTHOR_IDENTIFIER_SCHEME).extracting("value")
+            .containsOnly("ISNI");
+
+        assertThat(field.getValue()).extracting(AUTHOR_IDENTIFIER).extracting("value")
+            .containsOnly("0000000396540123");
     }
     @Test
     void toContributorValueObject_should_create_correct_contributor_details_in_Json_object() throws Exception {

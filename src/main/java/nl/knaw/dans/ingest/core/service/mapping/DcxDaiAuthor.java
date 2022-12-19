@@ -32,6 +32,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_N
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_NAME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_TYPE;
 import static nl.knaw.dans.ingest.core.service.mapping.Contributor.contributorRoleToContributorType;
+import static nl.knaw.dans.ingest.core.service.mapping.IdUriHelper.reduceUriToId;
 
 @Slf4j
 public final class DcxDaiAuthor extends Base {
@@ -45,12 +46,12 @@ public final class DcxDaiAuthor extends Base {
 
         if (author.getOrcid() != null) {
             builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ORCID");
-            builder.addSubfield(AUTHOR_IDENTIFIER, author.getOrcid());
+            builder.addSubfield(AUTHOR_IDENTIFIER, reduceUriToId(author.getOrcid()));
         }
 
         else if (author.getIsni() != null) {
             builder.addControlledSubfield(AUTHOR_IDENTIFIER_SCHEME, "ISNI");
-            builder.addSubfield(AUTHOR_IDENTIFIER, author.getIsni());
+            builder.addSubfield(AUTHOR_IDENTIFIER, reduceUriToId(author.getIsni()));
         }
 
         else if (author.getDai() != null) {
@@ -109,8 +110,8 @@ public final class DcxDaiAuthor extends Base {
             .insertions(getFirstValue(node, "dcx-dai:insertions"))
             .surname(getFirstValue(node, "dcx-dai:surname"))
             .dai(getFirstValue(node, "dcx-dai:DAI"))
-            .isni(getFirstValue(node, "dcx-dai:ISNI"))
-            .orcid(getFirstValue(node, "dcx-dai:ORCID"))
+            .isni(reduceUriToId(getFirstValue(node, "dcx-dai:ISNI")))
+            .orcid(reduceUriToId(getFirstValue(node, "dcx-dai:ORCID")))
             .role(getFirstValue(node, "dcx-dai:role"))
             .organization(getFirstValue(node, "dcx-dai:organization/dcx-dai:name"))
             .build();

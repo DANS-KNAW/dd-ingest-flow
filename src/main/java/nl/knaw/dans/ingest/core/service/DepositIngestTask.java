@@ -135,7 +135,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     }
 
     void updateDepositFromResult(DepositState depositState, String message) {
-        System.out.println("MOVING SHIT " + message + " " + depositState);
         deposit.setState(depositState);
         deposit.setStateDescription(message);
 

@@ -19,12 +19,13 @@ import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.service.DepositMigrationTask;
-import nl.knaw.dans.ingest.core.service.DepositToDvDatasetMetadataMapper;
 import nl.knaw.dans.ingest.core.service.EventWriter;
 import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.ingest.core.service.ZipFileHandler;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapper;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,14 +71,17 @@ public class DepositStartImportTaskWrapperTest {
     private DepositImportTaskWrapper createTaskWrapper(String depositName) throws Throwable {
 
         var client = Mockito.mock(DataverseClient.class);
-        var mapper = getMapper();
+        var mapper = getMapperFactory();
         var validator = Mockito.mock(DansBagValidator.class);
         var eventWriter = Mockito.mock(EventWriter.class);
         var depositManager = new DepositManagerImpl(new XmlReaderImpl());
         var deposit = depositManager.loadDeposit(testDepositsBasedir.resolve(depositName));
 
         var task = new DepositMigrationTask(
-            mapper, deposit, client, "dummy",
+            mapper,
+            deposit,
+            client,
+            "dummy",
             null,
             new ZipFileHandler(Path.of("target/test")),
             Map.of(),
@@ -101,9 +105,10 @@ public class DepositStartImportTaskWrapperTest {
         iso2ToDataverseLanguage.put("ger", "German");
     }
 
-    DepositToDvDatasetMetadataMapper getMapper() {
-        return new DepositToDvDatasetMetadataMapper(
-            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage
+    DepositToDvDatasetMetadataMapperFactory getMapperFactory() {
+        return new DepositToDvDatasetMetadataMapperFactory(
+            iso1ToDataverseLanguage, iso2ToDataverseLanguage,
+            Mockito.mock(DataverseClient.class)
         );
     }
 

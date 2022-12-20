@@ -18,7 +18,8 @@ package nl.knaw.dans.ingest.core.service;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.api.ValidateCommand;
 import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
-import nl.knaw.dans.ingest.core.service.mapping.Amd;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
@@ -37,12 +38,24 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class DepositMigrationTask extends DepositIngestTask {
-    public DepositMigrationTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Pattern fileExclusionPattern,
-        ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, DepositManager depositManager) {
-
+    public DepositMigrationTask(
+        DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
+        Deposit deposit,
+        DataverseClient dataverseClient,
+        String depositorRole,
+        Pattern fileExclusionPattern,
+        ZipFileHandler zipFileHandler,
+        Map<String, String> variantToLicense,
+        List<URI> supportedLicenses,
+        DansBagValidator dansBagValidator,
+        int publishAwaitUnlockMillisecondsBetweenRetries,
+        int publishAwaitUnlockMaxNumberOfRetries,
+        Path outboxDir,
+        EventWriter eventWriter,
+        DepositManager depositManager
+    ) {
         super(
-            datasetMetadataMapper, deposit, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
+            datasetMetadataMapperFactory, deposit, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
             publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries, outboxDir, eventWriter, depositManager);
     }
 

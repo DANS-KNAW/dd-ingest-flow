@@ -19,9 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
-import nl.knaw.dans.lib.dataverse.DataverseException;
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlockSummary;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.io.FileUtils;
@@ -36,9 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class DepositIngestTaskFactory {
@@ -58,10 +55,11 @@ public class DepositIngestTaskFactory {
     private final DepositManager depositManager;
 
     private final boolean isMigration;
+    private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
 
     public DepositIngestTaskFactory(boolean isMigration, DataverseClient dataverseClient,
         DansBagValidator dansBagValidator, XmlReader xmlReader, IngestFlowConfig ingestFlowConfig,
-        DataverseExtra dataverseExtra, DepositManager depositManager) throws IOException, URISyntaxException {
+        DataverseExtra dataverseExtra, DepositManager depositManager, DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
@@ -75,16 +73,11 @@ public class DepositIngestTaskFactory {
         this.variantToLicense = getMap(ingestFlowConfig, "license-uri-variants.csv", "Variant", "Normalized");
         this.supportedLicenses = getUriList(ingestFlowConfig, "supported-licenses.txt");
         this.depositManager = depositManager;
+        this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
     }
 
     public DepositIngestTask createDepositIngestTask(Deposit deposit, Path outboxDir, EventWriter eventWriter) {
-        var depositToDvDatasetMetadataMapper = new DepositToDvDatasetMetadataMapper(
-            false,
-            getActiveMetadataBlocks(dataverseClient),
-            iso1ToDataverseLanguage,
-            iso2ToDataverseLanguage
-        );
-
+        // TODO move to main class
         var zipFileHandler = new ZipFileHandler(ingestFlowConfig.getZipWrappingTempDir());
         var fileExclusionPattern = Optional.ofNullable(ingestFlowConfig.getFileExclusionPattern())
             .map(Pattern::compile)
@@ -93,7 +86,7 @@ public class DepositIngestTaskFactory {
         log.info("Creating deposit ingest task, isMigration = {}", this.isMigration);
         if (this.isMigration) {
             return new DepositMigrationTask(
-                depositToDvDatasetMetadataMapper,
+                depositToDvDatasetMetadataMapperFactory,
                 deposit,
                 dataverseClient,
                 ingestFlowConfig.getDepositorRole(),
@@ -111,7 +104,7 @@ public class DepositIngestTaskFactory {
         }
         else {
             return new DepositIngestTask(
-                depositToDvDatasetMetadataMapper,
+                depositToDvDatasetMetadataMapperFactory,
                 deposit,
                 dataverseClient,
                 ingestFlowConfig.getDepositorRole(),
@@ -165,17 +158,6 @@ public class DepositIngestTaskFactory {
             }
 
             return result;
-        }
-    }
-
-    Set<String> getActiveMetadataBlocks(DataverseClient dataverseClient) {
-        try {
-            var result = dataverseClient.dataverse("root").listMetadataBlocks();
-            return result.getData().stream().map(MetadataBlockSummary::getName).collect(Collectors.toSet());
-        }
-        catch (IOException | DataverseException e) {
-            log.error("Unable to fetch active metadata blocks", e);
-            throw new RuntimeException(e);
         }
     }
 }

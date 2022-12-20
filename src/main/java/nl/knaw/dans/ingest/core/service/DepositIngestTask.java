@@ -23,6 +23,7 @@ import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 import nl.knaw.dans.ingest.core.service.exception.FailedDepositException;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
@@ -55,7 +56,7 @@ public class DepositIngestTask implements TargetedTask {
     protected final Map<String, String> variantToLicense;
     protected final List<URI> supportedLicenses;
     protected final DansBagValidator dansBagValidator;
-    protected final DepositToDvDatasetMetadataMapper datasetMetadataMapper;
+    protected final DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory;
     protected final int publishAwaitUnlockMillisecondsBetweenRetries;
     protected final int publishAwaitUnlockMaxNumberOfRetries;
     protected final Path outboxDir;
@@ -65,10 +66,23 @@ public class DepositIngestTask implements TargetedTask {
 
     private final DepositManager depositManager;
 
-    public DepositIngestTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Pattern fileExclusionPattern,
-        ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, DepositManager depositManager) {
-        this.datasetMetadataMapper = datasetMetadataMapper;
+    public DepositIngestTask(
+        DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
+        Deposit deposit,
+        DataverseClient dataverseClient,
+        String depositorRole,
+        Pattern fileExclusionPattern,
+        ZipFileHandler zipFileHandler,
+        Map<String, String> variantToLicense,
+        List<URI> supportedLicenses,
+        DansBagValidator dansBagValidator,
+        int publishAwaitUnlockMillisecondsBetweenRetries,
+        int publishAwaitUnlockMaxNumberOfRetries,
+        Path outboxDir,
+        EventWriter eventWriter,
+        DepositManager depositManager
+    ) {
+        this.datasetMetadataMapperFactory = datasetMetadataMapperFactory;
         this.deposit = deposit;
         this.dataverseClient = dataverseClient;
 
@@ -321,7 +335,9 @@ public class DepositIngestTask implements TargetedTask {
         // TODO think about putting assertions inside a getter method
         checkPersonalDataPresent(deposit.getAgreements());
 
-        return datasetMetadataMapper.toDataverseDataset(
+        var mapper = datasetMetadataMapperFactory.createMapper(false);
+
+        return mapper.toDataverseDataset(
             deposit.getDdm(),
             deposit.getOtherDoiId(),
             deposit.getAgreements(),

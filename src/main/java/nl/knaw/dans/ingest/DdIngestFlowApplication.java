@@ -38,6 +38,7 @@ import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
 import nl.knaw.dans.ingest.health.DansBagValidatorHealthCheck;
 import nl.knaw.dans.ingest.health.DataverseHealthCheck;
@@ -49,6 +50,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 public class DdIngestFlowApplication extends Application<DdIngestFlowConfiguration> {
@@ -84,6 +86,11 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
         final var xmlReader = new XmlReaderImpl();
         final var depositManager = new DepositManagerImpl(xmlReader);
+        final var depositToDvDatasetMetadataMapperFactory = new DepositToDvDatasetMetadataMapperFactory(
+            Map.of(),
+            Map.of(),
+            dataverseClient
+        );
 
         var dansBagValidatorClient = new JerseyClientBuilder(environment)
             .withProvider(MultiPartFeature.class)
@@ -101,14 +108,18 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             validator,
             xmlReader, configuration.getIngestFlow(),
             configuration.getDataverseExtra(),
-            depositManager);
+            depositManager,
+            depositToDvDatasetMetadataMapperFactory
+        );
         final var migrationTaskFactory = new DepositIngestTaskFactory(
             true,
             dataverseClient,
             validator,
             xmlReader, configuration.getIngestFlow(),
             configuration.getDataverseExtra(),
-            depositManager);
+            depositManager,
+            depositToDvDatasetMetadataMapperFactory
+        );
 
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());

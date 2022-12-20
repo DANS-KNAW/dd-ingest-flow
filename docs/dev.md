@@ -60,6 +60,7 @@ Once the dependencies and services are started you can prepare batches and start
 with [dans-datastation-tools]{:target=_blank}.
 
 Configure the `ingest_flow` section and `dataverse` section of `.dans-datastation-tools.yml` which is  a copy of `src/datastation/example-dans-datastation-tools.yml`.
+
 * `service_baseurl` should refer to `localhost`
 * The `ingest_areas` should refer to the same folders as the `ingestFlow` section of `dd-ingest-flow/etc/config.yml`.
   Replace the default `/var/opt/dans.knaw.nl/tmp` in the latter with `data`.
@@ -67,8 +68,8 @@ Configure the `ingest_flow` section and `dataverse` section of `.dans-datastatio
 * To repeat a test you'll need the `dv-dataset-destroy` script which needs `safety_latch: OFF`, the default is `ON`.
 
 The tools to copy/move your data into the `ingest_area` require a user group `deposits`.
-When running locally you don't have such a group so create the following structure otherwise.
-Depending on the command, replace `migartion` with `import`.
+When running locally you don't have such a group, so you can't use these commands.
+Create the following structure. Depending on the command, replace `migration` with `import`.
 
 ```
 dd-ingest-flow

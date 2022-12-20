@@ -33,6 +33,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBU
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_TYPE;
 import static nl.knaw.dans.ingest.core.service.mapping.Contributor.contributorRoleToContributorType;
 import static nl.knaw.dans.ingest.core.service.mapping.IdUriHelper.reduceUriToId;
+import static nl.knaw.dans.ingest.core.service.mapping.IdUriHelper.reduceUriToOrcidId;
 
 @Slf4j
 public final class DcxDaiAuthor extends Base {
@@ -111,7 +112,7 @@ public final class DcxDaiAuthor extends Base {
             .surname(getFirstValue(node, "dcx-dai:surname"))
             .dai(getFirstValue(node, "dcx-dai:DAI"))
             .isni(reduceUriToId(getFirstValue(node, "dcx-dai:ISNI")))
-            .orcid(reduceUriToId(getFirstValue(node, "dcx-dai:ORCID")))
+            .orcid(reduceUriToOrcidId(getFirstValue(node, "dcx-dai:ORCID")))
             .role(getFirstValue(node, "dcx-dai:role"))
             .organization(getFirstValue(node, "dcx-dai:organization/dcx-dai:name"))
             .build();

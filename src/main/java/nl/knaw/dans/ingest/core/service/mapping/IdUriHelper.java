@@ -21,13 +21,27 @@ import java.util.regex.Pattern;
 
 public class IdUriHelper {
     private static final Pattern pattern = Pattern
-        .compile("((\\d{8,31}[0-9X])|(\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d\\d-\\d\\d\\d[0-9Xx]))$");
+        .compile("https?://.*/([-0-9]+[0-9Xx])$");
 
     public static String reduceUriToId(String value) {
         if (!StringUtils.isAllEmpty(value)) {
             var m = pattern.matcher(value);
             if (m.find())
-                return m.group(1);
+                return m.group(1).replaceAll("-","");
+        }
+        return value;
+    }
+
+    public static String reduceUriToOrcidId(String value) {
+        if (!StringUtils.isAllEmpty(value)) {
+            var m = pattern.matcher(value);
+            if (m.find()) {
+                String s = m.group(1).replaceAll("-", "");
+                return StringUtils
+                    .leftPad(s, 16, '0')
+                    .replaceAll("(\\d\\d\\d\\d)","$1-")
+                    .replaceAll("-$","");
+            }
         }
         return value;
     }

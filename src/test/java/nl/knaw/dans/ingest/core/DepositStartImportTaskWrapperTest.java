@@ -15,8 +15,8 @@
  */
 package nl.knaw.dans.ingest.core;
 
-import nl.knaw.dans.ingest.core.legacy.DepositImportTaskWrapper;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
+import nl.knaw.dans.ingest.core.service.DepositIngestTask;
 import nl.knaw.dans.ingest.core.service.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.service.DepositMigrationTask;
 import nl.knaw.dans.ingest.core.service.EventWriter;
@@ -24,7 +24,6 @@ import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.ingest.core.service.ZipFileHandler;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
-import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapper;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,7 +67,7 @@ public class DepositStartImportTaskWrapperTest {
     private final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
     private final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
 
-    private DepositImportTaskWrapper createTaskWrapper(String depositName) throws Throwable {
+    private DepositIngestTask createTaskWrapper(String depositName) throws Throwable {
 
         var client = Mockito.mock(DataverseClient.class);
         var mapper = getMapperFactory();
@@ -93,7 +92,9 @@ public class DepositStartImportTaskWrapperTest {
             eventWriter,
             depositManager
         );
-        return new DepositImportTaskWrapper(task, eventWriter);
+
+        return task;
+//        return new DepositIngestTask(task, eventWriter);
     }
 
     @BeforeEach
@@ -114,7 +115,7 @@ public class DepositStartImportTaskWrapperTest {
 
     @Test
     void deposits_should_be_ordered_by_created_timestamp() throws Throwable {
-        List<DepositImportTaskWrapper> sorted = Stream.of(
+        List<DepositIngestTask> sorted = Stream.of(
             createTaskWrapper("deposit2_a"),
             createTaskWrapper("deposit1_b"),
             createTaskWrapper("deposit1_a"),

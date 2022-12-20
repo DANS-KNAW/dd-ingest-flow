@@ -20,7 +20,10 @@ import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.net.URI;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 public class IngestFlowConfig {
     @NotNull
@@ -31,7 +34,6 @@ public class IngestFlowConfig {
     @NotNull
     @Valid
     private IngestAreaConfig migration;
-
 
     @NotNull
     @Valid
@@ -59,6 +61,12 @@ public class IngestFlowConfig {
     @NotNull
     @Valid
     private ExecutorServiceFactory taskQueue;
+
+    private Map<String, String> iso1ToDataverseLanguage;
+    private Map<String, String> iso2ToDataverseLanguage;
+    private Map<String, String> reportIdToTerm;
+    private Map<String, String> variantToLicense;
+    private List<URI> supportedLicenses;
 
     public IngestAreaConfig getImportConfig() {
         return importConfig;
@@ -130,5 +138,45 @@ public class IngestFlowConfig {
 
     public void setTaskQueue(ExecutorServiceFactory taskQueue) {
         this.taskQueue = taskQueue;
+    }
+
+    public Map<String, String> getIso1ToDataverseLanguage() {
+        return iso1ToDataverseLanguage;
+    }
+
+    public void setIso1ToDataverseLanguage(Map<String, String> iso1ToDataverseLanguage) {
+        this.iso1ToDataverseLanguage = iso1ToDataverseLanguage;
+    }
+
+    public Map<String, String> getIso2ToDataverseLanguage() {
+        return iso2ToDataverseLanguage;
+    }
+
+    public void setIso2ToDataverseLanguage(Map<String, String> iso2ToDataverseLanguage) {
+        this.iso2ToDataverseLanguage = iso2ToDataverseLanguage;
+    }
+
+    public Map<String, String> getReportIdToTerm() {
+        return reportIdToTerm;
+    }
+
+    public void setReportIdToTerm(Map<String, String> reportIdToTerm) {
+        this.reportIdToTerm = reportIdToTerm;
+    }
+
+    public Map<String, String> getVariantToLicense() {
+        return variantToLicense;
+    }
+
+    public void setVariantToLicense(Map<String, String> variantToLicense) {
+        this.variantToLicense = variantToLicense;
+    }
+
+    public List<URI> getSupportedLicenses() {
+        return supportedLicenses;
+    }
+
+    public void setSupportedLicenses(List<URI> supportedLicenses) {
+        this.supportedLicenses = supportedLicenses;
     }
 }

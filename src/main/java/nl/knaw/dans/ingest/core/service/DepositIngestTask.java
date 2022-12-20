@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,7 +47,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class DepositIngestTask implements TargetedTask {
+public class DepositIngestTask implements TargetedTask, Comparable<DepositIngestTask> {
 
     private static final Logger log = LoggerFactory.getLogger(DepositIngestTask.class);
     protected final DataverseClient dataverseClient;
@@ -106,17 +107,22 @@ public class DepositIngestTask implements TargetedTask {
 
     @Override
     public void run() {
+        writeEvent(TaskEvent.EventType.START_PROCESSING, TaskEvent.Result.OK, null);
+
         try {
             doRun();
             updateDepositFromResult(DepositState.PUBLISHED, "The deposit was successfully ingested in the Data Station and will be automatically archived");
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.OK, null);
         }
         catch (RejectedDepositException e) {
             log.error("deposit was rejected", e);
             updateDepositFromResult(DepositState.REJECTED, e.getMessage());
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.REJECTED, e.getMessage());
         }
         catch (Throwable e) {
             log.error("deposit failed", e);
             updateDepositFromResult(DepositState.FAILED, e.getMessage());
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.FAILED, e.getMessage());
         }
     }
 
@@ -129,6 +135,7 @@ public class DepositIngestTask implements TargetedTask {
     }
 
     void updateDepositFromResult(DepositState depositState, String message) {
+        System.out.println("MOVING SHIT " + message + " " + depositState);
         deposit.setState(depositState);
         deposit.setStateDescription(message);
 
@@ -136,7 +143,7 @@ public class DepositIngestTask implements TargetedTask {
             depositManager.saveDeposit(deposit);
 
             switch (depositState) {
-                case ARCHIVED:
+                case PUBLISHED:
                     moveDepositToOutbox(OutboxSubDir.PROCESSED);
                     break;
                 case REJECTED:
@@ -370,4 +377,12 @@ public class DepositIngestTask implements TargetedTask {
             });
     }
 
+    @Override
+    public int compareTo(DepositIngestTask depositIngestTask) {
+        return getCreatedInstant().compareTo(depositIngestTask.getCreatedInstant());
+    }
+
+    protected Instant getCreatedInstant() {
+        return getDeposit().getBagCreated();
+    }
 }

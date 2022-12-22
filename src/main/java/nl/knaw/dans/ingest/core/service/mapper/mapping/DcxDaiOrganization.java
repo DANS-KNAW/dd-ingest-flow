@@ -31,6 +31,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBU
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_TYPE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER_AGENCY;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER_VALUE;
+import static nl.knaw.dans.ingest.core.service.mapper.mapping.IdUriHelper.reduceUriToId;
 
 @Slf4j
 public final class DcxDaiOrganization {
@@ -82,8 +83,8 @@ public final class DcxDaiOrganization {
         return DatasetOrganization.builder()
             .name(getFirstValue(node, "dcx-dai:name"))
             .role(getFirstValue(node, "dcx-dai:role"))
-            .isni(getFirstValue(node, "dcx-dai:ISNI"))
-            .viaf(getFirstValue(node, "dcx-dai:VIAF"))
+            .isni(reduceUriToId(getFirstValue(node, "dcx-dai:ISNI")))
+            .viaf(reduceUriToId(getFirstValue(node, "dcx-dai:VIAF")))
             .build();
     }
 

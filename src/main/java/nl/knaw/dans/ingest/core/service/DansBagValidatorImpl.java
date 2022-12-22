@@ -15,9 +15,9 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.api.ValidateCommand;
-import nl.knaw.dans.ingest.api.ValidateCommand.PackageTypeEnum;
-import nl.knaw.dans.ingest.api.ValidateOk;
+import nl.knaw.dans.validatedansbag.api.ValidateCommand;
+import nl.knaw.dans.validatedansbag.api.ValidateCommand.PackageTypeEnum;
+import nl.knaw.dans.validatedansbag.api.ValidateOk;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -13,16 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
-import nl.knaw.dans.validatedansbag.api.ValidateCommand.PackageTypeEnum;
-import nl.knaw.dans.validatedansbag.api.ValidateOk;
+import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
+import static nl.knaw.dans.ingest.core.service.mapper.mapping.IdUriHelper.reduceUriToOrcidId;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public interface DansBagValidator {
+public class IdUriHelperTest {
+    @Test
+    void reduceUriToOrcidId_should_fix_input() {
+        assertEquals("0000-0000-1234-567X", reduceUriToOrcidId("http://bla/0012-34567X"));
+    }
 
-    void checkConnection();
-
-    ValidateOk validateBag(Path bagDir, PackageTypeEnum informationPackageType, int profileVersion);
+    @Test
+    void reduceUriToOrcidId_should_not_touch_garbage() {
+        assertEquals("http://bla/001x2-34567X", reduceUriToOrcidId("http://bla/001x2-34567X"));
+    }
 }

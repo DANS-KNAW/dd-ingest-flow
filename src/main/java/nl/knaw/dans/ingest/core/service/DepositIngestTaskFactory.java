@@ -63,7 +63,7 @@ public class DepositIngestTaskFactory {
         this.zipFileHandler = zipFileHandler;
     }
 
-    public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws IOException {
+    public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
         try {
             var deposit = depositManager.loadDeposit(depositDir);
             return createDepositIngestTask(deposit, outboxDir, eventWriter);
@@ -71,8 +71,15 @@ public class DepositIngestTaskFactory {
         catch (InvalidDepositException | IOException e) {
             // the reading of the deposit failed, so we cannot update its internal state. All we can do is move it
             // to the "failed" directory
+            log.error("Unable to load deposit properties, considering deposit at path {} to be broken", depositDir);
             moveDepositToOutbox(depositDir, outboxDir);
-            throw new RuntimeException("Invalid deposit", e);
+            throw e;
+        }
+        catch (Throwable e) {
+            // if something bad happens while loading the deposit, we want to wrap it into an InvalidDepositException as well
+            log.error("Unexpected error occurred while loading deposit at path {}, moving deposit", depositDir);
+            moveDepositToOutbox(depositDir, outboxDir);
+            throw new InvalidDepositException("Unexpected error occurred: " + e.getMessage(), e);
         }
     }
 

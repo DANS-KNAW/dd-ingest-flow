@@ -24,6 +24,7 @@ import nl.knaw.dans.lib.dataverse.DataverseClient;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -42,9 +43,13 @@ public class DepositIngestTaskFactory {
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
 
-    public DepositIngestTaskFactory(boolean isMigration, DataverseClient dataverseClient,
-        DansBagValidator dansBagValidator, IngestFlowConfig ingestFlowConfig,
-        DataverseExtra dataverseExtra, DepositManager depositManager,
+    public DepositIngestTaskFactory(
+        boolean isMigration,
+        DataverseClient dataverseClient,
+        DansBagValidator dansBagValidator,
+        IngestFlowConfig ingestFlowConfig,
+        DataverseExtra dataverseExtra,
+        DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler
     ) throws IOException, URISyntaxException {
@@ -58,7 +63,29 @@ public class DepositIngestTaskFactory {
         this.zipFileHandler = zipFileHandler;
     }
 
-    public DepositIngestTask createDepositIngestTask(Deposit deposit, Path outboxDir, EventWriter eventWriter) {
+    public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws IOException {
+        try {
+            var deposit = depositManager.loadDeposit(depositDir);
+            return createDepositIngestTask(deposit, outboxDir, eventWriter);
+        }
+        catch (InvalidDepositException | IOException e) {
+            // the reading of the deposit failed, so we cannot update its internal state. All we can do is move it
+            // to the "failed" directory
+            moveDepositToOutbox(depositDir, outboxDir);
+            throw new RuntimeException("Invalid deposit", e);
+        }
+    }
+
+    void moveDepositToOutbox(Path depositDir, Path outboxDir) throws IOException {
+        var target = outboxDir
+            .resolve(OutboxSubDir.FAILED.getValue())
+            .resolve(depositDir.getFileName());
+
+        log.info("Moving path {} to {}", depositDir, target);
+        Files.move(depositDir, target);
+    }
+
+    private DepositIngestTask createDepositIngestTask(Deposit deposit, Path outboxDir, EventWriter eventWriter) {
         var fileExclusionPattern = Optional.ofNullable(ingestFlowConfig.getFileExclusionPattern())
             .map(Pattern::compile)
             .orElse(null);
@@ -100,15 +127,5 @@ public class DepositIngestTaskFactory {
                 depositManager);
         }
 
-    }
-
-    public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) {
-        try {
-            var deposit = depositManager.loadDeposit(depositDir);
-            return createDepositIngestTask(deposit, outboxDir, eventWriter);
-        }
-        catch (InvalidDepositException | IOException e) {
-            throw new RuntimeException("Invalid deposit", e);
-        }
     }
 }

@@ -53,7 +53,13 @@ public abstract class AbstractDepositsImportTaskIterator implements Iterator<Dep
     }
 
     protected void addTaskForDeposit(Path dir) {
-        deque.add(taskFactory.createIngestTask(dir, outBox, eventWriter));
+        try {
+            var task = taskFactory.createIngestTask(dir, outBox, eventWriter);
+            deque.add(task);
+        }
+        catch (IOException e) {
+            log.error("Error while creating task", e);
+        }
     }
 
     @Override

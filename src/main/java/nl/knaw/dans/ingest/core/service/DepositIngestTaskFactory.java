@@ -16,7 +16,6 @@
 package nl.knaw.dans.ingest.core.service;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.IngestType;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
@@ -33,6 +32,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class DepositIngestTaskFactory {
 
+    private final String depositorRole;
     private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
 
@@ -46,22 +46,18 @@ public class DepositIngestTaskFactory {
 
     public DepositIngestTaskFactory(
         boolean isMigration,
-        DataverseClient dataverseClient,
-        DansBagValidator dansBagValidator,
-        IngestFlowConfig ingestFlowConfig,
-        DataverseExtra dataverseExtra,
-        DepositManager depositManager,
-        DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
-        ZipFileHandler zipFileHandler
+        String depositorRole,
+        DepositIngestTaskParams depositIngestTaskParams
     ) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
-        this.dataverseClient = dataverseClient;
-        this.dansBagValidator = dansBagValidator;
-        this.ingestFlowConfig = ingestFlowConfig;
-        this.dataverseExtra = dataverseExtra;
-        this.depositManager = depositManager;
-        this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
-        this.zipFileHandler = zipFileHandler;
+        this.depositorRole = depositorRole;
+        this.dataverseClient = depositIngestTaskParams.getDataverseClient();
+        this.dansBagValidator = depositIngestTaskParams.getDansBagValidator();
+        this.ingestFlowConfig = depositIngestTaskParams.getIngestFlowConfig();
+        this.dataverseExtra = depositIngestTaskParams.getDataverseExtra();
+        this.depositManager = depositIngestTaskParams.getDepositManager();
+        this.depositToDvDatasetMetadataMapperFactory = depositIngestTaskParams.getDepositToDvDatasetMetadataMapperFactory();
+        this.zipFileHandler = depositIngestTaskParams.getZipFileHandler();
     }
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
@@ -104,7 +100,7 @@ public class DepositIngestTaskFactory {
                 depositToDvDatasetMetadataMapperFactory,
                 deposit,
                 dataverseClient,
-                ingestFlowConfig.getMigration().getDepositorRole(),
+                depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),
@@ -122,7 +118,7 @@ public class DepositIngestTaskFactory {
                 depositToDvDatasetMetadataMapperFactory,
                 deposit,
                 dataverseClient,
-                ingestFlowConfig.getDepositorRole(), // TODO getAutoIngest getImportConfig
+                depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),

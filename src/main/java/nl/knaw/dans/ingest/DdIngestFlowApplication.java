@@ -32,6 +32,7 @@ import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DansBagValidatorImpl;
 import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactory;
+import nl.knaw.dans.ingest.core.service.DepositIngestTaskParams;
 import nl.knaw.dans.ingest.core.service.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
@@ -53,7 +54,7 @@ import java.net.URISyntaxException;
 
 public class DdIngestFlowApplication extends Application<DdIngestFlowConfiguration> {
 
-    private final HibernateBundle<DdIngestFlowConfiguration> hibernateBundle = new HibernateBundle<DdIngestFlowConfiguration>(TaskEvent.class) {
+    private final HibernateBundle<DdIngestFlowConfiguration> hibernateBundle = new HibernateBundle<>(TaskEvent.class) {
 
         @Override
         public PooledDataSourceFactory getDataSourceFactory(DdIngestFlowConfiguration configuration) {
@@ -104,8 +105,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getValidateDansBag().getBaseUrl(),
             configuration.getValidateDansBag().getPingUrl());
 
-        final var ingestTaskFactory = new DepositIngestTaskFactory(
-            false,
+        final DepositIngestTaskParams depositIngestTaskParams = new DepositIngestTaskParams(
             dataverseClient,
             validator,
             configuration.getIngestFlow(),
@@ -114,18 +114,6 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler
         );
-
-        final var migrationTaskFactory = new DepositIngestTaskFactory(
-            true,
-            dataverseClient,
-            validator,
-            configuration.getIngestFlow(),
-            configuration.getDataverseExtra(),
-            depositManager,
-            depositToDvDatasetMetadataMapperFactory,
-            zipFileHandler
-        );
-
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
@@ -133,23 +121,38 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final ImportArea importArea = new ImportArea(
             configuration.getIngestFlow().getImportConfig().getInbox(),
             configuration.getIngestFlow().getImportConfig().getOutbox(),
-            ingestTaskFactory,
-            migrationTaskFactory, // Only necessary during migration. Can be phased out after that.
+            new DepositIngestTaskFactory(
+                false,
+                configuration.getIngestFlow().getImportConfig().getDepositorRole(),
+                depositIngestTaskParams),
+            new DepositIngestTaskFactory(
+                true,
+                configuration.getIngestFlow().getImportConfig().getDepositorRole(),
+                depositIngestTaskParams), // Only necessary during migration. Can be phased out after that.
             taskEventService,
             enqueuingService);
 
         final ImportArea migrationArea = new ImportArea(
             configuration.getIngestFlow().getMigration().getInbox(),
             configuration.getIngestFlow().getMigration().getOutbox(),
-            ingestTaskFactory,
-            migrationTaskFactory, // Only necessary during migration. Can be phased out after that.
+            new DepositIngestTaskFactory(
+                false,
+                configuration.getIngestFlow().getMigration().getDepositorRole(),
+                depositIngestTaskParams),
+            new DepositIngestTaskFactory(
+                true,
+                configuration.getIngestFlow().getMigration().getDepositorRole(),
+                depositIngestTaskParams), // Only necessary during migration. Can be phased out after that.
             taskEventService,
             enqueuingService);
 
         final AutoIngestArea autoIngestArea = new AutoIngestArea(
             configuration.getIngestFlow().getAutoIngest().getInbox(),
             configuration.getIngestFlow().getAutoIngest().getOutbox(),
-            ingestTaskFactory,
+            new DepositIngestTaskFactory(
+                false,
+                configuration.getIngestFlow().getAutoIngest().getDepositorRole(),
+                depositIngestTaskParams),
             taskEventService,
             enqueuingService
         );

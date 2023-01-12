@@ -20,7 +20,10 @@ import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 
-public class DepositIngestTaskParams {
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+public class DepositIngestTaskFactoryBuilder {
     private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
     private final IngestFlowConfig ingestFlowConfig;
@@ -29,7 +32,7 @@ public class DepositIngestTaskParams {
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
 
-    public DepositIngestTaskParams(
+    public DepositIngestTaskFactoryBuilder(
         DataverseClient dataverseClient,
         DansBagValidator dansBagValidator,
         IngestFlowConfig ingestFlowConfig,
@@ -46,32 +49,17 @@ public class DepositIngestTaskParams {
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
     }
-
-    public DataverseClient getDataverseClient() {
-        return dataverseClient;
-    }
-
-    public DansBagValidator getDansBagValidator() {
-        return dansBagValidator;
-    }
-
-    public IngestFlowConfig getIngestFlowConfig() {
-        return ingestFlowConfig;
-    }
-
-    public DataverseExtra getDataverseExtra() {
-        return dataverseExtra;
-    }
-
-    public DepositManager getDepositManager() {
-        return depositManager;
-    }
-
-    public DepositToDvDatasetMetadataMapperFactory getDepositToDvDatasetMetadataMapperFactory() {
-        return depositToDvDatasetMetadataMapperFactory;
-    }
-
-    public ZipFileHandler getZipFileHandler() {
-        return zipFileHandler;
+    public DepositIngestTaskFactory createTaskFactory(boolean isMigration, String depositorRole) throws IOException, URISyntaxException {
+        return new DepositIngestTaskFactory(
+            isMigration,
+            depositorRole,
+            dataverseClient,
+            dansBagValidator,
+            ingestFlowConfig,
+            dataverseExtra,
+            depositManager,
+            depositToDvDatasetMetadataMapperFactory,
+            zipFileHandler
+        );
     }
 }

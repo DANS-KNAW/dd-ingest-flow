@@ -28,11 +28,11 @@ import nl.knaw.dans.ingest.core.AutoIngestArea;
 import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
+import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DansBagValidatorImpl;
-import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactory;
-import nl.knaw.dans.ingest.core.service.DepositIngestTaskParams;
+import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactoryBuilder;
 import nl.knaw.dans.ingest.core.service.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
@@ -79,21 +79,22 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
     @Override
     public void run(final DdIngestFlowConfiguration configuration, final Environment environment) throws IOException, URISyntaxException {
-        final var taskExecutor = configuration.getIngestFlow().getTaskQueue().build(environment);
+        IngestFlowConfig ingestFlowConfig = configuration.getIngestFlow();
+        final var taskExecutor = ingestFlowConfig.getTaskQueue().build(environment);
         final var targetedTaskSequenceManager = new TargetedTaskSequenceManager(taskExecutor);
         final var dataverseClient = configuration.getDataverse().build();
 
-        IngestFlowConfigReader.readIngestFlowConfiguration(configuration.getIngestFlow());
+        IngestFlowConfigReader.readIngestFlowConfiguration(ingestFlowConfig);
 
         final var xmlReader = new XmlReaderImpl();
         final var depositManager = new DepositManagerImpl(xmlReader);
         final var depositToDvDatasetMetadataMapperFactory = new DepositToDvDatasetMetadataMapperFactory(
-            configuration.getIngestFlow().getIso1ToDataverseLanguage(),
-            configuration.getIngestFlow().getIso2ToDataverseLanguage(),
+            ingestFlowConfig.getIso1ToDataverseLanguage(),
+            ingestFlowConfig.getIso2ToDataverseLanguage(),
             dataverseClient
         );
 
-        var zipFileHandler = new ZipFileHandler(configuration.getIngestFlow().getZipWrappingTempDir());
+        var zipFileHandler = new ZipFileHandler(ingestFlowConfig.getZipWrappingTempDir());
 
         var dansBagValidatorClient = new JerseyClientBuilder(environment)
             .withProvider(MultiPartFeature.class)
@@ -105,10 +106,10 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getValidateDansBag().getBaseUrl(),
             configuration.getValidateDansBag().getPingUrl());
 
-        final DepositIngestTaskParams depositIngestTaskParams = new DepositIngestTaskParams(
+        final DepositIngestTaskFactoryBuilder builder = new DepositIngestTaskFactoryBuilder(
             dataverseClient,
             validator,
-            configuration.getIngestFlow(),
+            ingestFlowConfig,
             configuration.getDataverseExtra(),
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
@@ -119,40 +120,25 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
 
         final ImportArea importArea = new ImportArea(
-            configuration.getIngestFlow().getImportConfig().getInbox(),
-            configuration.getIngestFlow().getImportConfig().getOutbox(),
-            new DepositIngestTaskFactory(
-                false,
-                configuration.getIngestFlow().getImportConfig().getDepositorRole(),
-                depositIngestTaskParams),
-            new DepositIngestTaskFactory(
-                true,
-                configuration.getIngestFlow().getImportConfig().getDepositorRole(),
-                depositIngestTaskParams), // Only necessary during migration. Can be phased out after that.
+            ingestFlowConfig.getImportConfig().getInbox(),
+            ingestFlowConfig.getImportConfig().getOutbox(),
+            builder.createTaskFactory(false, ingestFlowConfig.getImportConfig().getDepositorRole()),
+            builder.createTaskFactory(true, ingestFlowConfig.getImportConfig().getDepositorRole()), // Only necessary during migration. Can be phased out after that.
             taskEventService,
             enqueuingService);
 
         final ImportArea migrationArea = new ImportArea(
-            configuration.getIngestFlow().getMigration().getInbox(),
-            configuration.getIngestFlow().getMigration().getOutbox(),
-            new DepositIngestTaskFactory(
-                false,
-                configuration.getIngestFlow().getMigration().getDepositorRole(),
-                depositIngestTaskParams),
-            new DepositIngestTaskFactory(
-                true,
-                configuration.getIngestFlow().getMigration().getDepositorRole(),
-                depositIngestTaskParams), // Only necessary during migration. Can be phased out after that.
+            ingestFlowConfig.getMigration().getInbox(),
+            ingestFlowConfig.getMigration().getOutbox(),
+            builder.createTaskFactory(false, ingestFlowConfig.getMigration().getDepositorRole()),
+            builder.createTaskFactory(true, ingestFlowConfig.getMigration().getDepositorRole()), // Only necessary during migration. Can be phased out after that.
             taskEventService,
             enqueuingService);
 
         final AutoIngestArea autoIngestArea = new AutoIngestArea(
-            configuration.getIngestFlow().getAutoIngest().getInbox(),
-            configuration.getIngestFlow().getAutoIngest().getOutbox(),
-            new DepositIngestTaskFactory(
-                false,
-                configuration.getIngestFlow().getAutoIngest().getDepositorRole(),
-                depositIngestTaskParams),
+            ingestFlowConfig.getAutoIngest().getInbox(),
+            ingestFlowConfig.getAutoIngest().getOutbox(),
+            builder.createTaskFactory(false, ingestFlowConfig.getAutoIngest().getDepositorRole()),
             taskEventService,
             enqueuingService
         );

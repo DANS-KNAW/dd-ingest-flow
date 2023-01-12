@@ -47,7 +47,14 @@ public class DepositIngestTaskFactory {
     public DepositIngestTaskFactory(
         boolean isMigration,
         String depositorRole,
-        DepositIngestTaskParams depositIngestTaskParams
+        DataverseClient dataverseClient,
+        DansBagValidator dansBagValidator,
+        IngestFlowConfig ingestFlowConfig,
+        DataverseExtra dataverseExtra,
+        DepositManager depositManager,
+        DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
+        ZipFileHandler zipFileHandler
+
     ) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;

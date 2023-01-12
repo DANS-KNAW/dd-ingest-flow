@@ -58,13 +58,13 @@ public class DepositIngestTaskFactory {
     ) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;
-        this.dataverseClient = depositIngestTaskParams.getDataverseClient();
-        this.dansBagValidator = depositIngestTaskParams.getDansBagValidator();
-        this.ingestFlowConfig = depositIngestTaskParams.getIngestFlowConfig();
-        this.dataverseExtra = depositIngestTaskParams.getDataverseExtra();
-        this.depositManager = depositIngestTaskParams.getDepositManager();
-        this.depositToDvDatasetMetadataMapperFactory = depositIngestTaskParams.getDepositToDvDatasetMetadataMapperFactory();
-        this.zipFileHandler = depositIngestTaskParams.getZipFileHandler();
+        this.dataverseClient = dataverseClient;
+        this.dansBagValidator = dansBagValidator;
+        this.ingestFlowConfig = ingestFlowConfig;
+        this.dataverseExtra = dataverseExtra;
+        this.depositManager = depositManager;
+        this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
+        this.zipFileHandler = zipFileHandler;
     }
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {

@@ -24,6 +24,7 @@ import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.config.ValidateDansBagConfig;
 import nl.knaw.dans.lib.util.DataverseClientFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -60,6 +61,12 @@ public class DdIngestFlowConfiguration extends Configuration {
     }
 
     public IngestFlowConfig getIngestFlow() {
+        if(StringUtils.isBlank(ingestFlow.getAutoIngest().getDepositorRole()))
+            ingestFlow.getAutoIngest().setDepositorRole(ingestFlow.getDepositorRole());
+        if(StringUtils.isBlank(ingestFlow.getImportConfig().getDepositorRole()))
+            ingestFlow.getImportConfig().setDepositorRole(ingestFlow.getDepositorRole());
+        if(StringUtils.isBlank(ingestFlow.getMigration().getDepositorRole()))
+            ingestFlow.getMigration().setDepositorRole(ingestFlow.getDepositorRole());
         return ingestFlow;
     }
 

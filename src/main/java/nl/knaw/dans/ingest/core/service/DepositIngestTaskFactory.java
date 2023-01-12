@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.service;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.IngestType;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
@@ -103,7 +104,7 @@ public class DepositIngestTaskFactory {
                 depositToDvDatasetMetadataMapperFactory,
                 deposit,
                 dataverseClient,
-                ingestFlowConfig.getDepositorRole(),
+                ingestFlowConfig.getMigration().getDepositorRole(),
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),
@@ -121,7 +122,7 @@ public class DepositIngestTaskFactory {
                 depositToDvDatasetMetadataMapperFactory,
                 deposit,
                 dataverseClient,
-                ingestFlowConfig.getDepositorRole(),
+                ingestFlowConfig.getDepositorRole(), // TODO getAutoIngest getImportConfig
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),

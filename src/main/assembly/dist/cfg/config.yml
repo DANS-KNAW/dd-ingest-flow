@@ -38,6 +38,7 @@ ingestFlow:
   autoIngest:
     inbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/inbox
     outbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/outbox
+    depositorRole: swordupdater
 
   #
   # Filtering. Files with a path matching the pattern will not be added to the dataset. Renaming/moving files is not affected.

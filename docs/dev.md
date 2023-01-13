@@ -56,25 +56,22 @@ start-service.sh
 
 ## Prepare and start an ingest
 
-Once the dependencies and services are started you can prepare batches and start them
-with [dans-datastation-tools]{:target=_blank}.
+Once the dependencies and services are started you can ingest a single deposit by moving
+(not copy) a deposit into `data/auto-ingest/inbox` or whatever directory is configured in  
 
-Configure the `ingest_flow` section and `dataverse` section of `.dans-datastation-tools.yml` which is  a copy of `src/datastation/example-dans-datastation-tools.yml`.
+    dd-ingest-flow/etc/config.yml ingestFlow:autoIngest:inbox
 
-* `service_baseurl` should refer to `localhost`
-* The `ingest_areas` should refer to the same folders as the `ingestFlow` section of `dd-ingest-flow/etc/config.yml`.
-  Replace the default `/var/opt/dans.knaw.nl/tmp` in the latter with `data`.
-* Set the `apiKey`
-* To repeat a test you'll need the `dv-dataset-destroy` script which needs `safety_latch: OFF`, the default is `ON`.
+Note that a migration bag has more data than valid for this process. 
+The validator will inform you about what to remove and how to fix the checksums.
 
-The tools to copy/move your data into the `ingest_area` require a user group `deposits`.
+The [dans-datastation-tools]{:target=_blank} project has commands to copy/move your data into an `ingest_area` (autoIngest/import/migration) require a user group `deposits`.
 When running locally you don't have such a group, so you can't use these commands.
-Make sure to have the following structure. Depending on the command, you might (also) need and `import` directory like the `migration` directory.
+Make sure to have the following structure.
 
 ```
 dd-ingest-flow
 ├── data
-│   ├── migration
+│   ├── auto-ingest
 │   │   ├── inbox
 │   │   │   └── <SOME-DIR>
 │   │   │       ├── <UUID>
@@ -84,6 +81,16 @@ dd-ingest-flow
 │   │   └── out
 │   └── tmp
 ```
+
+Alternatively you can prepare batches in one of the other ingest areas and start as follows.
+
+Configure the `ingest_flow` section and `dataverse` section of `.dans-datastation-tools.yml` which is  a copy of `src/datastation/example-dans-datastation-tools.yml`.
+
+* `service_baseurl` should refer to `localhost`
+* The `ingest_areas` should refer to the same folders as the `ingestFlow` section of `dd-ingest-flow/etc/config.yml`.
+  Replace the default `/var/opt/dans.knaw.nl/tmp` in the latter with `data`.
+* Set the `apiKey`
+* To repeat a test you'll need the `dv-dataset-destroy` script which needs `safety_latch: OFF`, the default is `ON`.
 
 Assuming `dans-datastation-tools` and `dd-ingest-flow` are in the same directory:
 

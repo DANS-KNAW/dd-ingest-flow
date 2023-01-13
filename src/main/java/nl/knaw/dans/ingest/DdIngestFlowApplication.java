@@ -124,16 +124,15 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             importConfig.getInbox(),
             importConfig.getOutbox(),
             builder.createTaskFactory(false, importConfig.getDepositorRole()),
-            builder.createTaskFactory(true, importConfig.getDepositorRole()), // Only necessary during migration. Can be phased out after that.
             taskEventService,
             enqueuingService);
 
+        // Can be phased out after migration.
         final IngestAreaConfig migrationConfig = configuration.getIngestFlow().getMigration();
         final ImportArea migrationArea = new ImportArea(
             migrationConfig.getInbox(),
             migrationConfig.getOutbox(),
-            builder.createTaskFactory(false, migrationConfig.getDepositorRole()),
-            builder.createTaskFactory(true, migrationConfig.getDepositorRole()), // Only necessary during migration. Can be phased out after that.
+            builder.createTaskFactory(true, migrationConfig.getDepositorRole()),
             taskEventService,
             enqueuingService);
 

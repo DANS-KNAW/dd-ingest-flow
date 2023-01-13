@@ -47,7 +47,7 @@ public class MigrationsResource {
         log.info("Received command = {}", start);
         String taskName;
         try {
-            taskName = migrationArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue(), true);
+            taskName = migrationArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
         }
         catch (IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());

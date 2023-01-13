@@ -85,7 +85,7 @@ public abstract class FieldBuilder {
         data
             .filter(Objects::nonNull)
             .filter(StringUtils::isNotBlank)
-            .findFirst().ifPresent(value -> setPrimitiveField(name, value)); //getCompoundBuilder(name, false).addSubfield(name, value));
+            .findFirst().ifPresent(value -> setPrimitiveField(name, value));
 
     }
 

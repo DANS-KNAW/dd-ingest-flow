@@ -12,7 +12,7 @@ some dependencies must first be started:
 Open a separate terminal tab:
 
 ```commandline
-start-hsqldb.sh
+start-hsqldb-server.sh
 ```
 
 ### dd-validate-dans-bag
@@ -69,16 +69,20 @@ Configure the `ingest_flow` section and `dataverse` section of `.dans-datastatio
 
 The tools to copy/move your data into the `ingest_area` require a user group `deposits`.
 When running locally you don't have such a group, so you can't use these commands.
-Create the following structure. Depending on the command, replace `migration` with `import`.
+Make sure to have the following structure. Depending on the command, you might (also) need and `import` directory like the `migration` directory.
 
 ```
 dd-ingest-flow
-├── data/migration/inbox
-│   └── <SOME-DIR>
-│       └── <UUID>
-│           ├── bag
-│           │   └── *
-│           └── deposit.properties
+├── data
+│   ├── migration
+│   │   ├── inbox
+│   │   │   └── <SOME-DIR>
+│   │   │       ├── <UUID>
+│   │   │       ├── bag
+│   │   │       │   └── *
+│   │   │       └── deposit.properties
+│   │   └── out
+│   └── tmp
 ```
 
 Assuming `dans-datastation-tools` and `dd-ingest-flow` are in the same directory:

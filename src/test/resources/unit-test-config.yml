@@ -13,18 +13,18 @@ server:
 
 ingestFlow:
   import:
-    inbox: data/import/inbox
-    outbox: data/import/outbox
+    inbox: target/test/any-test-class/import/inbox
+    outbox: target/test/any-test-class/import/outbox
     depositorRole: importer
 
   migration:
-    inbox: data/migration/deposits
-    outbox: data/migration/out
+    inbox: target/test/any-test-class/migration/deposits
+    outbox: target/test/any-test-class/migration/out
     depositorRole: migrator
 
   autoIngest:
-    inbox: data/auto-ingest/inbox
-    outbox: data/auto-ingest/outbox
+    inbox: target/test/any-test-class/auto-ingest/inbox
+    outbox: target/test/any-test-class/auto-ingest/outbox
     depositorRole: swordupdater
 
   #
@@ -36,7 +36,7 @@ ingestFlow:
   #
   depositorRole: contributor
   deduplicate: true
-  zipWrappingTempDir: data/tmp
+  zipWrappingTempDir: target/test/any-test-class/tmp
   mappingDefsDir: etc
   taskQueue:
     nameFormat: "ingest-worker-%d"
@@ -116,4 +116,4 @@ logging:
 
     - type: file
       archive: false
-      currentLogFilename: data/dd-ingest-flow.log
+      currentLogFilename: target/test/any-test-class/dd-ingest-flow.log

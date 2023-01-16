@@ -43,33 +43,34 @@ public class DdIngestFlowConfigurationTest {
     }
 
     @Test
-    public void canReadAssemblyWithSomeDefaultRoles() throws IOException, ConfigurationException {
-        var config = factory.build(FileInputStream::new, "src/main/assembly/dist/cfg/config.yml");
-        assertEquals("swordupdater", config.getIngestFlow().getAutoIngest().getDepositorRole());
-        assertEquals("contributorplus", config.getIngestFlow().getImportConfig().getDepositorRole());
-        assertEquals("contributorplus", config.getIngestFlow().getMigration().getDepositorRole());
+    public void canReadAssembly() throws IOException, ConfigurationException {
+        factory.build(FileInputStream::new, "src/main/assembly/dist/cfg/config.yml");
     }
 
     @Test
-    public void canReadTestWithOnlyDefaultRole() throws IOException, ConfigurationException {
-        var config = factory.build(new ResourceConfigurationSourceProvider(), "debug-etc/config.yml");
-        assertEquals("contributor", config.getIngestFlow().getAutoIngest().getDepositorRole());
-        assertEquals("contributor", config.getIngestFlow().getMigration().getDepositorRole());
-        assertEquals("contributor", config.getIngestFlow().getImportConfig().getDepositorRole());
+    public void canReadTest() throws IOException, ConfigurationException {
+        factory.build(new ResourceConfigurationSourceProvider(), "debug-etc/config.yml");
     }
 
     @Test
     public void canReadAllCustomRoles() throws IOException, ConfigurationException {
+        var config = factory.build(new ResourceConfigurationSourceProvider(), "unit-test-config.yml");
+        assertEquals("swordupdater", config.getIngestFlow().getAutoIngest().getDepositorRole());
+        assertEquals("migrator", config.getIngestFlow().getMigration().getDepositorRole());
+        assertEquals("importer", config.getIngestFlow().getImportConfig().getDepositorRole());
+    }
+
+    @Test
+    public void canReadAllDefaultRoles() throws IOException, ConfigurationException {
         var s = FileUtils.readFileToString(new File("src/test/resources/debug-etc/config.yml"), "UTF8")
-            .replace("depositorRole: contributor", "depositorRole: contributorplus")
-            .replace("autoIngest:", "autoIngest:\n    depositorRole: swordupdater")
-            .replace("migration:", "migration:\n    depositorRole: depositor")
-            .replace("import:", "import:\n    depositorRole: contributor");
+            .replace("depositorRole: migrator", "")
+            .replace("depositorRole: importer", "")
+            .replace("depositorRole: swordupdater", "");
         File testFile = new File("target/test/" + this.getClass().getSimpleName() + "/config.yml");
         FileUtils.write(testFile, s, "UTF8");
         var config = factory.build(FileInputStream::new, testFile.toString());
-        assertEquals("swordupdater", config.getIngestFlow().getAutoIngest().getDepositorRole());
-        assertEquals("depositor", config.getIngestFlow().getMigration().getDepositorRole());
         assertEquals("contributor", config.getIngestFlow().getImportConfig().getDepositorRole());
+        assertEquals("contributor", config.getIngestFlow().getAutoIngest().getDepositorRole());
+        assertEquals("contributor", config.getIngestFlow().getMigration().getDepositorRole());
     }
 }

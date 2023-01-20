@@ -16,7 +16,6 @@
 package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import nl.knaw.dans.ingest.core.DepositState;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
@@ -30,6 +29,7 @@ import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
+import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -221,6 +221,13 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
                     "Bag was not valid according to Profile Version %s. Violations: %s",
                     result.getProfileVersion(), violations)
                 );
+            } else {
+                try {
+                    ManifestHelper.addSha1File(deposit.getBag());
+                } catch (Exception e){
+                    log.error("could not add SHA1 manifest", e);
+                    throw new FailedDepositException(deposit, e.getMessage());
+                }
             }
         }
     }

@@ -19,6 +19,7 @@ import gov.loc.repository.bagit.hash.StandardSupportedAlgorithms;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.Deposit;
 import nl.knaw.dans.ingest.core.service.FileInfo;
+import nl.knaw.dans.ingest.core.service.ManifestHelper;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 import org.apache.commons.lang3.StringUtils;
@@ -184,7 +185,7 @@ public class FileElement extends Base {
             .findFirst()
             .orElse(true);
 
-        var filePathToSha1 = getFilePathToSha1(deposit);
+        var filePathToSha1 = ManifestHelper.getFilePathToSha1(deposit);
         var result = new HashMap<Path, FileInfo>();
 
         XPathEvaluator.nodes(deposit.getFilesXml(), "//files:file").forEach(node -> {
@@ -198,21 +199,6 @@ public class FileElement extends Base {
 
             result.put(path, new FileInfo(absolutePath, sha1, toFileMeta(node, defaultRestrict)));
         });
-
-        return result;
-    }
-
-    static Map<Path, String> getFilePathToSha1(Deposit deposit) {
-        var result = new HashMap<Path, String>();
-        var bag = deposit.getBag();
-        var manifest = bag.getPayLoadManifests().stream()
-            .filter(item -> item.getAlgorithm().equals(StandardSupportedAlgorithms.SHA1))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Deposit bag does not have SHA-1 payload manifest"));
-
-        for (var entry : manifest.getFileToChecksumMap().entrySet()) {
-            result.put(deposit.getBagDir().relativize(entry.getKey()), entry.getValue());
-        }
 
         return result;
     }

@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.service;
 
 import gov.loc.repository.bagit.creator.CreatePayloadManifestsVistor;
+import gov.loc.repository.bagit.creator.CreateTagManifestsVistor;
 import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.domain.Manifest;
 import gov.loc.repository.bagit.hash.Hasher;
@@ -24,12 +25,15 @@ import gov.loc.repository.bagit.util.PathUtils;
 import gov.loc.repository.bagit.writer.ManifestWriter;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static gov.loc.repository.bagit.hash.StandardSupportedAlgorithms.SHA1;
 
@@ -46,6 +50,39 @@ public class ManifestHelper {
         Files.walkFileTree(PathUtils.getDataDir(bag), payloadVisitor);
         manifests.addAll(payloadFilesMap.keySet());
         ManifestWriter.writePayloadManifests(manifests, PathUtils.getBagitDir(bag), bag.getRootDir(), bag.getFileEncoding());
+
+        updateTagManifests(bag);
+    }
+
+    private static void updateTagManifests(Bag bag) throws NoSuchAlgorithmException, IOException {
+        var algorithms = bag.getTagManifests().stream()
+            .map(Manifest::getAlgorithm)
+            .collect(Collectors.toList());
+        var tagFilesMap = Hasher.createManifestToMessageDigestMap(algorithms);
+        var bagRootDir = bag.getRootDir();
+        var tagVisitor = new CreateTagManifestsVistor(tagFilesMap, true) {
+            @Override
+            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                /*
+                 * Fix for EASY-1306: a tag manifest must not contain an entry for itself, as this is practically
+                 * impossible to calculate. It could in theory contain entries for other tag manifests. However,
+                 * the CreateTagManifestsVistor, once it finds an entry for a tag file in ONE of the tag manifests,
+                 * will add an entry in ALL tag manifests.
+                 *
+                 * Therefore we adopt the strategy NOT to calculate any checksums for the tag manifests themselves.
+                 *
+                 * Update: this is actually required in V1.0: https://tools.ietf.org/html/rfc8493#section-2.2.1
+                 */
+                var isTagManifest = bagRootDir.relativize(path).getNameCount() == 1 &&
+                    path.getFileName().toString().startsWith("tagmanifest-");
+                if (isTagManifest) return FileVisitResult.CONTINUE;
+                else return super.visitFile(path, attrs);
+            }
+        };
+        Files.walkFileTree(bagRootDir, tagVisitor);
+        bag.getTagManifests().clear();
+        bag.getTagManifests().addAll(tagFilesMap.keySet());
+        ManifestWriter.writeTagManifests(bag.getTagManifests(), PathUtils.getBagitDir(bag), bagRootDir, bag.getFileEncoding());
     }
 
     static public Map<Path, String> getFilePathToSha1(Deposit deposit) {

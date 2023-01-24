@@ -1,18 +1,3 @@
-health:
-  delayedShutdownHandlerEnabled: false
-  initialOverallState: false
-  healthChecks:
-    - name: Dataverse
-      critical: true
-      initialState: false
-      schedule:
-        checkInterval: 60s
-    - name: DansBagValidator
-      critical: true
-      initialState: false
-      schedule:
-        checkInterval: 60s
-
 #
 # Http-interfaces
 #
@@ -28,16 +13,18 @@ server:
 
 ingestFlow:
   import:
-    inbox: /var/opt/dans.knaw.nl/tmp/import/inbox
-    outbox: /var/opt/dans.knaw.nl/tmp/import/outbox
+    inbox: target/test/any-test-class/import/inbox
+    outbox: target/test/any-test-class/import/outbox
+    depositorRole: importer
 
   migration:
-    inbox: /var/opt/dans.knaw.nl/tmp/migration/deposits
-    outbox: /var/opt/dans.knaw.nl/tmp/migration/out
+    inbox: target/test/any-test-class/migration/deposits
+    outbox: target/test/any-test-class/migration/out
+    depositorRole: migrator
 
   autoIngest:
-    inbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/inbox
-    outbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/outbox
+    inbox: target/test/any-test-class/auto-ingest/inbox
+    outbox: target/test/any-test-class/auto-ingest/outbox
     depositorRole: swordupdater
 
   #
@@ -47,10 +34,10 @@ ingestFlow:
   #
   # The role that the depositor account will be assigned on its datasets.
   #
-  depositorRole: contributorplus
+  depositorRole: contributor
   deduplicate: true
-  zipWrappingTempDir: /var/opt/dans.knaw.nl/tmp/zip-wrapping
-  mappingDefsDir: /etc/opt/dans.knaw.nl/dd-ingest-flow
+  zipWrappingTempDir: target/test/any-test-class/tmp
+  mappingDefsDir: etc
   taskQueue:
     nameFormat: "ingest-worker-%d"
     maxQueueSize: 5000
@@ -65,9 +52,9 @@ ingestFlow:
 # Parameters related to communication with the Dataverse instance
 #
 dataverse:
-  baseUrl: 'http://localhost:8080'
+  baseUrl: 'http://dar.dans.knaw.nl:8080'
   apiKey: 'changeme'
-  unblockKey: 'changeme'
+  unblockKey: 's3kretKey'
   awaitLockStateMaxNumberOfRetries: 30
   awaitLockStateMillisecondsBetweenRetries: 500
   # TODO: add to dans-dataverse-client-lib
@@ -78,14 +65,15 @@ dataverseExtra:
   publishAwaitUnlockMaxRetries: 900
   publishAwaitUnlockWaitTimeMs: 3000
 
+
 taskEventDatabase:
-  driverClass: org.postgresql.Driver
-  url: jdbc:postgresql://localhost:5432/dd_ingest_flow
-  user: dd_ingest_flow
-  password: changeme
+  driverClass: org.hsqldb.jdbcDriver
+  url: jdbc:hsqldb:hsql://localhost:9001/dd-ingest-flow
   logValidationErrors: true
+  # See: https://stackoverflow.com/questions/10684244/dbcp-validationquery-for-different-databases
+  validationQuery: SELECT * FROM INFORMATION_SCHEMA.SYSTEM_TABLES
   properties:
-    hibernate.dialect: 'org.hibernate.dialect.PostgreSQL95Dialect'
+    hibernate.dialect: 'org.hibernate.dialect.HSQLDialect'
     hibernate.hbm2ddl.auto: update
 
 validateDansBag:
@@ -94,9 +82,6 @@ validateDansBag:
   connectionTimeoutMs: 10000
   readTimeoutMs: 30000
 
-# this configures the bag validator client
-# the important thing is to disable chunked encoding
-# because it breaks the multipart/form-data headers
 dansBagValidatorClient:
   timeout: 30000ms
   connectionTimeout: 10000ms
@@ -108,14 +93,27 @@ dansBagValidatorClient:
   keepAlive: 0ms
   retries: 0
   userAgent: dd-ingest-flow
-
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
 #
 logging:
   level: INFO
+  loggers:
+    "nl.knaw.dans.ingest":
+      level: TRACE
+    "nl.knaw.dans.ingest.core.sequencing.DepositSequenceManager":
+      level: TRACE
+      additive: true
+    "nl.knaw.dans.ingest.core.service.UnboundedDepositsImportTaskIterator":
+      level: INFO
+    "nl.knaw.dans.easy.dd2d":
+      level: TRACE
+    "nl.knaw.dans.dataverse.DatasetApi":
+      level: TRACE
   appenders:
+    - type: console
+      logFormat: "%-5p [%d{ISO8601}] [%t] %c: %m%n%rEx"
+
     - type: file
       archive: false
-      timeZone: system
-      currentLogFilename: /var/opt/dans.knaw.nl/log/dd-ingest-flow/dd-ingest-flow.log
+      currentLogFilename: target/test/any-test-class/dd-ingest-flow.log

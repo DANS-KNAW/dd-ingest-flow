@@ -37,17 +37,13 @@ import java.util.stream.Stream;
 
 public class ImportArea extends AbstractIngestArea {
     private static final Logger log = LoggerFactory.getLogger(ImportArea.class);
-    private final DepositIngestTaskFactory migrationTaskFactory;
-    private final Map<String, TargetedTaskSource<DepositIngestTask>> batches = new HashMap<>();
 
-    public ImportArea(Path inboxDir, Path outboxDir, DepositIngestTaskFactory taskFactory, DepositIngestTaskFactory migrationTaskFactory,
-        TaskEventService taskEventService, EnqueuingService enqueuingService) {
+    public ImportArea(Path inboxDir, Path outboxDir, DepositIngestTaskFactory taskFactory, TaskEventService taskEventService, EnqueuingService enqueuingService) {
         super(inboxDir, outboxDir, taskFactory, taskEventService, enqueuingService);
-        this.migrationTaskFactory = migrationTaskFactory;
     }
 
-    public String startImport(Path inputPath, boolean isBatch, boolean continuePrevious, boolean isMigration) {
-        log.trace("startBatch({}, {}, {})", inputPath, continuePrevious, isMigration);
+    public String startImport(Path inputPath, boolean isBatch, boolean continuePrevious) {
+        log.trace("startBatch({}, {})", inputPath, continuePrevious);
         if (isBatch) {
             validateBatchDirectory(inputPath);
         }
@@ -83,14 +79,11 @@ public class ImportArea extends AbstractIngestArea {
         String taskName = relativeInputDir.toString();
         TargetedTaskSource<DepositIngestTask> taskSource;
         if (isBatch) {
-            taskSource = new TargetedTaskSourceImpl(taskName, batchInDir, batchOutDir, taskEventService,
-                isMigration ? migrationTaskFactory : taskFactory);
+            taskSource = new TargetedTaskSourceImpl(taskName, batchInDir, batchOutDir, taskEventService, taskFactory);
         }
         else {
-            taskSource = new SingleDepositTargetedTaskSourceImpl(taskName, inboxDir.resolve(relativeInputDir), batchOutDir, taskEventService,
-                isMigration ? migrationTaskFactory : taskFactory);
+            taskSource = new SingleDepositTargetedTaskSourceImpl(taskName, inboxDir.resolve(relativeInputDir), batchOutDir, taskEventService, taskFactory);
         }
-        batches.put(taskName, taskSource);
         enqueuingService.executeEnqueue(taskSource);
         return relativeInputDir.toString();
     }

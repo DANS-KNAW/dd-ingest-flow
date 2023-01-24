@@ -33,7 +33,7 @@ public class Author extends Base {
         else if (localName.equals("creatorDetails") && organization.isPresent()) {
             DcxDaiOrganization.toAuthorValueObject.build(builder, organization.get());
         }
-        else if (localName.equals("creator") || localName.equals("description")) {
+        else if (localName.equals("creator")) {
             Creator.toAuthorValueObject.build(builder, node);
         }
     };

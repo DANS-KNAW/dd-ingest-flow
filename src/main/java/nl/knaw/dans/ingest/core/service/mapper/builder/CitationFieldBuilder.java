@@ -34,9 +34,11 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBU
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.NOTES_TEXT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PRODUCTION_DATE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SERIES;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
 
@@ -44,6 +46,10 @@ public class CitationFieldBuilder extends FieldBuilder {
 
     public void addTitle(Stream<String> nodes) {
         addSingleString(TITLE, nodes);
+    }
+
+    public void addSeries(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+        addSingleCompound(SERIES, stream, generator);
     }
 
     public void addOtherIds(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
@@ -107,7 +113,11 @@ public class CitationFieldBuilder extends FieldBuilder {
     }
 
     public void addDataSources(Stream<String> dataSources) {
-        addSingleString(DATA_SOURCES, dataSources);
+        addMultiplePrimitivesString(DATA_SOURCES, dataSources);
+    }
+
+    public void addNotesText(Stream<Node> stream) {
+        addSingleString(NOTES_TEXT, stream.map(Node::getTextContent));
     }
 
     public void addDatasetContact(Stream<AuthenticatedUser> data, CompoundFieldGenerator<AuthenticatedUser> generator) {

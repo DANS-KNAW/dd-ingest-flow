@@ -114,6 +114,13 @@ public abstract class FieldBuilder {
         });
     }
 
+    public void addSingleCompound(String name, Stream<Node> data, CompoundFieldGenerator<Node> generator) {
+        data.forEach(value -> {
+            var builder = getCompoundBuilder(name, false);
+            generator.build(builder, value);
+        });
+    }
+
     public void addMultipleString(String name, Stream<String> data, CompoundFieldGenerator<String> generator) {
         data.forEach(value -> {
             var builder = getCompoundBuilder(name, true);

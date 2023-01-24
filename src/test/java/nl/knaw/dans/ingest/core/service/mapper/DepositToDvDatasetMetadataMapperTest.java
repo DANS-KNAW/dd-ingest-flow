@@ -22,6 +22,7 @@ import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapper;
 import nl.knaw.dans.ingest.core.service.mapper.builder.ArchaeologyFieldBuilder;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
@@ -39,6 +40,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DepositToDvDatasetMetadataMapperTest {
 
@@ -85,6 +88,38 @@ class DepositToDvDatasetMetadataMapperTest {
             .writer()
             .withDefaultPrettyPrinter()
             .writeValueAsString(result);
+    }
+
+    @Test
+    void toDataverseDataset_should_include_otherId() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset-simple.xml");
+
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "otherIdVersion", "swordToken");
+
+        var result = mapper.toDataverseDataset(doc, null, null, null, null, vaultMetadata);
+        var str = new ObjectMapper()
+            .writer()
+            .withDefaultPrettyPrinter()
+            .writeValueAsString(result);
+
+        assertThat(str).contains("doi:a/b");
+    }
+
+    @Test
+    void toDataverseDataset_should_not_include_otherId_if_null_is_passed() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset-simple.xml");
+
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", null, "otherIdVersion", "swordToken");
+
+        var result = mapper.toDataverseDataset(doc, null, null, null, null, vaultMetadata);
+        var str = new ObjectMapper()
+            .writer()
+            .withDefaultPrettyPrinter()
+            .writeValueAsString(result);
+
+        assertFalse(str.contains("doi:"));
     }
 
     @Test

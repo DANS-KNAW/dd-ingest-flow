@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ContributorTest extends BaseTest {
 
     @Test
-    void isValidContributer_should_return_true_for_Author() throws Exception {
-        var doc = readDocumentFromString("<dcx-dai:creatorDetails xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
+    void isValidContributer_should_return_true_for_contributorDetails_with_dcx_author() throws Exception {
+        var doc = readDocumentFromString("<dcx-dai:contributorDetails xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "    <dcx-dai:author>\n"
             + "        <dcx-dai:titles>Dhr</dcx-dai:titles>\n"
             + "        <dcx-dai:initials>I</dcx-dai:initials>\n"
@@ -36,14 +36,14 @@ class ContributorTest extends BaseTest {
             + "            <dcx-dai:name xml:lang=\"en\">Example Org</dcx-dai:name>\n"
             + "        </dcx-dai:organization>\n"
             + "    </dcx-dai:author>\n"
-            + "</dcx-dai:creatorDetails>");
+            + "</dcx-dai:contributorDetails>");
 
         assertTrue(Contributor.isValidContributor(doc.getDocumentElement()));
     }
 
     @Test
-    void toContributorValueObject_should_return_Author() throws Exception {
-        var doc = readDocumentFromString("<dcx-dai:creatorDetails xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
+    void toContributorValueObject_should_return_correct_contributor_name() throws Exception {
+        var doc = readDocumentFromString("<dcx-dai:contributorDetails xmlns:dcx-dai=\"http://easy.dans.knaw.nl/schemas/dcx/dai/\">\n"
             + "    <dcx-dai:author>\n"
             + "        <dcx-dai:titles>Dhr</dcx-dai:titles>\n"
             + "        <dcx-dai:initials>I</dcx-dai:initials>\n"
@@ -53,7 +53,7 @@ class ContributorTest extends BaseTest {
             + "            <dcx-dai:name xml:lang=\"en\">Example Org</dcx-dai:name>\n"
             + "        </dcx-dai:organization>\n"
             + "    </dcx-dai:author>\n"
-            + "</dcx-dai:creatorDetails>");
+            + "</dcx-dai:contributorDetails>");
 
         var builder = new CompoundFieldBuilder("", true);
         Contributor.toContributorValueObject.build(builder, doc.getDocumentElement());

@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class DepositIngestTaskFactory {
 
+    private final String depositorRole;
     private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
 
@@ -45,6 +46,7 @@ public class DepositIngestTaskFactory {
 
     public DepositIngestTaskFactory(
         boolean isMigration,
+        String depositorRole,
         DataverseClient dataverseClient,
         DansBagValidator dansBagValidator,
         IngestFlowConfig ingestFlowConfig,
@@ -52,8 +54,10 @@ public class DepositIngestTaskFactory {
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler
+
     ) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
+        this.depositorRole = depositorRole;
         this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
         this.ingestFlowConfig = ingestFlowConfig;
@@ -97,13 +101,13 @@ public class DepositIngestTaskFactory {
             .map(Pattern::compile)
             .orElse(null);
 
-        log.info("Creating deposit ingest task, isMigration = {}", this.isMigration);
-        if (this.isMigration) {
+        log.info("Creating deposit ingest task, isMigration={}, role={}, outboxDir={}", isMigration, depositorRole, outboxDir);
+        if (isMigration) {
             return new DepositMigrationTask(
                 depositToDvDatasetMetadataMapperFactory,
                 deposit,
                 dataverseClient,
-                ingestFlowConfig.getDepositorRole(),
+                depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),
@@ -121,7 +125,7 @@ public class DepositIngestTaskFactory {
                 depositToDvDatasetMetadataMapperFactory,
                 deposit,
                 dataverseClient,
-                ingestFlowConfig.getDepositorRole(),
+                depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),

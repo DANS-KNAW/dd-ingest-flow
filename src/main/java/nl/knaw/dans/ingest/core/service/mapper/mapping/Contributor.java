@@ -22,18 +22,27 @@ import org.w3c.dom.Node;
 import java.util.HashMap;
 import java.util.Map;
 
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_NAME;
+
 @Slf4j
 public final class Contributor extends Base {
     public static Map<String, String> contributorRoleToContributorType = new HashMap<>();
+
     public static CompoundFieldGenerator<Node> toContributorValueObject = (builder, node) -> {
-        getChildNode(node, "dcx-dai:author")
-            .filter(n -> !DcxDaiAuthor.isRightsHolder(n))
-            .ifPresent(n -> DcxDaiAuthor.toContributorValueObject.build(builder, n));
+        if ("contributorDetails".equals(node.getLocalName())) {
 
-        getChildNode(node, "dcx-dai:organization")
-            .filter(n -> !DcxDaiOrganization.isRightsHolderOrFunder(n))
-            .ifPresent(n -> DcxDaiOrganization.toContributorValueObject.build(builder, n));
+            getChildNode(node, "dcx-dai:author")
+                .filter(n -> !DcxDaiAuthor.isRightsHolder(n))
+                .ifPresent(n -> DcxDaiAuthor.toContributorValueObject.build(builder, n));
 
+            getChildNode(node, "dcx-dai:organization")
+                .filter(n -> !DcxDaiOrganization.isRightsHolderOrFunder(n))
+                .ifPresent(n -> DcxDaiOrganization.toContributorValueObject.build(builder, n));
+        }
+        else if ("description".equals(node.getLocalName())) {
+            builder.addSubfield(CONTRIBUTOR_NAME, node.getTextContent());
+        }
     };
 
     static {

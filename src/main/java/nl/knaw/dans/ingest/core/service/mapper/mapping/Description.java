@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION_VALUE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SERIES_INFORMATION;
 
 public class Description extends Base {
 
@@ -48,6 +49,11 @@ public class Description extends Base {
 
         builder.addSubfield(DESCRIPTION_VALUE, String.format("%s: %s", prefix, value.getTextContent()));
     };
+    public static CompoundFieldGenerator<Node> toSeries = (builder, value) -> {
+        var text = newlineToHtml(value.getTextContent());
+        //builder.addSubfield(SERIES_NAME, "?");
+        builder.addSubfield(SERIES_INFORMATION, text);
+    };
 
     private static String newlineToHtml(String value) {
         var newline = "\r\n|\n|\r";
@@ -68,8 +74,11 @@ public class Description extends Base {
 
     public static boolean isNotMapped(Node node) {
         var descr = getAttribute(node, "descriptionType");
-        // TODO add series when implemented
-        return descr.isEmpty() || !List.of("Other").contains(descr.get().getTextContent());
+        return descr.isEmpty() || !List.of("Other", "SeriesInformation").contains(descr.get().getTextContent());
+    }
+
+    public static boolean isSeriesInformation(Node node) {
+        return hasAttributeValue(node, "descriptionType", "SeriesInformation") && isNotBlank(node);
     }
 
     public static boolean hasDescriptionTypeOther(Node node) {

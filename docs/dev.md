@@ -12,7 +12,7 @@ some dependencies must first be started:
 Open a separate terminal tab:
 
 ```commandline
-start-hsqldb.sh
+start-hsqldb-server.sh
 ```
 
 ### dd-validate-dans-bag
@@ -56,8 +56,33 @@ start-service.sh
 
 ## Prepare and start an ingest
 
-Once the dependencies and services are started you can prepare batches and start them
-with [dans-datastation-tools]{:target=_blank}.
+Once the dependencies and services are started you can ingest a single deposit by moving
+(not copy) a deposit into `data/auto-ingest/inbox` or whatever directory is configured in  
+
+    dd-ingest-flow/etc/config.yml ingestFlow:autoIngest:inbox
+
+Note that a migration bag has more data than valid for this process. 
+The validator will inform you about what to remove and how to fix the checksums.
+
+The [dans-datastation-tools]{:target=_blank} project has commands to copy/move your data into an `ingest_area` (autoIngest/import/migration) require a user group `deposits`.
+When running locally you don't have such a group, so you can't use these commands.
+Make sure to have the following structure.
+
+```
+dd-ingest-flow
+├── data
+│   ├── auto-ingest
+│   │   ├── inbox
+│   │   │   └── <SOME-DIR>
+│   │   │       ├── <UUID>
+│   │   │       ├── bag
+│   │   │       │   └── *
+│   │   │       └── deposit.properties
+│   │   └── out
+│   └── tmp
+```
+
+Alternatively you can prepare batches in one of the other ingest areas and start as follows.
 
 Configure the `ingest_flow` section and `dataverse` section of `.dans-datastation-tools.yml` which is  a copy of `src/datastation/example-dans-datastation-tools.yml`.
 
@@ -66,20 +91,6 @@ Configure the `ingest_flow` section and `dataverse` section of `.dans-datastatio
   Replace the default `/var/opt/dans.knaw.nl/tmp` in the latter with `data`.
 * Set the `apiKey`
 * To repeat a test you'll need the `dv-dataset-destroy` script which needs `safety_latch: OFF`, the default is `ON`.
-
-The tools to copy/move your data into the `ingest_area` require a user group `deposits`.
-When running locally you don't have such a group, so you can't use these commands.
-Create the following structure. Depending on the command, replace `migration` with `import`.
-
-```
-dd-ingest-flow
-├── data/migration/inbox
-│   └── <SOME-DIR>
-│       └── <UUID>
-│           ├── bag
-│           │   └── *
-│           └── deposit.properties
-```
 
 Assuming `dans-datastation-tools` and `dd-ingest-flow` are in the same directory:
 

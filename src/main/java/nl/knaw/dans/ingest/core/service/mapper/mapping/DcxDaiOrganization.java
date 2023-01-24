@@ -61,7 +61,7 @@ public final class DcxDaiOrganization {
         }
         if (StringUtils.isNotBlank(organization.getRole())) {
             var value = Contributor.contributorRoleToContributorType.getOrDefault(organization.getRole(), "Other");
-            builder.addSubfield(CONTRIBUTOR_TYPE, value);
+            builder.addControlledSubfield(CONTRIBUTOR_TYPE, value);
         }
     };
     public static CompoundFieldGenerator<Node> toGrantNumberValueObject = (builder, node) -> {

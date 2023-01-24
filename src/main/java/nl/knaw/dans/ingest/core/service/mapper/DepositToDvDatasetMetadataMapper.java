@@ -54,10 +54,12 @@ import nl.knaw.dans.ingest.core.service.mapper.mapping.Subject;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.SubjectAbr;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.TemporalAbr;
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
+import nl.knaw.dans.lib.dataverse.model.dataset.CompoundField;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
+import nl.knaw.dans.lib.dataverse.model.dataset.SingleValueField;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -67,6 +69,7 @@ import org.w3c.dom.Node;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -112,10 +115,7 @@ public class DepositToDvDatasetMetadataMapper {
         @Nullable VaultMetadata vaultMetadata
     ) throws MissingRequiredFieldException {
 
-        // TODO otherDoiId should be "", not null when sending to dataverse
-
         if (activeMetadataBlocks.contains("citation")) {
-            // this is not very java-esque
             checkRequiredField(TITLE, getTitles(ddm));
             checkRequiredField(SUBJECT, getAudiences(ddm));
 
@@ -130,17 +130,16 @@ public class DepositToDvDatasetMetadataMapper {
 
             citationFields.addOtherIds(getIdentifiers(ddm).filter(Identifier::canBeMappedToOtherId), Identifier.toOtherIdValue);
             citationFields.addOtherIdsStrings(Stream.ofNullable(otherDoiId), DepositPropertiesOtherDoi.toOtherIdValue);
-
-            citationFields.addContributors(getMetadataDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Author.toAuthorValueObject);
             citationFields.addAuthors(getCreators(ddm), Author.toAuthorValueObject);
             citationFields.addDatasetContact(Stream.ofNullable(contactData), Contact.toOtherIdValue);
-            citationFields.addDescription(getDescriptions(ddm).filter(Description::isNotBlank), Description.toDescription);
+            citationFields.addDescription(getProfileDescriptions(ddm), Description.toDescription);
 
             if (alternativeTitles.size() > 0) {
                 citationFields.addDescription(Stream.of(alternativeTitles.get(alternativeTitles.size() - 1)), Description.toDescription);
             }
 
-            citationFields.addDescription(getMetadataDescriptions(ddm).filter(Description::isNotMapped), Description.toDescription);
+            citationFields.addDescription(getDcmiDctermsDescriptions(ddm), Description.toDescription);
+            citationFields.addDescription(getDcmiDdmDescriptions(ddm).filter(Description::isNotMapped), Description.toDescription);
 
             citationFields.addDescription(getOtherDescriptions(ddm).filter(Description::isNotBlank), Description.toPrefixedDescription);
 
@@ -154,6 +153,7 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addLanguages(getLanguages(ddm), node -> Language.toCitationBlockLanguage(node, iso1ToDataverseLanguage, iso2ToDataverseLanguage));
             citationFields.addProductionDate(getCreated(ddm).map(Base::toYearMonthDayFormat));
             citationFields.addContributors(getContributorDetails(ddm).filter(Contributor::isValidContributor), Contributor.toContributorValueObject);
+            citationFields.addContributors(getDcmiDdmDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Contributor.toContributorValueObject);
             citationFields.addGrantNumbers(getIdentifiers(ddm).filter(Identifier::isNwoGrantNumber), Identifier.toNwoGrantNumber);
 
             citationFields.addDistributor(getPublishers(ddm).filter(Publisher::isNotDans), Publisher.toDistributorValueObject);
@@ -164,6 +164,9 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addDateOfCollections(getDatesOfCollection(ddm)
                 .filter(DatesOfCollection::isValidDistributorDate), DatesOfCollection.toDistributorValueObject);
             citationFields.addDataSources(getDataSources(ddm));
+            citationFields.addNotesText(getProvenance(ddm));
+            citationFields.addSeries(getDcmiDdmDescriptions(ddm).filter(Description::isSeriesInformation),Description.toSeries);
+
         }
         else {
             throw new IllegalStateException("Metadatablock citation should always be active");
@@ -236,8 +239,7 @@ public class DepositToDvDatasetMetadataMapper {
         // TODO figure out how to deduplicate compound fields (just on key, or also on value?)
         var compoundFields = builder.getCompoundFields().values()
             .stream()
-            .map(CompoundFieldBuilder::build)
-            .map(m -> (MetadataField) m);
+            .map(this::compoundBuild);
 
         var primitiveFields = builder.getPrimitiveFields()
             .values()
@@ -259,6 +261,27 @@ public class DepositToDvDatasetMetadataMapper {
         block.setFields(result);
 
         fields.put(title, block);
+    }
+
+    private MetadataField compoundBuild(CompoundFieldBuilder compoundFieldBuilder) {
+        // TODO rewrite in the dataverse library
+        CompoundField compoundField = compoundFieldBuilder.build();
+        if (compoundField.isMultiple()) {
+            return compoundField;
+        }
+        else {
+            return new MetadataField(compoundField.getTypeClass(), compoundField.getTypeName(), false) {
+
+                public Map<String, SingleValueField> getValue() {
+                    List<Map<String, SingleValueField>> value = compoundField.getValue();
+                    if (value != null && !value.isEmpty()) {
+                        return value.get(0);
+                    }
+                    else
+                        return null;
+                }
+            };
+        }
     }
 
     Dataset assembleDataverseDataset() {
@@ -291,16 +314,24 @@ public class DepositToDvDatasetMetadataMapper {
         return dataset;
     }
 
-    Stream<Node> getDescriptions(Document ddm) {
+    Stream<Node> getProfileDescriptions(Document ddm) {
         return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:profile/dcterms:description | /ddm:DDM/ddm:profile/dc:description");
     }
 
-    Stream<Node> getMetadataDescriptions(Document ddm) {
+    Stream<Node> getDcmiDctermsDescriptions(Document ddm) {
         return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:description");
     }
 
+    Stream<Node> getDcmiDdmDescriptions(Document ddm) {
+        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/ddm:description");
+    }
+
+    Stream<Node> getProvenance(Document ddm) {
+        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:provenance");
+    }
+
     Stream<Node> getTemporal(Document ddm) {
-        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/ddm:temporal");
+        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:temporal");
     }
 
     Stream<Node> getSpatial(Document ddm) {
@@ -316,7 +347,7 @@ public class DepositToDvDatasetMetadataMapper {
     }
 
     Stream<Node> getLanguages(Document ddm) {
-        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:language");
+        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/ddm:language");
     }
 
     Stream<Node> getAcquisitionMethods(Document ddm) {

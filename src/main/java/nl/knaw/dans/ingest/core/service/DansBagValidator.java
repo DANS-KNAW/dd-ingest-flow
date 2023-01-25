@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
+import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import nl.knaw.dans.validatedansbag.api.ValidateCommand.PackageTypeEnum;
 import nl.knaw.dans.validatedansbag.api.ValidateOk;
 
@@ -24,5 +25,5 @@ public interface DansBagValidator {
 
     void checkConnection();
 
-    ValidateOk validateBag(Path bagDir, PackageTypeEnum informationPackageType, int profileVersion);
+    ValidateOk validateBag(Path bagDir, PackageTypeEnum informationPackageType, int profileVersion, ValidateCommand.LevelEnum level);
 }

@@ -210,7 +210,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
         if (dansBagValidator != null) {
             var result = dansBagValidator.validateBag(
-                deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
+                deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1, ValidateCommand.LevelEnum.WITH_DATA_STATION_CONTEXT);
 
             if (!result.getIsCompliant()) {
                 var violations = result.getRuleViolations().stream()

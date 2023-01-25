@@ -148,7 +148,7 @@ public class DepositMigrationTask extends DepositIngestTask {
 
         if (dansBagValidator != null) {
             var result = dansBagValidator.validateBag(
-                deposit.getBagDir(), ValidateCommand.PackageTypeEnum.MIGRATION, 1);
+                deposit.getBagDir(), ValidateCommand.PackageTypeEnum.MIGRATION, 1, ValidateCommand.LevelEnum.STAND_ALONE);
 
             if (!result.getIsCompliant()) {
                 var violations = result.getRuleViolations().stream()

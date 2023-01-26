@@ -46,20 +46,6 @@ public class DdIngestFlowConfiguration extends Configuration {
     @NotNull
     private DataSourceFactory taskEventDatabase;
 
-    @Valid
-    @NotNull
-    private JerseyClientConfiguration dansBagValidatorClient = new JerseyClientConfiguration();
-
-    @JsonProperty("dansBagValidatorClient")
-    public JerseyClientConfiguration getDansBagValidatorClient() {
-        return dansBagValidatorClient;
-    }
-
-    @JsonProperty("dansBagValidatorClient")
-    public void setDansBagValidatorClient(JerseyClientConfiguration jerseyClient) {
-        this.dansBagValidatorClient = jerseyClient;
-    }
-
     public IngestFlowConfig getIngestFlow() {
         if(StringUtils.isBlank(ingestFlow.getAutoIngest().getDepositorRole()))
             ingestFlow.getAutoIngest().setDepositorRole(ingestFlow.getDepositorRole());

@@ -98,7 +98,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
         var dansBagValidatorClient = new JerseyClientBuilder(environment)
             .withProvider(MultiPartFeature.class)
-            .using(configuration.getDansBagValidatorClient())
+            .using(configuration.getValidateDansBag().getHttpClient())
             .build(getName());
 
         final DansBagValidator validator = new DansBagValidatorImpl(

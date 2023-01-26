@@ -81,18 +81,17 @@ validateDansBag:
   pingUrl: 'http://localhost:20331/ping'
   connectionTimeoutMs: 10000
   readTimeoutMs: 30000
-
-dansBagValidatorClient:
-  timeout: 30000ms
-  connectionTimeout: 10000ms
-  chunkedEncodingEnabled: false
-  timeToLive: 1h
-  cookiesEnabled: false
-  maxConnections: 128
-  maxConnectionsPerRoute: 128
-  keepAlive: 0ms
-  retries: 0
-  userAgent: dd-ingest-flow
+  httpClient:
+    timeout: 30000ms
+    connectionTimeout: 10000ms
+    chunkedEncodingEnabled: false
+    timeToLive: 1h
+    cookiesEnabled: false
+    maxConnections: 128
+    maxConnectionsPerRoute: 128
+    keepAlive: 0ms
+    retries: 0
+    userAgent: dd-ingest-flow
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
 #

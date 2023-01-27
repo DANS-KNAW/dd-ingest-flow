@@ -212,7 +212,15 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             var result = dansBagValidator.validateBag(
                 deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
 
-            if (!result.getIsCompliant()) {
+            if (result.getIsCompliant()) {
+                try {
+                    ManifestHelper.ensureSha1ManifestPresent(deposit.getBag());
+                } catch (Exception e){
+                    log.error("could not add SHA1 manifest", e);
+                    throw new FailedDepositException(deposit, e.getMessage());
+                }
+            }
+            else {
                 var violations = result.getRuleViolations().stream()
                     .map(r -> String.format("- [%s] %s", r.getRule(), r.getViolation()))
                     .collect(Collectors.joining("\n"));
@@ -221,13 +229,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
                     "Bag was not valid according to Profile Version %s. Violations: %s",
                     result.getProfileVersion(), violations)
                 );
-            } else {
-                try {
-                    ManifestHelper.addSha1File(deposit.getBag());
-                } catch (Exception e){
-                    log.error("could not add SHA1 manifest", e);
-                    throw new FailedDepositException(deposit, e.getMessage());
-                }
             }
         }
     }

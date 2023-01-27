@@ -39,7 +39,7 @@ import static gov.loc.repository.bagit.hash.StandardSupportedAlgorithms.SHA1;
 
 public class ManifestHelper {
 
-    static public void addSha1File(Bag bag) throws NoSuchAlgorithmException, IOException {
+    static public void ensureSha1ManifestPresent(Bag bag) throws NoSuchAlgorithmException, IOException {
         var manifests = bag.getPayLoadManifests();
         var algorithms = manifests.stream().map(Manifest::getAlgorithm);
         if (algorithms.anyMatch(SHA1::equals))

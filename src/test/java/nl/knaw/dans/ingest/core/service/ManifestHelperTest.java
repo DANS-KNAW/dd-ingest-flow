@@ -52,7 +52,7 @@ public class ManifestHelperTest {
         FileUtils.copyDirectory(new File(originalBag), bagDir.toFile());
         FileUtils.deleteQuietly(sha1File);
 
-        ManifestHelper.addSha1File(new BagReader().read(bagDir));
+        ManifestHelper.ensureSha1ManifestPresent(new BagReader().read(bagDir));
         assertThat(sha1File).exists();
     }
 }

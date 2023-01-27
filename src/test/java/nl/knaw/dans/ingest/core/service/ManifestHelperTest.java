@@ -40,7 +40,7 @@ public class ManifestHelperTest {
         deposit.setBagDir(bagDir);
         deposit.setBag(new BagReader().read(bagDir));
 
-        var result = ManifestHelper.getFilePathToSha1(deposit);
+        var result = ManifestHelper.getFilePathToSha1(deposit.getBag());
         assertThat(result).hasSize(5);
     }
 

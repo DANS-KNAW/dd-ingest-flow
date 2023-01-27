@@ -185,7 +185,7 @@ public class FileElement extends Base {
             .findFirst()
             .orElse(true);
 
-        var filePathToSha1 = ManifestHelper.getFilePathToSha1(deposit);
+        var filePathToSha1 = ManifestHelper.getFilePathToSha1(deposit.getBag());
         var result = new HashMap<Path, FileInfo>();
 
         XPathEvaluator.nodes(deposit.getFilesXml(), "//files:file").forEach(node -> {

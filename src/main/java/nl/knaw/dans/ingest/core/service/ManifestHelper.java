@@ -85,16 +85,15 @@ public class ManifestHelper {
         ManifestWriter.writeTagManifests(bag.getTagManifests(), PathUtils.getBagitDir(bag), bagRootDir, bag.getFileEncoding());
     }
 
-    static public Map<Path, String> getFilePathToSha1(Deposit deposit) {
+    static public Map<Path, String> getFilePathToSha1(Bag bag) {
         var result = new HashMap<Path, String>();
-        var bag = deposit.getBag();
         var manifest = bag.getPayLoadManifests().stream()
             .filter(item -> item.getAlgorithm().equals(StandardSupportedAlgorithms.SHA1))
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Deposit bag does not have SHA-1 payload manifest"));
 
         for (var entry : manifest.getFileToChecksumMap().entrySet()) {
-            result.put(deposit.getBagDir().relativize(entry.getKey()), entry.getValue());
+            result.put(bag.getRootDir().relativize(entry.getKey()), entry.getValue());
         }
 
         return result;

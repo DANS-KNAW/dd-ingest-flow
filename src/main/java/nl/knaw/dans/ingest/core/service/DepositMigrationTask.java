@@ -16,13 +16,13 @@
 package nl.knaw.dans.ingest.core.service;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
+import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 
@@ -52,11 +52,12 @@ public class DepositMigrationTask extends DepositIngestTask {
         int publishAwaitUnlockMaxNumberOfRetries,
         Path outboxDir,
         EventWriter eventWriter,
-        DepositManager depositManager
+        DepositManager depositManager,
+        BlockedTargetService blockedTargetService
     ) {
         super(
             datasetMetadataMapperFactory, deposit, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
-            publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries, outboxDir, eventWriter, depositManager);
+            publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries, outboxDir, eventWriter, depositManager, blockedTargetService);
     }
 
     @Override
@@ -163,5 +164,15 @@ public class DepositMigrationTask extends DepositIngestTask {
         }
     }
 
+    @Override
+    String resolveDoi(Deposit deposit) throws IOException, DataverseException {
+        var isVersionOf = deposit.getIsVersionOf();
+
+        if (isVersionOf == null) {
+            throw new IllegalArgumentException("Update-deposit without Is-Version-Of");
+        }
+
+        return getDoi(String.format("dansBagId:\"%s\"", isVersionOf));
+    }
 }
 

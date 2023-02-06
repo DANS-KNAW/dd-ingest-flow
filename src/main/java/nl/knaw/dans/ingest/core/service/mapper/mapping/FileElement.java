@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
-import gov.loc.repository.bagit.hash.StandardSupportedAlgorithms;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.Deposit;
 import nl.knaw.dans.ingest.core.service.FileInfo;

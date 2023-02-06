@@ -51,10 +51,13 @@ public class AbstractIngestArea {
 
     protected void validateInDir(Path inDir) {
         log.trace("validateInDir({})", inDir);
-        if (Files.isRegularFile(inDir))
+        if (Files.isRegularFile(inDir)) {
             throw new IllegalArgumentException("Input directory is a regular file: " + inDir);
-        if (!Files.exists(inDir))
+        }
+
+        if (!Files.exists(inDir)) {
             throw new IllegalArgumentException("Input directory does not exist: " + inDir);
+        }
     }
 
     protected void initOutbox(Path outbox, boolean allowNonEmpty) {

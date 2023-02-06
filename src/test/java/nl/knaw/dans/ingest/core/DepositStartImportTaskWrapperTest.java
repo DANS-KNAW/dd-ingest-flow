@@ -15,8 +15,10 @@
  */
 package nl.knaw.dans.ingest.core;
 
+import nl.knaw.dans.ingest.core.service.BlockedTargetService;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DepositIngestTask;
+import nl.knaw.dans.ingest.core.service.DepositIngestTaskTest;
 import nl.knaw.dans.ingest.core.service.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.service.DepositMigrationTask;
 import nl.knaw.dans.ingest.core.service.EventWriter;
@@ -75,6 +77,7 @@ public class DepositStartImportTaskWrapperTest {
         var eventWriter = Mockito.mock(EventWriter.class);
         var depositManager = new DepositManagerImpl(new XmlReaderImpl());
         var deposit = depositManager.loadDeposit(testDepositsBasedir.resolve(depositName));
+        var blockedTargetService = Mockito.mock(BlockedTargetService.class);
 
         var task = new DepositMigrationTask(
             mapper,
@@ -90,7 +93,8 @@ public class DepositStartImportTaskWrapperTest {
             1000,
             Path.of("dummy"),
             eventWriter,
-            depositManager
+            depositManager,
+            blockedTargetService
         );
 
         return task;

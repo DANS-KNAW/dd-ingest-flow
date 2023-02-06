@@ -15,14 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import gov.loc.repository.bagit.creator.CreatePayloadManifestsVistor;
 import gov.loc.repository.bagit.domain.Bag;
-import gov.loc.repository.bagit.domain.Manifest;
-import gov.loc.repository.bagit.hash.Hasher;
-import gov.loc.repository.bagit.hash.StandardSupportedAlgorithms;
-import gov.loc.repository.bagit.hash.SupportedAlgorithm;
-import gov.loc.repository.bagit.util.PathUtils;
-import gov.loc.repository.bagit.writer.ManifestWriter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,20 +23,9 @@ import nl.knaw.dans.ingest.core.DepositState;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static gov.loc.repository.bagit.hash.StandardSupportedAlgorithms.SHA1;
 
 @Data
 @NoArgsConstructor
@@ -56,6 +38,7 @@ public class Deposit {
 
     private String doi;
     private String urn;
+    private String dataverseDoi;
 
     private String filename;
     private String mimeType;
@@ -108,7 +91,8 @@ public class Deposit {
 
         if (StringUtils.equals(String.format("doi:%s", doi), result)) {
             return null;
-        } else {
+        }
+        else {
             return result;
         }
     }

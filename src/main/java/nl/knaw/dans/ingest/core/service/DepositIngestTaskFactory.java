@@ -43,6 +43,7 @@ public class DepositIngestTaskFactory {
     private final boolean isMigration;
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
+    private final BlockedTargetService blockedTargetService;
 
     public DepositIngestTaskFactory(
         boolean isMigration,
@@ -53,9 +54,9 @@ public class DepositIngestTaskFactory {
         DataverseExtra dataverseExtra,
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
-        ZipFileHandler zipFileHandler
+        ZipFileHandler zipFileHandler,
 
-    ) throws IOException, URISyntaxException {
+        BlockedTargetService blockedTargetService) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;
         this.dataverseClient = dataverseClient;
@@ -65,6 +66,7 @@ public class DepositIngestTaskFactory {
         this.depositManager = depositManager;
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
+        this.blockedTargetService = blockedTargetService;
     }
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
@@ -117,7 +119,8 @@ public class DepositIngestTaskFactory {
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir,
                 eventWriter,
-                depositManager
+                depositManager,
+                blockedTargetService
             );
         }
         else {
@@ -135,7 +138,9 @@ public class DepositIngestTaskFactory {
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir,
                 eventWriter,
-                depositManager);
+                depositManager,
+                blockedTargetService
+            );
         }
 
     }

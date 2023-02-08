@@ -31,15 +31,14 @@ public class BlockedTargetDAO extends AbstractDAO<BlockedTarget> {
     }
 
     public List<BlockedTarget> getTarget(String target) {
-        try (var session = currentSession()) {
-            var cb = session.getCriteriaBuilder();
-            var crit = cb.createQuery(BlockedTarget.class);
-            var r = crit.from(BlockedTarget.class);
+        var session = currentSession();
+        var cb = session.getCriteriaBuilder();
+        var crit = this.criteriaQuery();
+        var r = crit.from(BlockedTarget.class);
 
-            crit.select(r)
-                .where(cb.equal(r.get("target"), target));
+        crit.select(r)
+            .where(cb.equal(r.get("target"), target));
 
-            return session.createQuery(crit).list();
-        }
+        return list(crit);
     }
 }

@@ -25,6 +25,7 @@ import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ingest.core.AutoIngestArea;
+import nl.knaw.dans.ingest.core.BlockedTarget;
 import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
@@ -57,7 +58,7 @@ import java.net.URISyntaxException;
 
 public class DdIngestFlowApplication extends Application<DdIngestFlowConfiguration> {
 
-    private final HibernateBundle<DdIngestFlowConfiguration> hibernateBundle = new HibernateBundle<>(TaskEvent.class) {
+    private final HibernateBundle<DdIngestFlowConfiguration> hibernateBundle = new HibernateBundle<>(TaskEvent.class, BlockedTarget.class) {
 
         @Override
         public PooledDataSourceFactory getDataSourceFactory(DdIngestFlowConfiguration configuration) {
@@ -109,7 +110,8 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getValidateDansBag().getPingUrl());
 
         final BlockedTargetDAO blockedTargetDAO = new BlockedTargetDAO(hibernateBundle.getSessionFactory());
-        final BlockedTargetService blockedTargetService = new BlockedTargetServiceImpl(blockedTargetDAO);
+        final BlockedTargetService blockedTargetService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
+            .create(BlockedTargetServiceImpl.class, BlockedTargetDAO.class, blockedTargetDAO);
 
         final DepositIngestTaskFactoryBuilder builder = new DepositIngestTaskFactoryBuilder(
             dataverseClient,

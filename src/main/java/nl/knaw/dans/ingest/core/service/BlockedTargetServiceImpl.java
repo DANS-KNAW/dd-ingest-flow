@@ -33,6 +33,7 @@ public class BlockedTargetServiceImpl implements BlockedTargetService {
     }
 
     @Override
+    @UnitOfWork
     public boolean isBlocked(String target) {
         var targets = blockedTargetDAO.getTarget(target);
         return targets.size() > 0;

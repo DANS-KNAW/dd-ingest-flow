@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
+import nl.knaw.dans.ingest.core.DepositState;
 import nl.knaw.dans.ingest.core.TaskEvent.EventType;
 import nl.knaw.dans.ingest.core.TaskEvent.Result;
 import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
@@ -29,6 +30,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DepositIngestTaskTest {
 
@@ -108,6 +111,10 @@ public class DepositIngestTaskTest {
                 .when(spiedTask).resolveDoi(Mockito.any());
 
             spiedTask.run();
+
+            var deposit = spiedTask.getDeposit();
+            assertEquals(DepositState.FAILED, deposit.getState());
+            assertEquals("Deposit with id 4466a9d0-b835-4bff-81e2-ef104f8195d0 and target doi:id is blocked by a previous deposit", deposit.getStateDescription());
         }
 
         Mockito.verify(eventWriter)

@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
+import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class AbstractDepositsImportTaskIterator implements Iterator<DepositIngestTask> {
@@ -41,11 +44,11 @@ public abstract class AbstractDepositsImportTaskIterator implements Iterator<Dep
         this.eventWriter = eventWriter;
     }
 
-    protected boolean readAllDepositsFromInbox() {
-        try (Stream<Path> paths = Files.list(inboxDir)) {
-            paths.map(d -> taskFactory.createIngestTask(d, outBox, eventWriter))
-                .sorted().forEach(deque::add);
-            return !deque.isEmpty();
+    protected List<Path> getAllDepositPathsFromInbox() {
+        try (Stream<Path> paths = Files.list(inboxDir).filter(Files::isDirectory)) {
+            var pathList = paths.collect(Collectors.toList());
+            log.debug("Found {} deposits", pathList.size());
+            return pathList;
         }
         catch (IOException e) {
             throw new IllegalStateException("Could not read deposits from inbox", e);
@@ -53,7 +56,13 @@ public abstract class AbstractDepositsImportTaskIterator implements Iterator<Dep
     }
 
     protected void addTaskForDeposit(Path dir) {
-        deque.add(taskFactory.createIngestTask(dir, outBox, eventWriter));
+        try {
+            var task = taskFactory.createIngestTask(dir, outBox, eventWriter);
+            deque.add(task);
+        }
+        catch (IOException | InvalidDepositException e) {
+            log.error("Error while creating task", e);
+        }
     }
 
     @Override

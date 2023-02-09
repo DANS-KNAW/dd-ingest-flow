@@ -21,6 +21,8 @@ public class BoundedDepositImportTaskIterator extends  AbstractDepositsImportTas
     public BoundedDepositImportTaskIterator(Path inboxDir, Path outBox, DepositIngestTaskFactory taskFactory,
         EventWriter eventWriter) {
         super(inboxDir, outBox, taskFactory, eventWriter);
-        readAllDepositsFromInbox();
+        for(var p: getAllDepositPathsFromInbox()) {
+            addTaskForDeposit(p);
+        }
     }
 }

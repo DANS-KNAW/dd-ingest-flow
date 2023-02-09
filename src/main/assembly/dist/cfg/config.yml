@@ -93,6 +93,21 @@ validateDansBag:
   connectionTimeoutMs: 10000
   readTimeoutMs: 30000
 
+# this configures the bag validator client
+# the important thing is to disable chunked encoding
+# because it breaks the multipart/form-data headers
+dansBagValidatorClient:
+  timeout: 30000ms
+  connectionTimeout: 10000ms
+  chunkedEncodingEnabled: false
+  timeToLive: 1h
+  cookiesEnabled: false
+  maxConnections: 128
+  maxConnectionsPerRoute: 128
+  keepAlive: 0ms
+  retries: 0
+  userAgent: dd-ingest-flow
+
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
 #

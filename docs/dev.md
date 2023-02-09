@@ -54,7 +54,43 @@ Now you can start the service:
 start-service.sh
 ```
 
+## Prepare and start an ingest
+
+Once the dependencies and services are started you can prepare batches and start them
+with [dans-datastation-tools]{:target=_blank}.
+
+Configure the `ingest_flow` section and `dataverse` section of `.dans-datastation-tools.yml` which is  a copy of `src/datastation/example-dans-datastation-tools.yml`.
+
+* `service_baseurl` should refer to `localhost`
+* The `ingest_areas` should refer to the same folders as the `ingestFlow` section of `dd-ingest-flow/etc/config.yml`.
+  Replace the default `/var/opt/dans.knaw.nl/tmp` in the latter with `data`.
+* Set the `apiKey`
+* To repeat a test you'll need the `dv-dataset-destroy` script which needs `safety_latch: OFF`, the default is `ON`.
+
+The tools to copy/move your data into the `ingest_area` require a user group `deposits`.
+When running locally you don't have such a group, so you can't use these commands.
+Create the following structure. Depending on the command, replace `migration` with `import`.
+
+```
+dd-ingest-flow
+├── data/migration/inbox
+│   └── <SOME-DIR>
+│       └── <UUID>
+│           ├── bag
+│           │   └── *
+│           └── deposit.properties
+```
+
+Assuming `dans-datastation-tools` and `dd-ingest-flow` are in the same directory:
+
+```commandline
+cd ~/git/service/data-station/dans-datastation-tools
+poetry run ingest-flow-start-migration -s ../dd-ingest-flow/data/migration/inbox/<SOME-DIR>/<UUID>
+```
+
 
 [dans-dev-tools]: https://github.com/DANS-KNAW/dans-dev-tools#dans-dev-tools
+
+[dans-datastation-tools]: https://github.com/DANS-KNAW/dans-datastation-tools#dans-datastation-tools
 
 [dd-dtap]: https://github.com/DANS-KNAW/dd-dtap

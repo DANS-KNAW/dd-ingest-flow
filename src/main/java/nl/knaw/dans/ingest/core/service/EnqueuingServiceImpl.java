@@ -44,7 +44,8 @@ public class EnqueuingServiceImpl implements EnqueuingService {
                 for (T t : source) {
                     enqueue(t);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 log.error("Enqueuing could not start because of an error", e);
             }
         });

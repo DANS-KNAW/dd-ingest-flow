@@ -20,14 +20,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>dans-dropwizard-project</artifactId>
-        <groupId>nl.knaw.dans.shared</groupId>
-        <version>9.5.0</version>
+        <groupId>nl.knaw.dans</groupId>
+        <artifactId>dd-parent</artifactId>
+        <version>0.12.0</version>
     </parent>
 
-    <groupId>nl.knaw.dans</groupId>
     <artifactId>dd-ingest-flow</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.11.1-SNAPSHOT</version>
 
     <name>DD Ingest Flow</name>
     <url>https://github.com/DANS-KNAW/dd-ingest-flow</url>
@@ -36,8 +35,6 @@
 
     <properties>
         <main-class>nl.knaw.dans.ingest.DdIngestFlowApplication</main-class>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
     <scm>
@@ -46,6 +43,10 @@
     </scm>
 
     <dependencies>
+        <dependency>
+            <groupId>nl.knaw.dans</groupId>
+            <artifactId>dd-validate-dans-bag-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>nl.knaw.dans</groupId>
             <artifactId>dans-java-utils</artifactId>
@@ -86,7 +87,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.24</version>
         </dependency>
 
         <dependency>
@@ -95,7 +95,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Legacy -->
         <!-- testing -->
         <dependency>
             <groupId>org.mockito</groupId>
@@ -103,7 +102,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <!-- TODO: move version to parent pom -->
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
             <scope>test</scope>
@@ -111,7 +109,6 @@
         <dependency>
             <groupId>net.lingala.zip4j</groupId>
             <artifactId>zip4j</artifactId>
-            <version>2.11.2</version>
         </dependency>
 
         <!-- Apache Commons -->
@@ -149,14 +146,8 @@
         </dependency>
 
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.23.1</version>
         </dependency>
 
     </dependencies>
@@ -184,51 +175,28 @@
         </repository>
     </repositories>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>5.4.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-
-                        <configuration>
-                            <inputSpec>${project.basedir}/docs/api/api.yml</inputSpec>
-                            <generatorName>jaxrs-spec</generatorName>
-                            <generateModels>true</generateModels>
-                            <generateModelTests>false</generateModelTests>
-                            <generateApis>false</generateApis>
-                            <generateSupportingFiles>false</generateSupportingFiles>
-                            <configOptions>
-                                <modelPackage>nl.knaw.dans.ingest.api</modelPackage>
-                                <sourceFolder>src/gen/java/main</sourceFolder>
-                                <dateLibrary>java8</dateLibrary>
-                                <delegatePattern>true</delegatePattern>
-                                <interfaceOnly>true</interfaceOnly>
-                                <singleContentTypes>false</singleContentTypes>
-                            </configOptions>
-                            <globalProperties>
-                                <skipFormModel>false</skipFormModel>
-                            </globalProperties>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
+    <pluginRepositories>
+        <pluginRepository>
+            <id>dans-releases</id>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <url>https://maven.dans.knaw.nl/releases/</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>dans-snapshots</id>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <url>https://maven.dans.knaw.nl/snapshots/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <profiles>
         <profile>
@@ -244,17 +212,21 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>rpm-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-rpm</id>
-                                <goals>
-                                    <goal>attached-rpm</goal>
-                                </goals>
-                            </execution>
-                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- Do not deploy to Maven, but instead to YUM repo with dans-nexus-maven-plugin -->
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>nl.knaw.dans</groupId>
+                        <artifactId>dans-nexus-maven-plugin</artifactId>
                     </plugin>
                 </plugins>
             </build>
         </profile>
     </profiles>
+
 </project>

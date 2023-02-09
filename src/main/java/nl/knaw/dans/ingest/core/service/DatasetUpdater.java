@@ -95,7 +95,6 @@ public class DatasetUpdater extends DatasetEditor {
 
                 validateFileMetas(pathToFileInfoInLatestVersion);
 
-                // version
                 var versions = api.getAllVersions().getData();
                 var publishedVersions = versions.stream().filter(v -> v.getVersionState().equals("RELEASED")).count();
                 log.debug("Number of published versions so far: {}", publishedVersions);
@@ -218,6 +217,7 @@ public class DatasetUpdater extends DatasetEditor {
         dataverseClient.dataset(persistentId).deleteDraft();
     }
 
+    @SafeVarargs
     private void updateFileMetadata(Map<Integer, FileMeta>... fileMaps) throws IOException, DataverseException {
         var seen = new HashSet<Integer>();
 
@@ -227,7 +227,7 @@ public class DatasetUpdater extends DatasetEditor {
                 var id = file.getKey();
                 var fileMeta = file.getValue();
 
-                // dont do duplicates
+                // don't do duplicates
                 if (seen.contains(id)) {
                     continue;
                 }

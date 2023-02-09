@@ -147,7 +147,7 @@ public class DepositManagerImpl implements DepositManager {
         var deposit = new Deposit();
         deposit.setBagDir(bagDir);
         deposit.setDir(path);
-        deposit.setDoi(config.getString("identifier.doi"));
+        deposit.setDoi(config.getString("identifier.doi", ""));
         deposit.setUrn(config.getString("identifier.urn"));
         deposit.setId(config.getString("bag-store.bag-id"));
         deposit.setCreated(Optional.ofNullable(config.getString("creation.timestamp")).map(OffsetDateTime::parse).orElse(null));

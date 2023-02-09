@@ -15,8 +15,8 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.api.ValidateCommand.PackageTypeEnum;
-import nl.knaw.dans.ingest.api.ValidateOk;
+import nl.knaw.dans.validatedansbag.api.ValidateCommand.PackageTypeEnum;
+import nl.knaw.dans.validatedansbag.api.ValidateOk;
 
 import java.nio.file.Path;
 

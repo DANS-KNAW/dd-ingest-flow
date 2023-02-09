@@ -16,13 +16,14 @@
 package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.ingest.api.ValidateCommand;
+import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import nl.knaw.dans.ingest.core.DepositState;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 import nl.knaw.dans.ingest.core.service.exception.FailedDepositException;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +47,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class DepositIngestTask implements TargetedTask {
+public class DepositIngestTask implements TargetedTask, Comparable<DepositIngestTask> {
 
     private static final Logger log = LoggerFactory.getLogger(DepositIngestTask.class);
     protected final DataverseClient dataverseClient;
@@ -55,7 +57,7 @@ public class DepositIngestTask implements TargetedTask {
     protected final Map<String, String> variantToLicense;
     protected final List<URI> supportedLicenses;
     protected final DansBagValidator dansBagValidator;
-    protected final DepositToDvDatasetMetadataMapper datasetMetadataMapper;
+    protected final DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory;
     protected final int publishAwaitUnlockMillisecondsBetweenRetries;
     protected final int publishAwaitUnlockMaxNumberOfRetries;
     protected final Path outboxDir;
@@ -65,10 +67,23 @@ public class DepositIngestTask implements TargetedTask {
 
     private final DepositManager depositManager;
 
-    public DepositIngestTask(DepositToDvDatasetMetadataMapper datasetMetadataMapper, Deposit deposit, DataverseClient dataverseClient, String depositorRole, Pattern fileExclusionPattern,
-        ZipFileHandler zipFileHandler, Map<String, String> variantToLicense, List<URI> supportedLicenses, DansBagValidator dansBagValidator, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Path outboxDir, EventWriter eventWriter, DepositManager depositManager) {
-        this.datasetMetadataMapper = datasetMetadataMapper;
+    public DepositIngestTask(
+        DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
+        Deposit deposit,
+        DataverseClient dataverseClient,
+        String depositorRole,
+        Pattern fileExclusionPattern,
+        ZipFileHandler zipFileHandler,
+        Map<String, String> variantToLicense,
+        List<URI> supportedLicenses,
+        DansBagValidator dansBagValidator,
+        int publishAwaitUnlockMillisecondsBetweenRetries,
+        int publishAwaitUnlockMaxNumberOfRetries,
+        Path outboxDir,
+        EventWriter eventWriter,
+        DepositManager depositManager
+    ) {
+        this.datasetMetadataMapperFactory = datasetMetadataMapperFactory;
         this.deposit = deposit;
         this.dataverseClient = dataverseClient;
 
@@ -92,17 +107,22 @@ public class DepositIngestTask implements TargetedTask {
 
     @Override
     public void run() {
+        writeEvent(TaskEvent.EventType.START_PROCESSING, TaskEvent.Result.OK, null);
+
         try {
             doRun();
             updateDepositFromResult(DepositState.PUBLISHED, "The deposit was successfully ingested in the Data Station and will be automatically archived");
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.OK, null);
         }
         catch (RejectedDepositException e) {
             log.error("deposit was rejected", e);
             updateDepositFromResult(DepositState.REJECTED, e.getMessage());
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.REJECTED, e.getMessage());
         }
         catch (Throwable e) {
             log.error("deposit failed", e);
             updateDepositFromResult(DepositState.FAILED, e.getMessage());
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.FAILED, e.getMessage());
         }
     }
 
@@ -122,7 +142,7 @@ public class DepositIngestTask implements TargetedTask {
             depositManager.saveDeposit(deposit);
 
             switch (depositState) {
-                case ARCHIVED:
+                case PUBLISHED:
                     moveDepositToOutbox(OutboxSubDir.PROCESSED);
                     break;
                 case REJECTED:
@@ -321,7 +341,9 @@ public class DepositIngestTask implements TargetedTask {
         // TODO think about putting assertions inside a getter method
         checkPersonalDataPresent(deposit.getAgreements());
 
-        return datasetMetadataMapper.toDataverseDataset(
+        var mapper = datasetMetadataMapperFactory.createMapper(false);
+
+        return mapper.toDataverseDataset(
             deposit.getDdm(),
             deposit.getOtherDoiId(),
             deposit.getAgreements(),
@@ -354,4 +376,12 @@ public class DepositIngestTask implements TargetedTask {
             });
     }
 
+    @Override
+    public int compareTo(DepositIngestTask depositIngestTask) {
+        return getCreatedInstant().compareTo(depositIngestTask.getCreatedInstant());
+    }
+
+    protected Instant getCreatedInstant() {
+        return getDeposit().getBagCreated();
+    }
 }

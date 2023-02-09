@@ -29,21 +29,7 @@ import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public final class XPathEvaluator {
-
-    public static final String NAMESPACE_XML = "http://www.w3.org/XML/1998/namespace";
-    public static final String NAMESPACE_DC = "http://purl.org/dc/elements/1.1/";
-    public static final String NAMESPACE_DCX_DAI = "http://easy.dans.knaw.nl/schemas/dcx/dai/";
-    public static final String NAMESPACE_DDM = "http://easy.dans.knaw.nl/schemas/md/ddm/";
-    public static final String NAMESPACE_DCTERMS = "http://purl.org/dc/terms/";
-    public static final String NAMESPACE_XSI = "http://www.w3.org/2001/XMLSchema-instance";
-    public static final String NAMESPACE_ID_TYPE = "http://easy.dans.knaw.nl/schemas/vocab/identifier-type/";
-    public static final String NAMESPACE_DCX_GML = "http://easy.dans.knaw.nl/schemas/dcx/gml/";
-    public static final String NAMESPACE_FILES_XML = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/";
-    public static final String NAMESPACE_OPEN_GIS = "http://www.opengis.net/gml";
-    public static final String NAMESPACE_EASY_WORKFLOW = "http://easy.dans.knaw.nl/easy/workflow/";
-    public static final String NAMESPACE_DAMD = "http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/";
-    public static final String NAMESPACE_AGREEMENTS = "http://easy.dans.knaw.nl/schemas/bag/metadata/agreements/";
+public final class XPathEvaluator implements XmlNamespaces {
 
     private static XPath xpath;
 
@@ -54,19 +40,19 @@ public final class XPathEvaluator {
                 .newXPath();
 
             final var namespaceMap = new HashMap<String, String>();
-            namespaceMap.put("xml", NAMESPACE_XML);
-            namespaceMap.put("dc", NAMESPACE_DC);
-            namespaceMap.put("dcx-dai", NAMESPACE_DCX_DAI);
-            namespaceMap.put("ddm", NAMESPACE_DDM);
-            namespaceMap.put("dcterms", NAMESPACE_DCTERMS);
-            namespaceMap.put("xsi", NAMESPACE_XSI);
-            namespaceMap.put("id-type", NAMESPACE_ID_TYPE);
-            namespaceMap.put("dcx-gml", NAMESPACE_DCX_GML);
-            namespaceMap.put("files", NAMESPACE_FILES_XML);
-            namespaceMap.put("gml", NAMESPACE_OPEN_GIS);
-            namespaceMap.put("wfs", NAMESPACE_EASY_WORKFLOW);
-            namespaceMap.put("damd", NAMESPACE_DAMD);
-            namespaceMap.put("agreements", NAMESPACE_AGREEMENTS);
+            namespaceMap.put("xml", XmlNamespaces.NAMESPACE_XML);
+            namespaceMap.put("dc", XmlNamespaces.NAMESPACE_DC);
+            namespaceMap.put("dcx-dai", XmlNamespaces.NAMESPACE_DCX_DAI);
+            namespaceMap.put("ddm", XmlNamespaces.NAMESPACE_DDM);
+            namespaceMap.put("dcterms", XmlNamespaces.NAMESPACE_DCTERMS);
+            namespaceMap.put("xsi", XmlNamespaces.NAMESPACE_XSI);
+            namespaceMap.put("id-type", XmlNamespaces.NAMESPACE_ID_TYPE);
+            namespaceMap.put("dcx-gml", XmlNamespaces.NAMESPACE_DCX_GML);
+            namespaceMap.put("files", XmlNamespaces.NAMESPACE_FILES_XML);
+            namespaceMap.put("gml", XmlNamespaces.NAMESPACE_OPEN_GIS);
+            namespaceMap.put("wfs", XmlNamespaces.NAMESPACE_EASY_WORKFLOW);
+            namespaceMap.put("damd", XmlNamespaces.NAMESPACE_DAMD);
+            namespaceMap.put("agreements", XmlNamespaces.NAMESPACE_AGREEMENTS);
 
             xpath.setNamespaceContext(new NamespaceContext() {
 

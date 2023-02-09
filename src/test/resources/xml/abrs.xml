@@ -1,6 +1,4 @@
-<ddm:DDM xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://easy.dans.knaw.nl/schemas/md/ddm/ http://easy.dans.knaw.nl/schemas/md/2017/09/ddm.xsd">
+<ddm:DDM xmlns:ddm="http://schemas.dans.knaw.nl/dataset/ddm-v2/">
     <ddm:dcmiMetadata>
         <ddm:subject>no tags subject</ddm:subject>
         <ddm:subject schemeURI="https://data.cultureelerfgoed.nl/term/id/pan/PAN"

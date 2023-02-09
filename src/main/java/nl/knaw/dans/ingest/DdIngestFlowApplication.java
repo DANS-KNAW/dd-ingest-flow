@@ -38,18 +38,18 @@ import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
+import nl.knaw.dans.ingest.core.service.ZipFileHandler;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
 import nl.knaw.dans.ingest.health.DansBagValidatorHealthCheck;
 import nl.knaw.dans.ingest.health.DataverseHealthCheck;
 import nl.knaw.dans.ingest.resources.EventsResource;
 import nl.knaw.dans.ingest.resources.ImportsResource;
 import nl.knaw.dans.ingest.resources.MigrationsResource;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.concurrent.ExecutorService;
 
 public class DdIngestFlowApplication extends Application<DdIngestFlowConfiguration> {
 
@@ -78,12 +78,21 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
     @Override
     public void run(final DdIngestFlowConfiguration configuration, final Environment environment) throws IOException, URISyntaxException {
-        final ExecutorService taskExecutor = configuration.getIngestFlow().getTaskQueue().build(environment);
-        final TargetedTaskSequenceManager targetedTaskSequenceManager = new TargetedTaskSequenceManager(taskExecutor);
-        final DataverseClient dataverseClient = configuration.getDataverse().build();
+        final var taskExecutor = configuration.getIngestFlow().getTaskQueue().build(environment);
+        final var targetedTaskSequenceManager = new TargetedTaskSequenceManager(taskExecutor);
+        final var dataverseClient = configuration.getDataverse().build();
+
+        IngestFlowConfigReader.readIngestFlowConfiguration(configuration.getIngestFlow());
 
         final var xmlReader = new XmlReaderImpl();
         final var depositManager = new DepositManagerImpl(xmlReader);
+        final var depositToDvDatasetMetadataMapperFactory = new DepositToDvDatasetMetadataMapperFactory(
+            configuration.getIngestFlow().getIso1ToDataverseLanguage(),
+            configuration.getIngestFlow().getIso2ToDataverseLanguage(),
+            dataverseClient
+        );
+
+        var zipFileHandler = new ZipFileHandler(configuration.getIngestFlow().getZipWrappingTempDir());
 
         var dansBagValidatorClient = new JerseyClientBuilder(environment)
             .withProvider(MultiPartFeature.class)
@@ -99,16 +108,23 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             false,
             dataverseClient,
             validator,
-            xmlReader, configuration.getIngestFlow(),
+            configuration.getIngestFlow(),
             configuration.getDataverseExtra(),
-            depositManager);
+            depositManager,
+            depositToDvDatasetMetadataMapperFactory,
+            zipFileHandler
+        );
+
         final var migrationTaskFactory = new DepositIngestTaskFactory(
             true,
             dataverseClient,
             validator,
-            xmlReader, configuration.getIngestFlow(),
+            configuration.getIngestFlow(),
             configuration.getDataverseExtra(),
-            depositManager);
+            depositManager,
+            depositToDvDatasetMetadataMapperFactory,
+            zipFileHandler
+        );
 
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
@@ -147,4 +163,5 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         environment.jersey().register(new EventsResource(taskEventDAO));
         environment.jersey().register(new CsvMessageBodyWriter());
     }
+
 }

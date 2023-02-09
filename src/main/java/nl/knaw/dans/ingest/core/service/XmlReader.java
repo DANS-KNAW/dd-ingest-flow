@@ -22,18 +22,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public interface XmlReader {
-
-    String NAMESPACE_XML = "http://www.w3.org/XML/1998/namespace";
-    String NAMESPACE_DC = "http://purl.org/dc/elements/1.1/";
-    String NAMESPACE_DCX_DAI = "http://easy.dans.knaw.nl/schemas/dcx/dai/";
-    String NAMESPACE_DDM = "http://easy.dans.knaw.nl/schemas/md/ddm/";
-    String NAMESPACE_DCTERMS = "http://purl.org/dc/terms/";
-    String NAMESPACE_XSI = "http://www.w3.org/2001/XMLSchema-instance";
-    String NAMESPACE_ID_TYPE = "http://easy.dans.knaw.nl/schemas/vocab/identifier-type/";
-    String NAMESPACE_DCX_GML = "http://easy.dans.knaw.nl/schemas/dcx/gml/";
-    String NAMESPACE_FILES_XML = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/";
-    String NAMESPACE_OPEN_GIS = "http://www.opengis.net/gml";
+public interface XmlReader extends XmlNamespaces {
 
     Document readXmlFile(Path path) throws ParserConfigurationException, IOException, SAXException;
 

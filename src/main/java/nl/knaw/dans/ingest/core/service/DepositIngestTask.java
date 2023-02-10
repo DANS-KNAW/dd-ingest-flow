@@ -249,12 +249,16 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             return;
         }
 
-        blockedTargetService.blockTarget(
-            deposit.getDepositId(),
-            target,
-            depositState.toString(),
-            message
-        );
+        try {
+            blockedTargetService.blockTarget(
+                deposit.getDepositId(),
+                target,
+                depositState.toString(),
+                message
+            );
+        } catch (TargetBlockedException e) {
+            log.warn("Target {} is already blocked", target);
+        }
     }
 
     void checkDepositType() {

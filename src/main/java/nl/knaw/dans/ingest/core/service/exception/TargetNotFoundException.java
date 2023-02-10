@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2022 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
@@ -14,17 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.service.exception;
 
-import nl.knaw.dans.ingest.core.service.exception.TargetBlockedException;
-import nl.knaw.dans.ingest.core.service.exception.TargetNotFoundException;
-
-public interface BlockedTargetService {
-    void unblockTarget(String target) throws TargetNotFoundException;
-
-    void blockTarget(String target) throws TargetBlockedException;
-
-    void blockTarget(String depositId, String target, String state, String message) throws TargetBlockedException;
-
-    boolean isBlocked(String target);
+public class TargetNotFoundException extends Exception {
+    public TargetNotFoundException(String msg) {
+        super(msg);
+    }
 }

@@ -28,10 +28,10 @@ public class BlockedTarget {
     @Column(name = "target", nullable = false)
     private String target;
 
-    @Column(name = "deposit_id", nullable = false)
+    @Column(name = "deposit_id")
     private String depositId;
 
-    @Column(name = "state", nullable = false)
+    @Column(name = "state")
     private String state;
 
     @Column(name = "message")

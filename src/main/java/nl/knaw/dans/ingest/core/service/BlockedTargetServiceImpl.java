@@ -17,6 +17,8 @@ package nl.knaw.dans.ingest.core.service;
 
 import io.dropwizard.hibernate.UnitOfWork;
 import nl.knaw.dans.ingest.core.BlockedTarget;
+import nl.knaw.dans.ingest.core.service.exception.TargetBlockedException;
+import nl.knaw.dans.ingest.core.service.exception.TargetNotFoundException;
 import nl.knaw.dans.ingest.db.BlockedTargetDAO;
 
 public class BlockedTargetServiceImpl implements BlockedTargetService {
@@ -24,6 +26,32 @@ public class BlockedTargetServiceImpl implements BlockedTargetService {
 
     public BlockedTargetServiceImpl(BlockedTargetDAO blockedTargetDAO) {
         this.blockedTargetDAO = blockedTargetDAO;
+    }
+
+    @Override
+    @UnitOfWork
+    public void unblockTarget(String target) throws TargetNotFoundException {
+        var records = blockedTargetDAO.getTarget(target);
+
+        if (records.size() == 0) {
+            throw new TargetNotFoundException("Target not found");
+        }
+
+        for (var record : records) {
+            blockedTargetDAO.delete(record);
+        }
+    }
+
+    @Override
+    @UnitOfWork
+    public void blockTarget(String target) throws TargetBlockedException {
+        var existing = blockedTargetDAO.getTarget(target);
+
+        if (existing.size() > 0) {
+            throw new TargetBlockedException("Target is already blocked");
+        }
+
+        blockedTargetDAO.save(new BlockedTarget(null, target, null, null));
     }
 
     @Override

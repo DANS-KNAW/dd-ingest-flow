@@ -41,4 +41,8 @@ public class BlockedTargetDAO extends AbstractDAO<BlockedTarget> {
 
         return list(crit);
     }
+
+    public void delete(BlockedTarget target) {
+        currentSession().delete(target);
+    }
 }

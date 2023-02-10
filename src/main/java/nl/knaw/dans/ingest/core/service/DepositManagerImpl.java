@@ -185,9 +185,9 @@ public class DepositManagerImpl implements DepositManager {
         var value = metadata.get(key);
 
         if (value == null) {
-
             throw new IllegalArgumentException(String.format("No '%s' value found in bag", key));
         }
+
         if (value.size() != 1) {
             throw new IllegalArgumentException(String.format("Value '%s' should contain exactly 1 value in bag; %s found", key, value.size()));
         }

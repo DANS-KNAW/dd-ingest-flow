@@ -61,6 +61,7 @@ public class ManifestHelper {
         var tagFilesMap = Hasher.createManifestToMessageDigestMap(algorithms);
         var bagRootDir = bag.getRootDir();
         var tagVisitor = new CreateTagManifestsVistor(tagFilesMap, true) {
+
             @Override
             public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
                 /*
@@ -75,8 +76,10 @@ public class ManifestHelper {
                  */
                 var isTagManifest = bagRootDir.relativize(path).getNameCount() == 1 &&
                     path.getFileName().toString().startsWith("tagmanifest-");
-                if (isTagManifest) return FileVisitResult.CONTINUE;
-                else return super.visitFile(path, attrs);
+                if (isTagManifest)
+                    return FileVisitResult.CONTINUE;
+                else
+                    return super.visitFile(path, attrs);
             }
         };
         Files.walkFileTree(bagRootDir, tagVisitor);

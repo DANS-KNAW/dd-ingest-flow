@@ -73,8 +73,8 @@ public class Description extends Base {
     }
 
     public static boolean isNotMapped(Node node) {
-        var descr = getAttribute(node, "descriptionType");
-        return descr.isEmpty() || !List.of("Other", "SeriesInformation").contains(descr.get().getTextContent());
+        var descriptionType = getAttribute(node, "descriptionType");
+        return descriptionType.isEmpty() || !List.of("Other", "SeriesInformation").contains(descriptionType.get().getTextContent());
     }
 
     public static boolean isSeriesInformation(Node node) {

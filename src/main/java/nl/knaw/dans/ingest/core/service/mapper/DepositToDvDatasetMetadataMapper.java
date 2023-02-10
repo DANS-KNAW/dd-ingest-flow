@@ -145,7 +145,8 @@ public class DepositToDvDatasetMetadataMapper {
             if (hasRestrictedOrNoneFiles) {
                 // stick to initial value if nothing is found
                 termsOfAccess = getDctAccessRights(ddm).map(Node::getTextContent).findFirst().orElse(termsOfAccess);
-            }else {
+            }
+            else {
                 citationFields.addDescription(getDctAccessRights(ddm), Description.toDescription);
             }
 
@@ -171,7 +172,7 @@ public class DepositToDvDatasetMetadataMapper {
                 .filter(DatesOfCollection::isValidDistributorDate), DatesOfCollection.toDistributorValueObject);
             citationFields.addDataSources(getDataSources(ddm));
             citationFields.addNotesText(getProvenance(ddm));
-            citationFields.addSeries(getDcmiDdmDescriptions(ddm).filter(Description::isSeriesInformation),Description.toSeries);
+            citationFields.addSeries(getDcmiDdmDescriptions(ddm).filter(Description::isSeriesInformation), Description.toSeries);
 
         }
         else {

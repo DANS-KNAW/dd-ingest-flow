@@ -9,8 +9,9 @@ SYNOPSIS
     dd-ingest-flow { server | check }
 
     # Client
-    ingest-flow start-import <path-to-batch>
-    ingest-flow start-migration <path-to-batch>
+    ingest-flow-* 
+
+For `ingest-flow-*` commands see [dans-datastation-tools]{:target=_blank}.
 
 DESCRIPTION
 -----------
@@ -18,7 +19,7 @@ DESCRIPTION
 ### Summary
 
 The `dd-ingest-flow` service imports [deposit directories]{:target=_blank} into Dataverse. If successful, this will result in a new dataset in
-Dataverse or a new version of a an existing dataset. The input deposit directories must be located in a directory on local disk storage known as
+Dataverse or a new version of an existing dataset. The input deposit directories must be located in a directory on local disk storage known as
 an [ingest area](#ingest-areas).
 
 ### Ingest areas
@@ -38,7 +39,7 @@ The service supports three ingest areas:
 
 #### Order of deposit processing
 
-A deposit directory represents one dataset version. The version history of a datasets is represented by a sequence of deposit directories. When enqueueing
+A deposit directory represents one dataset version. The version history of a datasets is represented by a sequence of deposit directories. When enqueuing
 deposits the program will first order them by the timestamp in the `Created` element in the contained bag's `bag-info.txt` file.
 
 #### Processing steps
@@ -46,7 +47,7 @@ deposits the program will first order them by the timestamp in the `Created` ele
 The processing of a deposit consists of the following steps:
 
 1. Check that the deposit is a valid [deposit directory]{:target=_blank}.
-2. Check that the bag in the deposit is a valid [DANS bag]{:target=_blank}.
+2. Check that the bag in the deposit is a valid v1 [DANS bag]{:target=_blank}.
 3. Map the dataset level metadata to the metadata fields expected in the target Dataverse.
 4. If:
     * deposit represents first version of a dataset: create a new dataset draft.
@@ -59,7 +60,7 @@ When receiving a deposit that specifies a new version for an existing dataset (a
 data that must be in the new version. This means:
 
 * The metadata specified completely overwrites the metadata in the latest version. So, even if the client needs to change only one word, it must send all the
-  existing metadata with only that particular word changed. Any metadata left out will be deleted.
+  existing metadata with only that particular word changed. Any metadata left out will be deleted in the new version.
 * The files will replace the files in the latest version. So the files that are in the deposit are the ones that will be in the new version. If a file is to be
   deleted from the new version, it should simply be left out in the deposit. If a file is to remain unchanged in the new version, an exact copy of the current
   file must be sent.
@@ -72,133 +73,14 @@ data that must be in the new version. This means:
 
 ### Mapping to Dataverse dataset
 
-!!! note "Target Dataverse variations in mapping"
+The mapping rules are documented in the spreadsheet [DD Ingest Flow Mapping Rules]{:target=_blank}. Access to the Google spreadsheet is granted on 
+request to customers of DANS.
 
-    In the current version of the tool there is only one target Dataverse, and therefore only one set of
-    mapping rules. This will change in the future, as the target Dataverses will be different data stations with different requirements.
+The spreadsheet includes rules for:
 
-#### Dataset level metadata
-
-Per metadata block a mapping is defined from information in the deposit directory to the fields in the block. The details of these mappings are defined in
-internal document, but can be found in the [DepositToDvDatasetMetadataMapper.scala]{:target=_blank} class as well.
-
-If a block is found to be active in the targeted Dataverse instance, the mapping is executed, if the block is inactive, it is skipped.
-
-Mappings for the following blocks have been defined:
-
-* Citation Metadata (`citation`)
-* Rights Metadata (`dansRights`)
-* Relation Metadata (`dansRelationMetadata`)
-* Archaeology-Specific Metadata (`dansArchaeologyMetadata`)
-* Temporal and Spatial Coverage (`dansTemporalSpatial`)
-* Data Vault Metadata (`dansDataVaultMetadata`)
-
-#### Embargoes
-
-The element `ddm:available` in `dataset.xml` contains the date when the files in the dataset should become available. If it contains a future date, all the
-files in the deposit are placed under embargo, excluding the ones that have been released in a previous version. The files that have been released in a previous
-version may have been placed under embargo when that version was published. However, it is not possible to change that embargo by creating a new version.
-
-Although Dataverse allows you to set embargo at the file level, it is currently not possible to specify an embargo for specific files through the DANS deposit
-APIs.
-
-#### File level metadata
-
-The file level metadata is derived from the deposit as follows:
-
-From `<bag>/metadata/files.xml` the corresponding `<file>` element is looked up:
-
-* The directory part of the `filepath` attribute is used for `directoryLabel`
-* The filename part is used as the file name (i.e. `label`).
-* The child elements of `<file>` are used to [determine the description attribute in Dataverse](#description-attribute)
-* If an `<accessibleToRights>` element is found then the dataset's accessibility is based on the value in it:
-
-
-| accessibleToRights   | Restrict? |
-|----------------------|-----------|
-| `KNOWN`              | Yes       |
-| `NONE`               | Yes       |
-| `RESTRICTED_REQUEST` | Yes       |
-| `ANONYMOUS`          | No        |
-
-Otherwise the dataset's accessibility is based on the `<ddm:accessRights>` value found in
-  `<bag>/metadata/dataset.xml`:
-
-| accessRights                       | Restrict? |
-|------------------------------------|-----------|
-| `OPEN_ACCESS_FOR_REGISTERED_USERS` | Yes       |
-| `NO_ACCESS`                        | Yes       |
-| `REQUEST_PERMISSION`               | Yes       |
-| `OPEN_ACCESS`                      | No        |
-
-##### Description attribute
-
-In Dataverse a file has a description attribute. The value of this attribute is used to include child elements of the source `<file>` element
-in `<bag>/metadata/files.xml`. These elements are displayed in the Dataverse description attribute as follows:
-
-```
-key1: "value1"; key2: "value2"; ... 
-```
-
-Multiple values for one key are separated by commas:
-
-```
-key1: "value1a", "value1b"; key2: "value2a", "value2b"; ... 
-```
-
-The source element is either
-
-```xml
-
-<keyvaluepair>
-    <key>key</key>
-    <value>value</key>
-</keyvaluepair>
-```
-
-or
-
-```xml
-
-<key>value</key>
-```
-
-if `key` is one of the following:
-
-* `description`
-* `title`
-* `hardware`
-* `original_OS`
-* `software`
-* `notes`
-* `case_quantity`
-* `file_category`
-* `othmat_codebook`
-* `data_collector`
-* `collection_date`
-* `time_period`
-* `geog_cover`
-* `geog_unit`
-* `local_georef`
-* `mapprojection`
-* `analytic_units`
-
-!!! note
-
-    * If there is only one key-value pair and its key is 'description', the value is used a the value for the decsription attribute without the aformentioned 
-      formatting;
-    * Any title key-value-pair that thas a value equal to the filename (case insensitively) is omitted.
-
-#### Permission requests
-
-In Dataverse permission requests can be enabled only at the dataset level. It is not possible to allow permission requests for one file and disallow them for
-another file in the same dataset (even if the two files are in different versions). The following rule will be applied to enabled or disable permission
-requests:
-
-*If one or more files in the dataset (in any of its version) have an (effective) accessibility of `NONE`, permission requests will be disabled; otherwise they
-will be enabled.*
-
-Note that it is therefore possible for an update deposit to disable permission requests on a dataset, but not to enable them.
+* dataset level metadata
+* dataset terms
+* file level metadata and attributes (including setting an embargo)
 
 ARGUMENTS
 ---------
@@ -267,4 +149,4 @@ mvn clean install assembly:single
 
 [EASY]: https://easy.dans.knaw.nl
 
-[DepositToDvDatasetMetadataMapper.scala]: https://github.com/DANS-KNAW/dd-ingest-flow/blob/master/src/main/scala/nl.knaw.dans.easy.dd2d/DepositToDvDatasetMetadataMapper.scala
+[DD Ingest Flow Mapping Rules]: https://docs.google.com/spreadsheets/d/1G5YHSDg3a91nI9NgRjbz11iRFU9qgnNkde6K84j1NWI/edit#gid=107937978 

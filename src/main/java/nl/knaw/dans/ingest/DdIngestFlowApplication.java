@@ -93,13 +93,14 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
         final var xmlReader = new XmlReaderImpl();
 
+        // the parts responsible for reading and writing deposits to disk
         final var bagReader = new BagReader();
         final var bagDirResolver = new BagDirResolverImpl();
         final var depositReader = new DepositReaderImpl(bagReader, xmlReader, bagDirResolver);
         final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver);
         final var depositWriter = new DepositWriterImpl();
-
         final var depositManager = new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);
+
         final var depositToDvDatasetMetadataMapperFactory = new DepositToDvDatasetMetadataMapperFactory(
             configuration.getIngestFlow().getIso1ToDataverseLanguage(),
             configuration.getIngestFlow().getIso2ToDataverseLanguage(),

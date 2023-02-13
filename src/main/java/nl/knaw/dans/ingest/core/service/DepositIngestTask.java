@@ -142,13 +142,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         }
     }
 
-    void moveDepositToOutbox(OutboxSubDir subDir) throws IOException {
-        var target = this.outboxDir.resolve(subDir.getValue())
-            .resolve(deposit.getDir().getFileName());
-
-        Files.move(deposit.getDir(), target);
-    }
-
     void moveDepositToOutbox(Path path, OutboxSubDir subDir) throws IOException {
         var target = this.outboxDir.resolve(subDir.getValue())
             .resolve(path.getFileName());

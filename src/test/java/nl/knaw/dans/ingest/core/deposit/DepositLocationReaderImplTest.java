@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.deposit;
 
+import nl.knaw.dans.ingest.core.io.BagDataManager;
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -31,11 +32,12 @@ class DepositLocationReaderImplTest {
         Mockito.doReturn(Path.of("bagdir"))
             .when(bagDirResolver).getValidBagDir(Mockito.any());
 
+        var bagDataManager = Mockito.mock(BagDataManager.class);
         var config = new BaseConfiguration();
         config.setProperty("dataverse.sword-token", "token");
         config.setProperty("identifier.doi", "doi");
 
-        var reader = new DepositLocationReaderImpl(bagDirResolver);
+        var reader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
         var result = reader.getTarget(config);
 
         assertEquals("token", result);
@@ -47,11 +49,12 @@ class DepositLocationReaderImplTest {
         Mockito.doReturn(Path.of("bagdir"))
             .when(bagDirResolver).getValidBagDir(Mockito.any());
 
+        var bagDataManager = Mockito.mock(BagDataManager.class);
         var config = new BaseConfiguration();
         config.setProperty("dataverse.sword-token", null);
         config.setProperty("identifier.doi", "doi");
 
-        var reader = new DepositLocationReaderImpl(bagDirResolver);
+        var reader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
         var result = reader.getTarget(config);
 
         assertEquals("doi", result);
@@ -63,11 +66,12 @@ class DepositLocationReaderImplTest {
         Mockito.doReturn(Path.of("bagdir"))
             .when(bagDirResolver).getValidBagDir(Mockito.any());
 
+        var bagDataManager = Mockito.mock(BagDataManager.class);
         var config = new BaseConfiguration();
         config.setProperty("dataverse.sword-token", " ");
         config.setProperty("identifier.doi", "doi");
 
-        var reader = new DepositLocationReaderImpl(bagDirResolver);
+        var reader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
         var result = reader.getTarget(config);
 
         assertEquals("doi", result);
@@ -83,7 +87,9 @@ class DepositLocationReaderImplTest {
         config.setProperty("dataverse.sword-token", " ");
         config.setProperty("identifier.doi", " ");
 
-        var reader = new DepositLocationReaderImpl(bagDirResolver);
+        var bagDataManager = Mockito.mock(BagDataManager.class);
+
+        var reader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
         var result = reader.getTarget(config);
 
         assertEquals("", result);

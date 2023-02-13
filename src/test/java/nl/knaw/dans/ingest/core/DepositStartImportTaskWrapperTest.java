@@ -22,6 +22,7 @@ import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositWriterImpl;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.io.BagDataManager;
 import nl.knaw.dans.ingest.core.io.FileService;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DepositIngestTask;
@@ -78,11 +79,12 @@ public class DepositStartImportTaskWrapperTest {
         var validator = Mockito.mock(DansBagValidator.class);
         var eventWriter = Mockito.mock(EventWriter.class);
         var fileService = Mockito.mock(FileService.class);
+        var bagDataManager = Mockito.mock(BagDataManager.class);
         var bagDirResolver = new BagDirResolverImpl(fileService);
-        var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver);
+        var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
         var bagReader = new BagReader();
-        var depositReader = new DepositReaderImpl(bagReader, xmlReader, bagDirResolver);
-        var depositWriter = new DepositWriterImpl();
+        var depositReader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager);
+        var depositWriter = new DepositWriterImpl(bagDataManager);
         var depositManager = new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);
         // TODO dont actually read the data from disk, just keep it in this class
         //        var depositLocation = depositLocationReader.readDepositLocation(testDepositsBasedir.resolve(depositName));

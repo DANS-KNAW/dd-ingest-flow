@@ -44,7 +44,7 @@ public class DepositManagerImpl implements DepositManager {
     }
 
     @Override
-    public void saveDeposit(Deposit deposit) throws InvalidDepositException {
+    public void updateDeposit(Deposit deposit) throws InvalidDepositException {
         depositWriter.saveDeposit(deposit);
     }
 

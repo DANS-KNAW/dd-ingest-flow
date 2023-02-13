@@ -29,7 +29,7 @@ public interface DepositManager {
 
     DepositLocation readDepositLocation(Path path) throws InvalidDepositException, IOException;
 
-    void saveDeposit(Deposit deposit) throws InvalidDepositException;
+    void updateDeposit(Deposit deposit) throws InvalidDepositException;
 
     void updateAndMoveDeposit(Deposit deposit, Path target) throws IOException, InvalidDepositException;
 

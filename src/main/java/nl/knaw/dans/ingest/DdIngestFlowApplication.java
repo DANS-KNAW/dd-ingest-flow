@@ -35,6 +35,7 @@ import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositWriterImpl;
+import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
 import nl.knaw.dans.ingest.core.io.FileServiceImpl;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
@@ -97,10 +98,11 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
         // the parts responsible for reading and writing deposits to disk
         final var bagReader = new BagReader();
+        final var bagDataManager = new BagDataManagerImpl(bagReader);
         final var bagDirResolver = new BagDirResolverImpl(fileService);
-        final var depositReader = new DepositReaderImpl(bagReader, xmlReader, bagDirResolver);
-        final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver);
-        final var depositWriter = new DepositWriterImpl();
+        final var depositReader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager);
+        final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
+        final var depositWriter = new DepositWriterImpl(bagDataManager);
         final var depositManager = new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);
 
         final var depositToDvDatasetMetadataMapperFactory = new DepositToDvDatasetMetadataMapperFactory(

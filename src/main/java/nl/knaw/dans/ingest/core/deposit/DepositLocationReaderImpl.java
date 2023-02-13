@@ -15,17 +15,13 @@
  */
 package nl.knaw.dans.ingest.core.deposit;
 
+import gov.loc.repository.bagit.domain.Metadata;
 import gov.loc.repository.bagit.exceptions.InvalidBagitFileFormatException;
 import gov.loc.repository.bagit.exceptions.UnparsableVersionException;
-import gov.loc.repository.bagit.reader.BagitTextFileReader;
-import gov.loc.repository.bagit.reader.KeyValueReader;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.io.BagDataManager;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 
@@ -33,16 +29,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class DepositLocationReaderImpl implements DepositLocationReader {
     private final BagDirResolver bagDirResolver;
 
-    public DepositLocationReaderImpl(BagDirResolver bagDirResolver) {
+    private final BagDataManager bagDataManager;
+
+    public DepositLocationReaderImpl(BagDirResolver bagDirResolver, BagDataManager bagDataManager) {
         this.bagDirResolver = bagDirResolver;
+        this.bagDataManager = bagDataManager;
     }
 
     @Override
@@ -50,23 +46,20 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
         var bagDir = bagDirResolver.getValidBagDir(path);
 
         try {
-            var properties = getProperties(bagDir);
+            var properties = bagDataManager.readConfiguration(bagDir.resolve("deposit.properties"));
+            var bagInfo = bagDataManager.readBagMetadata(path);
             var depositId = getDepositId(path);
             var target = getTarget(properties);
-            var created = getCreated(bagDir);
+            var created = getCreated(bagInfo);
 
             return new DepositLocation(path, target, depositId.toString(), created);
         }
         catch (ConfigurationException e) {
             throw new InvalidDepositException("Deposit.properties file could not be read", e);
         }
-    }
-
-    List<SimpleImmutableEntry<String, String>> getBagInfo(Path bagDir) throws InvalidBagitFileFormatException, IOException, UnparsableVersionException {
-        var bagitInfo = BagitTextFileReader.readBagitTextFile(bagDir.resolve("bagit.txt"));
-        var encoding = bagitInfo.getValue();
-
-        return KeyValueReader.readKeyValuesFromFile(bagDir.resolve("bag-info.txt"), ":", encoding);
+        catch (UnparsableVersionException | InvalidBagitFileFormatException | IOException e) {
+            throw new InvalidDepositException("BagIt file(s) could not be read", e);
+        }
     }
 
     String getTarget(Configuration properties) {
@@ -87,19 +80,6 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
         return target;
     }
 
-    Configuration getProperties(Path bagDir) throws ConfigurationException {
-        var propertiesFile = bagDir.resolve("deposit.properties");
-        var params = new Parameters();
-        var paramConfig = params.properties()
-            .setFileName(propertiesFile.toString());
-
-        var builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>
-            (PropertiesConfiguration.class, null, true)
-            .configure(paramConfig);
-
-        return builder.getConfiguration();
-    }
-
     UUID getDepositId(Path path) throws InvalidDepositException {
         try {
             return UUID.fromString(path.getFileName().toString());
@@ -112,13 +92,10 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
         }
     }
 
-    OffsetDateTime getCreated(Path path) throws InvalidDepositException {
+    OffsetDateTime getCreated(Metadata bagInfo) throws InvalidDepositException {
         try {
             // the created date comes from bag-info.txt, with the Created property
-            var bagInfo = getBagInfo(path);
-            var createdItems = bagInfo.stream()
-                .filter(s -> s.getKey().equalsIgnoreCase("created"))
-                .collect(Collectors.toList());
+            var createdItems = bagInfo.get("created");
 
             if (createdItems.size() < 1) {
                 throw new InvalidDepositException("Missing 'created' property in bag-info.txt");
@@ -127,13 +104,10 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
                 throw new InvalidDepositException("Value 'created' should contain exactly 1 value in bag; " + createdItems.size() + " found");
             }
 
-            return OffsetDateTime.parse(createdItems.get(0).getValue());
+            return OffsetDateTime.parse(createdItems.get(0));
         }
         catch (DateTimeParseException e) {
             throw new InvalidDepositException("Error while parsing date", e);
-        }
-        catch (InvalidBagitFileFormatException | IOException | UnparsableVersionException e) {
-            throw new InvalidDepositException("BagIt file(s) could not be read", e);
         }
     }
 }

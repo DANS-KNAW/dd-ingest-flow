@@ -19,6 +19,8 @@ import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.reader.BagReader;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.io.BagDataManager;
+import nl.knaw.dans.ingest.core.io.FileService;
 import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import org.apache.commons.configuration2.Configuration;
@@ -32,7 +34,6 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -40,15 +41,17 @@ import java.util.Optional;
 public class DepositReaderImpl implements DepositReader {
     private final String FILENAME = "deposit.properties";
 
-    private final BagReader bagReader;
     private final XmlReader xmlReader;
-
     private final BagDirResolver bagDirResolver;
+    private final FileService fileService;
 
-    public DepositReaderImpl(BagReader bagReader, XmlReader xmlReader, BagDirResolver bagDirResolver) {
-        this.bagReader = bagReader;
+    private final BagDataManager bagDataManager;
+
+    public DepositReaderImpl(XmlReader xmlReader, BagDirResolver bagDirResolver, FileService fileService, BagDataManager bagDataManager) {
         this.xmlReader = xmlReader;
         this.bagDirResolver = bagDirResolver;
+        this.fileService = fileService;
+        this.bagDataManager = bagDataManager;
     }
 
     @Override
@@ -62,15 +65,8 @@ public class DepositReaderImpl implements DepositReader {
             var bagDir = bagDirResolver.getValidBagDir(path);
             var propertiesFile = getDepositPath(path);
 
-            var params = new Parameters();
-            var paramConfig = params.properties()
-                .setFileName(propertiesFile.toString());
-
-            var builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class, null, true).configure(
-                paramConfig);
-
-            var config = builder.getConfiguration();
-            var bagInfo = bagReader.read(bagDir);
+            var config = bagDataManager.readConfiguration(propertiesFile);
+            var bagInfo = bagDataManager.readBag(bagDir);
 
             var deposit = mapToDeposit(path, bagDir, config, bagInfo);
 
@@ -88,7 +84,7 @@ public class DepositReaderImpl implements DepositReader {
     }
 
     Document readOptionalXmlFile(Path path) throws ParserConfigurationException, IOException, SAXException {
-        if (Files.exists(path)) {
+        if (fileService.fileExists(path)) {
             return xmlReader.readXmlFile(path);
         }
 

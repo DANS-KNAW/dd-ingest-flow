@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.deposit;
 
 import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.io.BagDataManager;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -26,27 +27,27 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 
 public class DepositWriterImpl implements DepositWriter {
+    private final BagDataManager bagDataManager;
+
+    public DepositWriterImpl(BagDataManager bagDataManager) {
+        this.bagDataManager = bagDataManager;
+    }
+
     @Override
     public void saveDeposit(Deposit deposit) throws InvalidDepositException {
         var path = deposit.getDir();
         var propertiesFile = path.resolve("deposit.properties");
-
-        var params = new Parameters();
-        var paramConfig = params.properties()
-            .setFileName(propertiesFile.toString());
-
-        var builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class, null, true).configure(
-            paramConfig);
+        var config = new HashMap<String, Object>();
+        config.put("state.label", deposit.getState().toString());
+        config.put("state.description", deposit.getStateDescription());
+        config.put("identifier.doi", deposit.getDoi());
+        config.put("identifier.urn", deposit.getUrn());
 
         try {
-            var config = builder.getConfiguration();
-            config.setProperty("state.label", deposit.getState().toString());
-            config.setProperty("state.description", deposit.getStateDescription());
-            config.setProperty("identifier.doi", deposit.getDoi());
-            config.setProperty("identifier.urn", deposit.getUrn());
-            builder.save();
+            bagDataManager.saveConfiguration(propertiesFile, config);
         }
         catch (ConfigurationException cex) {
             throw new InvalidDepositException("Unable to save deposit properties", cex);

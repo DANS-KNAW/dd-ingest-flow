@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2022 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package nl.knaw.dans.ingest.core.io;
 
 import gov.loc.repository.bagit.domain.Bag;
@@ -21,6 +36,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public class BagDataManagerImpl implements BagDataManager {
+    private final String DEPOSIT_PROPERTIES_FILENAME = "deposit.properties";
     private final BagReader bagReader;
 
     public BagDataManagerImpl(BagReader bagReader) {
@@ -45,8 +61,8 @@ public class BagDataManagerImpl implements BagDataManager {
     }
 
     @Override
-    public Configuration readConfiguration(Path path) throws ConfigurationException {
-        var propertiesFile = path.resolve("deposit.properties");
+    public Configuration readDepositProperties(Path path) throws ConfigurationException {
+        var propertiesFile = path.resolve(DEPOSIT_PROPERTIES_FILENAME);
         var params = new Parameters();
         var paramConfig = params.properties()
             .setFileName(propertiesFile.toString());
@@ -59,10 +75,10 @@ public class BagDataManagerImpl implements BagDataManager {
     }
 
     @Override
-    public void saveConfiguration(Path path, Map<String, Object> configuration) throws ConfigurationException {
+    public void saveDepositProperties(Path path, Map<String, Object> configuration) throws ConfigurationException {
         var params = new Parameters();
         var paramConfig = params.properties()
-            .setFileName(path.toString());
+            .setFileName(path.resolve(DEPOSIT_PROPERTIES_FILENAME).toString());
 
         var builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(
             PropertiesConfiguration.class, null, true
@@ -71,6 +87,7 @@ public class BagDataManagerImpl implements BagDataManager {
         var config = builder.getConfiguration();
 
         for (var entry : configuration.entrySet()) {
+            // setProperty overwrites existing values, so no clearing is needed
             config.setProperty(entry.getKey(), entry.getValue());
         }
 

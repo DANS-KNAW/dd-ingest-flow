@@ -15,12 +15,27 @@
  */
 package nl.knaw.dans.ingest.core.deposit;
 
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
 public interface BagDirResolver {
 
+    /**
+     * Returns the first subdirectory of the provided path. Will throw an exception if
+     * <pre>
+     *  - The path is not a directory
+     *  - There is no deposit.properties file inside the path
+     *  - There are no subdirectories in the path
+     *  - There are more than 1 subdirectories in the path
+     *  - The subdirectory does not contain a bagit.txt file
+     * </pre>
+     *
+     * @param path The deposit directory
+     * @return The path to the first subdirectory
+     * @throws InvalidDepositException If any of the checks above fail
+     * @throws IOException             Propagated from underlying systems to indicate an IO error
+     */
     Path getValidBagDir(Path path) throws InvalidDepositException, IOException;
 }

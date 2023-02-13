@@ -16,18 +16,13 @@
 package nl.knaw.dans.ingest.core.deposit;
 
 import gov.loc.repository.bagit.domain.Bag;
-import gov.loc.repository.bagit.reader.BagReader;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.io.BagDataManager;
 import nl.knaw.dans.ingest.core.io.FileService;
 import nl.knaw.dans.ingest.core.service.XmlReader;
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -39,8 +34,6 @@ import java.time.OffsetDateTime;
 import java.util.Optional;
 
 public class DepositReaderImpl implements DepositReader {
-    private final String FILENAME = "deposit.properties";
-
     private final XmlReader xmlReader;
     private final BagDirResolver bagDirResolver;
     private final FileService fileService;
@@ -63,9 +56,8 @@ public class DepositReaderImpl implements DepositReader {
     public Deposit readDeposit(Path path) throws InvalidDepositException {
         try {
             var bagDir = bagDirResolver.getValidBagDir(path);
-            var propertiesFile = getDepositPath(path);
 
-            var config = bagDataManager.readConfiguration(propertiesFile);
+            var config = bagDataManager.readDepositProperties(path);
             var bagInfo = bagDataManager.readBag(bagDir);
 
             var deposit = mapToDeposit(path, bagDir, config, bagInfo);
@@ -124,7 +116,4 @@ public class DepositReaderImpl implements DepositReader {
         return deposit;
     }
 
-    private Path getDepositPath(Path path) {
-        return path.resolve(FILENAME);
-    }
 }

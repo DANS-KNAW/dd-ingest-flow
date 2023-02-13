@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

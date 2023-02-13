@@ -15,12 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
-
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.LinkedList;
-import java.util.List;
 
 public class BoundedDepositImportTaskIterator extends AbstractDepositsImportTaskIterator {
     public BoundedDepositImportTaskIterator(Path inboxDir, Path outBox, DepositIngestTaskFactory taskFactory,

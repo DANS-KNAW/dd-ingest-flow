@@ -21,7 +21,7 @@ import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 
@@ -90,8 +90,7 @@ public class DepositIngestTaskFactory {
 
     void moveDepositToOutbox(Path depositDir, Path outboxDir) throws IOException {
         var target = outboxDir
-            .resolve(OutboxSubDir.FAILED.getValue())
-            .resolve(depositDir.getFileName());
+            .resolve(OutboxSubDir.FAILED.getValue());
 
         log.info("Moving path {} to {}", depositDir, target);
         depositManager.moveDeposit(depositDir, target);

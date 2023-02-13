@@ -16,7 +16,7 @@
 package nl.knaw.dans.ingest.core.deposit;
 
 import nl.knaw.dans.ingest.core.io.FileService;
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

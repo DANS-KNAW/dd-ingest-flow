@@ -19,8 +19,9 @@ import gov.loc.repository.bagit.domain.Metadata;
 import gov.loc.repository.bagit.exceptions.InvalidBagitFileFormatException;
 import gov.loc.repository.bagit.exceptions.UnparsableVersionException;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.MissingTargetException;
 import nl.knaw.dans.ingest.core.io.BagDataManager;
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
@@ -46,8 +47,8 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
         var bagDir = bagDirResolver.getValidBagDir(path);
 
         try {
-            var properties = bagDataManager.readConfiguration(bagDir.resolve("deposit.properties"));
-            var bagInfo = bagDataManager.readBagMetadata(path);
+            var properties = bagDataManager.readDepositProperties(path);
+            var bagInfo = bagDataManager.readBagMetadata(bagDir);
             var depositId = getDepositId(path);
             var target = getTarget(properties);
             var created = getCreated(bagInfo);
@@ -57,12 +58,15 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
         catch (ConfigurationException e) {
             throw new InvalidDepositException("Deposit.properties file could not be read", e);
         }
+        catch (MissingTargetException e) {
+            throw new InvalidDepositException(e.getMessage(), e);
+        }
         catch (UnparsableVersionException | InvalidBagitFileFormatException | IOException e) {
             throw new InvalidDepositException("BagIt file(s) could not be read", e);
         }
     }
 
-    String getTarget(Configuration properties) {
+    String getTarget(Configuration properties) throws MissingTargetException {
         // the logic for the target should be
         // 1. if there is a dataverse.sword-token, use that
         // 2. otherwise, use identifier.doi
@@ -73,8 +77,7 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
         }
 
         if (StringUtils.isBlank(target)) {
-            // set a default value?
-            target = "";
+            throw new MissingTargetException("No viable target found in deposit");
         }
 
         return target;

@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.exception;
+package nl.knaw.dans.ingest.core.exception;
 
-public class InvalidDepositException extends Throwable {
-    public InvalidDepositException(String msg) {
-        super(msg);
-    }
+public class MissingRequiredFieldException extends RuntimeException {
+    private final String title;
 
-    public InvalidDepositException(String msg, Throwable cause) {
-        super(msg, cause);
+    public MissingRequiredFieldException(String title) {
+        super(String.format("Required metadata field '%s' is missing", title));
+        this.title = title;
     }
 }

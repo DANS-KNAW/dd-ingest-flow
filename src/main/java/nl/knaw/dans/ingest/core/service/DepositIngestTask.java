@@ -23,10 +23,10 @@ import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.DepositState;
 import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
+import nl.knaw.dans.ingest.core.exception.FailedDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
-import nl.knaw.dans.ingest.core.service.exception.FailedDepositException;
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
-import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
@@ -42,7 +42,6 @@ import org.w3c.dom.Document;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -143,9 +142,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     }
 
     void moveDepositToOutbox(Path path, OutboxSubDir subDir) throws IOException {
-        var target = this.outboxDir.resolve(subDir.getValue())
-            .resolve(path.getFileName());
-
+        var target = this.outboxDir.resolve(subDir.getValue());
         depositManager.moveDeposit(path, target);
     }
 

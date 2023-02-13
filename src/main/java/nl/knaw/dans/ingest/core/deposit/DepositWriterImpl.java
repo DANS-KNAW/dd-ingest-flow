@@ -16,12 +16,8 @@
 package nl.knaw.dans.ingest.core.deposit;
 
 import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.io.BagDataManager;
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import java.io.IOException;
@@ -38,8 +34,6 @@ public class DepositWriterImpl implements DepositWriter {
 
     @Override
     public void saveDeposit(Deposit deposit) throws InvalidDepositException {
-        var path = deposit.getDir();
-        var propertiesFile = path.resolve("deposit.properties");
         var config = new HashMap<String, Object>();
         config.put("state.label", deposit.getState().toString());
         config.put("state.description", deposit.getStateDescription());
@@ -47,7 +41,7 @@ public class DepositWriterImpl implements DepositWriter {
         config.put("identifier.urn", deposit.getUrn());
 
         try {
-            bagDataManager.saveConfiguration(propertiesFile, config);
+            bagDataManager.saveDepositProperties(deposit.getDir(), config);
         }
         catch (ConfigurationException cex) {
             throw new InvalidDepositException("Unable to save deposit properties", cex);
@@ -61,7 +55,6 @@ public class DepositWriterImpl implements DepositWriter {
 
     @Override
     public void moveDeposit(Path source, Path target) throws IOException {
-        var destination = target.resolve(source.getFileName());
-        Files.move(source, destination);
+        Files.move(source, target.resolve(source.getFileName()));
     }
 }

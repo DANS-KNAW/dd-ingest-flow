@@ -13,19 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.exception;
 
+public class InvalidDepositException extends Throwable {
+    public InvalidDepositException(String msg) {
+        super(msg);
+    }
 
-import nl.knaw.dans.ingest.core.domain.Deposit;
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
-
-import java.io.IOException;
-import java.nio.file.Path;
-
-public interface DepositManagerOld {
-
-    Deposit loadDeposit(Path path) throws InvalidDepositException, IOException;
-
-    void saveDeposit(Deposit deposit) throws InvalidDepositException;
-
+    public InvalidDepositException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
 }

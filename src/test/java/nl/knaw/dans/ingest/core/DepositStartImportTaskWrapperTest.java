@@ -15,9 +15,14 @@
  */
 package nl.knaw.dans.ingest.core;
 
+import gov.loc.repository.bagit.reader.BagReader;
+import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositReaderImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositWriterImpl;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DepositIngestTask;
-import nl.knaw.dans.ingest.core.service.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.service.DepositMigrationTask;
 import nl.knaw.dans.ingest.core.service.EventWriter;
 import nl.knaw.dans.ingest.core.service.XmlReader;
@@ -68,17 +73,23 @@ public class DepositStartImportTaskWrapperTest {
     private final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
 
     private DepositIngestTask createTaskWrapper(String depositName) throws Throwable {
-
         var client = Mockito.mock(DataverseClient.class);
         var mapper = getMapperFactory();
         var validator = Mockito.mock(DansBagValidator.class);
         var eventWriter = Mockito.mock(EventWriter.class);
-        var depositManager = new DepositManagerImpl(new XmlReaderImpl());
-        var deposit = depositManager.loadDeposit(testDepositsBasedir.resolve(depositName));
+        var bagDirResolver = new BagDirResolverImpl();
+        var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver);
+        var bagReader = new BagReader();
+        var depositReader = new DepositReaderImpl(bagReader, xmlReader, bagDirResolver);
+        var depositWriter = new DepositWriterImpl();
+        var depositManager = new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);
+        // TODO dont actually read the data from disk, just keep it in this class
+        var depositLocation = depositLocationReader.readDepositLocation(testDepositsBasedir.resolve(depositName));
+        //        var depositLocation = new DepositLocation(testDepositsBasedir.resolve(depositName), depositName, OffsetDateTime.now());
 
-        var task = new DepositMigrationTask(
+        return new DepositMigrationTask(
             mapper,
-            deposit,
+            depositLocation,
             client,
             "dummy",
             null,
@@ -92,8 +103,6 @@ public class DepositStartImportTaskWrapperTest {
             eventWriter,
             depositManager
         );
-
-        return task;
     }
 
     @BeforeEach
@@ -141,13 +150,13 @@ public class DepositStartImportTaskWrapperTest {
     void fail_fast_if_no_created_timestamp() {
         var thrown = assertThrows(InvalidDepositException.class,
             () -> createTaskWrapper("deposit3_nocreated"));
-        assertTrue(thrown.getMessage().contains("No 'Created' value found in bag"));
+        assertTrue(thrown.getMessage().contains("Missing 'created' property in bag-info.txt"));
     }
 
     @Test
     void fail_fast_if_multiple_created_timestamps() {
         var thrown = assertThrows(InvalidDepositException.class,
             () -> createTaskWrapper("deposit3_2created"));
-        assertTrue(thrown.getMessage().contains("Value 'Created' should contain exactly 1 value in bag; 2 found"));
+        assertTrue(thrown.getMessage().contains("Value 'created' should contain exactly 1 value in bag; 2 found"));
     }
 }

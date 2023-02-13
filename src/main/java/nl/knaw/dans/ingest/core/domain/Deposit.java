@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.domain;
 
 import gov.loc.repository.bagit.domain.Bag;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nl.knaw.dans.ingest.core.DepositState;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 
@@ -32,24 +31,18 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class Deposit {
 
-    private String id;
     private Path dir;
     private Path bagDir;
 
     private String doi;
     private String urn;
 
-    private String filename;
-    private String mimeType;
-    private String packaging;
     private String depositorUserId;
-    private String bagName;
     private String otherId;
     private String otherIdVersion;
     private OffsetDateTime created;
     private DepositState state;
     private String stateDescription;
-    private String collectionId;
     private boolean update;
 
     private String dataverseIdProtocol;

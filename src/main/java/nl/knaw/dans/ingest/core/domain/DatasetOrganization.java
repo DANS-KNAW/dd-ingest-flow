@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.domain;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
-import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
-
-import java.nio.file.Path;
 
 @Data
+@Builder
 @ToString
-@AllArgsConstructor
-public class FileInfo {
-
-    private Path path;
-    private String checksum;
-    private FileMeta metadata;
-
+public class DatasetOrganization {
+    private String name;
+    private String role;
+    private String isni;
+    private String viaf;
 }

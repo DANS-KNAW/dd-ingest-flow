@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.exception;
 
-import nl.knaw.dans.ingest.core.service.Deposit;
+import nl.knaw.dans.ingest.core.domain.Deposit;
 
 public class FailedDepositException extends RuntimeException {
     public FailedDepositException(Deposit deposit, String message) {

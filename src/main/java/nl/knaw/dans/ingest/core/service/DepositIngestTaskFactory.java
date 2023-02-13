@@ -18,13 +18,15 @@ package nl.knaw.dans.ingest.core.service;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.deposit.DepositManager;
+import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -54,7 +56,6 @@ public class DepositIngestTaskFactory {
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler
-
     ) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;
@@ -69,8 +70,8 @@ public class DepositIngestTaskFactory {
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
         try {
-            var deposit = depositManager.loadDeposit(depositDir);
-            return createDepositIngestTask(deposit, outboxDir, eventWriter);
+            var depositLocation = depositManager.readDepositLocation(depositDir);
+            return createDepositIngestTask(depositLocation, outboxDir, eventWriter);
         }
         catch (InvalidDepositException | IOException e) {
             // the reading of the deposit failed, so we cannot update its internal state. All we can do is move it
@@ -93,10 +94,10 @@ public class DepositIngestTaskFactory {
             .resolve(depositDir.getFileName());
 
         log.info("Moving path {} to {}", depositDir, target);
-        Files.move(depositDir, target);
+        depositManager.moveDeposit(depositDir, target);
     }
 
-    private DepositIngestTask createDepositIngestTask(Deposit deposit, Path outboxDir, EventWriter eventWriter) {
+    private DepositIngestTask createDepositIngestTask(DepositLocation depositLocation, Path outboxDir, EventWriter eventWriter) {
         var fileExclusionPattern = Optional.ofNullable(ingestFlowConfig.getFileExclusionPattern())
             .map(Pattern::compile)
             .orElse(null);
@@ -105,7 +106,7 @@ public class DepositIngestTaskFactory {
         if (isMigration) {
             return new DepositMigrationTask(
                 depositToDvDatasetMetadataMapperFactory,
-                deposit,
+                depositLocation,
                 dataverseClient,
                 depositorRole,
                 fileExclusionPattern,
@@ -123,7 +124,7 @@ public class DepositIngestTaskFactory {
         else {
             return new DepositIngestTask(
                 depositToDvDatasetMetadataMapperFactory,
-                deposit,
+                depositLocation,
                 dataverseClient,
                 depositorRole,
                 fileExclusionPattern,
@@ -135,7 +136,8 @@ public class DepositIngestTaskFactory {
                 dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir,
                 eventWriter,
-                depositManager);
+                depositManager
+            );
         }
 
     }

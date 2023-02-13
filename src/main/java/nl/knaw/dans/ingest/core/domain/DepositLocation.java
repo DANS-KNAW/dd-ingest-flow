@@ -13,12 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.exception;
+package nl.knaw.dans.ingest.core.domain;
 
-import nl.knaw.dans.ingest.core.domain.Deposit;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public class RejectedDepositException extends RuntimeException {
-    public RejectedDepositException(Deposit deposit, String message) {
-        super(String.format("Rejected %s: %s", deposit.getDir(), message));
-    }
+import java.nio.file.Path;
+import java.time.OffsetDateTime;
+
+/**
+ * This class depicts the location of a deposit that was done in one of the inboxes.
+ * TODO: think of a good name for this, I do not believe this is the best one.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DepositLocation {
+    private Path dir;
+    private String target;
+    private String depositId;
+    private OffsetDateTime created;
 }

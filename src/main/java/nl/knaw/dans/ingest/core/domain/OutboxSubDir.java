@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core;
+package nl.knaw.dans.ingest.core.domain;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+public enum OutboxSubDir {
+    PROCESSED("processed"),
+    REJECTED("rejected"),
+    FAILED("failed");
 
-@Data
-@Builder
-@ToString
-public class DatasetOrganization {
-    private String name;
-    private String role;
-    private String isni;
-    private String viaf;
+    private final String value;
+
+    OutboxSubDir(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

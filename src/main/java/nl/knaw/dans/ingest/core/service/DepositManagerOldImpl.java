@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core.service;
 
 import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.reader.BagReader;
+import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.FileBasedConfiguration;
@@ -36,12 +37,12 @@ import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class DepositManagerImpl implements DepositManager {
+public class DepositManagerOldImpl implements DepositManagerOld {
     private final String FILENAME = "deposit.properties";
     private final BagReader bagReader = new BagReader();
     private final XmlReader xmlReader;
 
-    public DepositManagerImpl(XmlReader xmlReader) {
+    public DepositManagerOldImpl(XmlReader xmlReader) {
         this.xmlReader = xmlReader;
     }
 
@@ -149,7 +150,6 @@ public class DepositManagerImpl implements DepositManager {
         deposit.setDir(path);
         deposit.setDoi(config.getString("identifier.doi", ""));
         deposit.setUrn(config.getString("identifier.urn"));
-        deposit.setId(config.getString("bag-store.bag-id"));
         deposit.setCreated(Optional.ofNullable(config.getString("creation.timestamp")).map(OffsetDateTime::parse).orElse(null));
         deposit.setDepositorUserId(config.getString("depositor.userId"));
 

@@ -18,7 +18,7 @@ package nl.knaw.dans.ingest.core.service.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.VaultMetadata;
+import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.ingest.core.service.exception.MissingRequiredFieldException;
 import nl.knaw.dans.ingest.core.service.mapper.builder.ArchaeologyFieldBuilder;

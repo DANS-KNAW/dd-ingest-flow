@@ -16,6 +16,7 @@
 
 package nl.knaw.dans.ingest;
 
+import gov.loc.repository.bagit.reader.BagReader;
 import io.dropwizard.Application;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.db.PooledDataSourceFactory;
@@ -29,12 +30,16 @@ import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
-import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.deposit.BagDirResolver;
+import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositReaderImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositWriterImpl;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DansBagValidatorImpl;
 import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactoryBuilder;
-import nl.knaw.dans.ingest.core.service.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
@@ -87,16 +92,23 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         IngestFlowConfigReader.readIngestFlowConfiguration(configuration.getIngestFlow());
 
         final var xmlReader = new XmlReaderImpl();
-        final var depositManager = new DepositManagerImpl(xmlReader);
+
+        final var bagReader = new BagReader();
+        final var bagDirResolver = new BagDirResolverImpl();
+        final var depositReader = new DepositReaderImpl(bagReader, xmlReader, bagDirResolver);
+        final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver);
+        final var depositWriter = new DepositWriterImpl();
+
+        final var depositManager = new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);
         final var depositToDvDatasetMetadataMapperFactory = new DepositToDvDatasetMetadataMapperFactory(
             configuration.getIngestFlow().getIso1ToDataverseLanguage(),
             configuration.getIngestFlow().getIso2ToDataverseLanguage(),
             dataverseClient
         );
 
-        var zipFileHandler = new ZipFileHandler(configuration.getIngestFlow().getZipWrappingTempDir());
+        final var zipFileHandler = new ZipFileHandler(configuration.getIngestFlow().getZipWrappingTempDir());
 
-        var dansBagValidatorClient = new JerseyClientBuilder(environment)
+        final var dansBagValidatorClient = new JerseyClientBuilder(environment)
             .withProvider(MultiPartFeature.class)
             .using(configuration.getValidateDansBag().getHttpClient())
             .build(getName());
@@ -113,8 +125,8 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getDataverseExtra(),
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
-            zipFileHandler
-        );
+            zipFileHandler,
+            depositReader);
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);

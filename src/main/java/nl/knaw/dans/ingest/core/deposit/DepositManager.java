@@ -13,18 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.deposit;
 
-
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
+// an adapter around DepositReader and DepositWriter
 public interface DepositManager {
 
-    Deposit loadDeposit(Path path) throws InvalidDepositException, IOException;
+    Deposit readDeposit(DepositLocation location) throws InvalidDepositException;
+
+    DepositLocation readDepositLocation(Path path) throws InvalidDepositException, IOException;
 
     void saveDeposit(Deposit deposit) throws InvalidDepositException;
 
+    void updateAndMoveDeposit(Deposit deposit, Path target) throws IOException, InvalidDepositException;
+
+    void moveDeposit(Path depositDir, Path target) throws IOException;
 }

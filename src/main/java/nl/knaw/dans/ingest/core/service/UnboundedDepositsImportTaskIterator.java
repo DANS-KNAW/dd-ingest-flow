@@ -25,7 +25,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportTaskIterator {
     private static final Logger log = LoggerFactory.getLogger(UnboundedDepositsImportTaskIterator.class);
@@ -82,7 +81,7 @@ public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportT
             var initialTasks = createDepositIngestTasks(getAllDepositPathsFromInbox());
 
             for (var task : initialTasks) {
-                var path = task.getDeposit().getDir();
+                var path = task.getDepositPath();
                 log.debug("onStart initial deposit found: {}", path);
                 initialPathsRead.add(path);
                 addTask(task);

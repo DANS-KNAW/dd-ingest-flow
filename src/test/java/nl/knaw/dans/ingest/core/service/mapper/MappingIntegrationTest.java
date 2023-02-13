@@ -17,7 +17,7 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.ingest.core.service.VaultMetadata;
+import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledMultiValueField;
@@ -37,7 +37,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR_NAME;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.NOTES_TEXT;

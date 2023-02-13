@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.exception;
+package nl.knaw.dans.ingest.core.deposit;
 
-import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 
-public class RejectedDepositException extends RuntimeException {
-    public RejectedDepositException(Deposit deposit, String message) {
-        super(String.format("Rejected %s: %s", deposit.getDir(), message));
-    }
+import java.io.IOException;
+import java.nio.file.Path;
+
+public interface DepositLocationReader {
+
+    DepositLocation readDepositLocation(Path path) throws InvalidDepositException, IOException;
 }

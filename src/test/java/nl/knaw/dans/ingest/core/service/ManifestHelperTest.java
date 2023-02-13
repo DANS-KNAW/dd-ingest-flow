@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.service;
 
 import gov.loc.repository.bagit.reader.BagReader;
+import nl.knaw.dans.ingest.core.domain.Deposit;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -25,6 +25,6 @@ public interface DepositReader {
 
     Deposit readDeposit(DepositLocation location) throws InvalidDepositException;
 
-    Deposit readDeposit(Path path) throws InvalidDepositException;
+    Deposit readDeposit(Path depositDir) throws InvalidDepositException;
 
 }

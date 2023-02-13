@@ -58,19 +58,19 @@ public interface DepositManager {
      * Update the deposit.properties file with the data found in this Deposit, and move it to the target path. The path should NOT include the deposit ID.
      *
      * @param deposit The Deposit that should be written.
-     * @param target  The path that this deposit should move to after saving the properties. This path should NOT include the deposit ID.
+     * @param outbox  The path that this deposit should move to after saving the properties. This path should NOT include the deposit ID.
      * @throws IOException
      * @throws InvalidDepositException
      */
-    void updateAndMoveDeposit(Deposit deposit, Path target) throws IOException, InvalidDepositException;
+    void updateAndMoveDeposit(Deposit deposit, Path outbox) throws IOException, InvalidDepositException;
 
     /**
      * Move the first path to the target path. The target path should NOT include the deposit ID. This method should only be used if an exception occurred while reading the deposit, making it
      * impossible to read/write to the deposit.properties file.
      *
      * @param depositDir The deposit dir that was attempted to be read
-     * @param target     The path to which the deposit dir should be moved
+     * @param outbox     The path to which the deposit dir should be moved
      * @throws IOException
      */
-    void moveDeposit(Path depositDir, Path target) throws IOException;
+    void moveDeposit(Path depositDir, Path outbox) throws IOException;
 }

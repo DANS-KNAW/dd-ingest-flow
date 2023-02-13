@@ -44,13 +44,13 @@ public class DepositManagerImpl implements DepositManager {
     }
 
     @Override
-    public void updateAndMoveDeposit(Deposit deposit, Path target) throws IOException, InvalidDepositException {
+    public void updateAndMoveDeposit(Deposit deposit, Path outbox) throws IOException, InvalidDepositException {
         depositWriter.saveDeposit(deposit);
-        depositWriter.moveDeposit(deposit, target);
+        depositWriter.moveDeposit(deposit, outbox);
     }
 
     @Override
-    public void moveDeposit(Path depositDir, Path target) throws IOException {
-        depositWriter.moveDeposit(depositDir, target);
+    public void moveDeposit(Path depositDir, Path outbox) throws IOException {
+        depositWriter.moveDeposit(depositDir, outbox);
     }
 }

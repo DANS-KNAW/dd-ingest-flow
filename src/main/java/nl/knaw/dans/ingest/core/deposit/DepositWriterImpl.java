@@ -49,12 +49,12 @@ public class DepositWriterImpl implements DepositWriter {
     }
 
     @Override
-    public void moveDeposit(Deposit deposit, Path target) throws IOException {
-        moveDeposit(deposit.getDir(), target);
+    public void moveDeposit(Deposit deposit, Path outbox) throws IOException {
+        moveDeposit(deposit.getDir(), outbox);
     }
 
     @Override
-    public void moveDeposit(Path source, Path target) throws IOException {
-        Files.move(source, target.resolve(source.getFileName()));
+    public void moveDeposit(Path source, Path outbox) throws IOException {
+        Files.move(source, outbox.resolve(source.getFileName()));
     }
 }

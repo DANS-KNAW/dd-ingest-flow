@@ -57,18 +57,18 @@ public interface BagDataManager {
     /**
      * Reads the deposit.properties file found inside the folder provided. The path should NOT reference deposit.properties directly
      *
-     * @param path The directory that contains a deposit.properties file
+     * @param depositDir The directory that contains a deposit.properties file
      * @return
      * @throws ConfigurationException
      */
-    Configuration readDepositProperties(Path path) throws ConfigurationException;
+    Configuration readDepositProperties(Path depositDir) throws ConfigurationException;
 
     /**
      * Saves the provided configuration to the deposit.properties file in the provided path. The path should NOT reference deposit.properties directly
      *
-     * @param path          The directory that should contain the deposit.properties file
+     * @param depositDir    The directory that should contain the deposit.properties file
      * @param configuration
      * @throws ConfigurationException
      */
-    void saveDepositProperties(Path path, Map<String, Object> configuration) throws ConfigurationException;
+    void saveDepositProperties(Path depositDir, Map<String, Object> configuration) throws ConfigurationException;
 }

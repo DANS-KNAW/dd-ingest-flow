@@ -23,5 +23,5 @@ import java.nio.file.Path;
 
 public interface DepositLocationReader {
 
-    DepositLocation readDepositLocation(Path path) throws InvalidDepositException, IOException;
+    DepositLocation readDepositLocation(Path depositDir) throws InvalidDepositException, IOException;
 }

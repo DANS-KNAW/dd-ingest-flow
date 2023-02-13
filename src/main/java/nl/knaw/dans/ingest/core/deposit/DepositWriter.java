@@ -25,7 +25,7 @@ public interface DepositWriter {
 
     void saveDeposit(Deposit deposit) throws InvalidDepositException;
 
-    void moveDeposit(Deposit deposit, Path target) throws IOException;
+    void moveDeposit(Deposit deposit, Path outbox) throws IOException;
 
-    void moveDeposit(Path source, Path target) throws IOException;
+    void moveDeposit(Path source, Path outbox) throws IOException;
 }

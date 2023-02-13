@@ -32,10 +32,10 @@ public interface BagDirResolver {
      *  - The subdirectory does not contain a bagit.txt file
      * </pre>
      *
-     * @param path The deposit directory
+     * @param depositDir The deposit directory
      * @return The path to the first subdirectory
      * @throws InvalidDepositException If any of the checks above fail
      * @throws IOException             Propagated from underlying systems to indicate an IO error
      */
-    Path getValidBagDir(Path path) throws InvalidDepositException, IOException;
+    Path getValidBagDir(Path depositDir) throws InvalidDepositException, IOException;
 }

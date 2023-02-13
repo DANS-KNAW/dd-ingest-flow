@@ -30,25 +30,25 @@ public class BagDirResolverImpl implements BagDirResolver {
     }
 
     @Override
-    public Path getValidBagDir(Path path) throws InvalidDepositException, IOException {
-        if (!fileService.isDirectory(path)) {
-            throw new InvalidDepositException(String.format("%s is not a directory", path));
+    public Path getValidBagDir(Path depositDir) throws InvalidDepositException, IOException {
+        if (!fileService.isDirectory(depositDir)) {
+            throw new InvalidDepositException(String.format("%s is not a directory", depositDir));
         }
 
-        try (var substream = fileService.listDirectories(path)) {
+        try (var substream = fileService.listDirectories(depositDir)) {
             var directories = substream.collect(Collectors.toList());
 
             // only 1 directory allowed, not 0 or more than 1
             if (directories.size() != 1) {
                 throw new InvalidDepositException(String.format(
-                    "%s has more or fewer than one subdirectory", path
+                    "%s has more or fewer than one subdirectory", depositDir
                 ));
             }
 
             // check for the presence of deposit.properties and bagit.txt
-            if (!fileService.fileExists(path.resolve("deposit.properties"))) {
+            if (!fileService.fileExists(depositDir.resolve("deposit.properties"))) {
                 throw new InvalidDepositException(String.format(
-                    "%s does not contain a deposit.properties file", path
+                    "%s does not contain a deposit.properties file", depositDir
                 ));
             }
 
@@ -56,7 +56,7 @@ public class BagDirResolverImpl implements BagDirResolver {
 
             if (!fileService.fileExists(bagDir.resolve("bagit.txt"))) {
                 throw new InvalidDepositException(String.format(
-                    "%s does not contain a bag", path
+                    "%s does not contain a bag", depositDir
                 ));
             }
 

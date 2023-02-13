@@ -61,8 +61,8 @@ public class BagDataManagerImpl implements BagDataManager {
     }
 
     @Override
-    public Configuration readDepositProperties(Path path) throws ConfigurationException {
-        var propertiesFile = path.resolve(DEPOSIT_PROPERTIES_FILENAME);
+    public Configuration readDepositProperties(Path depositDir) throws ConfigurationException {
+        var propertiesFile = depositDir.resolve(DEPOSIT_PROPERTIES_FILENAME);
         var params = new Parameters();
         var paramConfig = params.properties()
             .setFileName(propertiesFile.toString());
@@ -75,10 +75,10 @@ public class BagDataManagerImpl implements BagDataManager {
     }
 
     @Override
-    public void saveDepositProperties(Path path, Map<String, Object> configuration) throws ConfigurationException {
+    public void saveDepositProperties(Path depositDir, Map<String, Object> configuration) throws ConfigurationException {
         var params = new Parameters();
         var paramConfig = params.properties()
-            .setFileName(path.resolve(DEPOSIT_PROPERTIES_FILENAME).toString());
+            .setFileName(depositDir.resolve(DEPOSIT_PROPERTIES_FILENAME).toString());
 
         var builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(
             PropertiesConfiguration.class, null, true

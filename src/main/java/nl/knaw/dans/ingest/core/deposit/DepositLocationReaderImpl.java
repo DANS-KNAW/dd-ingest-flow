@@ -43,17 +43,17 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
     }
 
     @Override
-    public DepositLocation readDepositLocation(Path path) throws InvalidDepositException, IOException {
-        var bagDir = bagDirResolver.getValidBagDir(path);
+    public DepositLocation readDepositLocation(Path depositDir) throws InvalidDepositException, IOException {
+        var bagDir = bagDirResolver.getValidBagDir(depositDir);
 
         try {
-            var properties = bagDataManager.readDepositProperties(path);
+            var properties = bagDataManager.readDepositProperties(depositDir);
             var bagInfo = bagDataManager.readBagMetadata(bagDir);
-            var depositId = getDepositId(path);
+            var depositId = getDepositId(depositDir);
             var target = getTarget(properties);
             var created = getCreated(bagInfo);
 
-            return new DepositLocation(path, target, depositId.toString(), created);
+            return new DepositLocation(depositDir, target, depositId.toString(), created);
         }
         catch (ConfigurationException e) {
             throw new InvalidDepositException("Deposit.properties file could not be read", e);

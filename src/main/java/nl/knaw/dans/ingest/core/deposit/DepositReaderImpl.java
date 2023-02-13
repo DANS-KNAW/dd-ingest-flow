@@ -53,14 +53,14 @@ public class DepositReaderImpl implements DepositReader {
     }
 
     @Override
-    public Deposit readDeposit(Path path) throws InvalidDepositException {
+    public Deposit readDeposit(Path depositDir) throws InvalidDepositException {
         try {
-            var bagDir = bagDirResolver.getValidBagDir(path);
+            var bagDir = bagDirResolver.getValidBagDir(depositDir);
 
-            var config = bagDataManager.readDepositProperties(path);
+            var config = bagDataManager.readDepositProperties(depositDir);
             var bagInfo = bagDataManager.readBag(bagDir);
 
-            var deposit = mapToDeposit(path, bagDir, config, bagInfo);
+            var deposit = mapToDeposit(depositDir, bagDir, config, bagInfo);
 
             deposit.setBag(bagInfo);
             deposit.setDdm(readOptionalXmlFile(deposit.getDdmPath()));

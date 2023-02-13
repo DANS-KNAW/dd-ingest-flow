@@ -407,7 +407,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         return getCreatedInstant().compareTo(depositIngestTask.getCreatedInstant());
     }
 
-    protected OffsetDateTime getCreatedInstant() {
+    public OffsetDateTime getCreatedInstant() {
         return depositLocation.getCreated();
     }
 }

@@ -30,12 +30,12 @@ import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
-import nl.knaw.dans.ingest.core.deposit.BagDirResolver;
 import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositWriterImpl;
+import nl.knaw.dans.ingest.core.io.FileServiceImpl;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DansBagValidatorImpl;
@@ -93,9 +93,11 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
         final var xmlReader = new XmlReaderImpl();
 
+        final var fileService = new FileServiceImpl();
+
         // the parts responsible for reading and writing deposits to disk
         final var bagReader = new BagReader();
-        final var bagDirResolver = new BagDirResolverImpl();
+        final var bagDirResolver = new BagDirResolverImpl(fileService);
         final var depositReader = new DepositReaderImpl(bagReader, xmlReader, bagDirResolver);
         final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver);
         final var depositWriter = new DepositWriterImpl();

@@ -27,6 +27,7 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,11 +48,18 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
     @Override
     public DepositLocation readDepositLocation(Path path) throws InvalidDepositException, IOException {
         var bagDir = bagDirResolver.getValidBagDir(path);
-        var depositId = getDepositId(path);
-        var target = getTarget(path);
-        var created = getCreated(bagDir);
 
-        return new DepositLocation(path, target, depositId.toString(), created);
+        try {
+            var properties = getProperties(bagDir);
+            var depositId = getDepositId(path);
+            var target = getTarget(properties);
+            var created = getCreated(bagDir);
+
+            return new DepositLocation(path, target, depositId.toString(), created);
+        }
+        catch (ConfigurationException e) {
+            throw new InvalidDepositException("Deposit.properties file could not be read", e);
+        }
     }
 
     List<SimpleImmutableEntry<String, String>> getBagInfo(Path bagDir) throws InvalidBagitFileFormatException, IOException, UnparsableVersionException {
@@ -61,28 +69,22 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
         return KeyValueReader.readKeyValuesFromFile(bagDir.resolve("bag-info.txt"), ":", encoding);
     }
 
-    String getTarget(Path path) throws InvalidDepositException {
-        try {
-            var properties = getProperties(path);
-            // the logic for the target should be
-            // 1. if there is a dataverse.sword-token, use that
-            // 2. otherwise, use identifier.doi
-            var target = properties.getString("dataverse.sword-token");
+    String getTarget(Configuration properties) {
+        // the logic for the target should be
+        // 1. if there is a dataverse.sword-token, use that
+        // 2. otherwise, use identifier.doi
+        var target = properties.getString("dataverse.sword-token");
 
-            if (target == null) {
-                target = properties.getString("identifier.doi");
-            }
-
-            if (target == null) {
-                // set a default value?
-                target = "";
-            }
-
-            return target;
+        if (StringUtils.isBlank(target)) {
+            target = properties.getString("identifier.doi");
         }
-        catch (ConfigurationException e) {
-            throw new InvalidDepositException("Deposit properties file could not be read", e);
+
+        if (StringUtils.isBlank(target)) {
+            // set a default value?
+            target = "";
         }
+
+        return target;
     }
 
     Configuration getProperties(Path bagDir) throws ConfigurationException {

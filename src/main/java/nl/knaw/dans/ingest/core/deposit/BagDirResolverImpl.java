@@ -15,21 +15,27 @@
  */
 package nl.knaw.dans.ingest.core.deposit;
 
+import nl.knaw.dans.ingest.core.io.FileService;
 import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 public class BagDirResolverImpl implements BagDirResolver {
+    private final FileService fileService;
+
+    public BagDirResolverImpl(FileService fileService) {
+        this.fileService = fileService;
+    }
+
     @Override
     public Path getValidBagDir(Path path) throws InvalidDepositException, IOException {
-        if (!Files.isDirectory(path)) {
+        if (!fileService.isDirectory(path)) {
             throw new InvalidDepositException(String.format("%s is not a directory", path));
         }
 
-        try (var substream = Files.list(path).filter(Files::isDirectory)) {
+        try (var substream = fileService.listDirectories(path)) {
             var directories = substream.collect(Collectors.toList());
 
             // only 1 directory allowed, not 0 or more than 1
@@ -40,7 +46,7 @@ public class BagDirResolverImpl implements BagDirResolver {
             }
 
             // check for the presence of deposit.properties and bagit.txt
-            if (!Files.exists(path.resolve("deposit.properties"))) {
+            if (!fileService.fileExists(path.resolve("deposit.properties"))) {
                 throw new InvalidDepositException(String.format(
                     "%s does not contain a deposit.properties file", path
                 ));
@@ -48,7 +54,7 @@ public class BagDirResolverImpl implements BagDirResolver {
 
             var bagDir = directories.get(0);
 
-            if (!Files.exists(bagDir.resolve("bagit.txt"))) {
+            if (!fileService.fileExists(bagDir.resolve("bagit.txt"))) {
                 throw new InvalidDepositException(String.format(
                     "%s does not contain a bag", path
                 ));

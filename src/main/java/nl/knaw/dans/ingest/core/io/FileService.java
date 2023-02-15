@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
-
-
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
+package nl.knaw.dans.ingest.core.io;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
-public interface DepositManager {
+public interface FileService {
 
-    Deposit loadDeposit(Path path) throws InvalidDepositException, IOException;
+    boolean isDirectory(Path path);
 
-    void saveDeposit(Deposit deposit) throws InvalidDepositException;
+    Stream<Path> listDirectories(Path path) throws IOException;
 
+    boolean fileExists(Path path);
 }

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.exception;
+package nl.knaw.dans.ingest.core.exception;
 
-import nl.knaw.dans.ingest.core.service.Deposit;
+import nl.knaw.dans.ingest.core.domain.Deposit;
 
 public class RejectedDepositException extends RuntimeException {
     public RejectedDepositException(Deposit deposit, String message) {

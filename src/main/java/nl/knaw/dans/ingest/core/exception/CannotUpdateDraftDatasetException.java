@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.exception;
 
-import java.nio.file.Path;
+import nl.knaw.dans.ingest.core.domain.Deposit;
 
-public class BoundedDepositImportTaskIterator extends AbstractDepositsImportTaskIterator {
-    public BoundedDepositImportTaskIterator(Path inboxDir, Path outBox, DepositIngestTaskFactory taskFactory,
-        EventWriter eventWriter) {
-        super(inboxDir, outBox, taskFactory, eventWriter);
-        createDepositIngestTasks(getAllDepositPathsFromInbox()).forEach(this::addTask);
+public class CannotUpdateDraftDatasetException extends RuntimeException {
+
+    public CannotUpdateDraftDatasetException(Deposit deposit) {
+        super("Latest version must be published before update-deposit can be processed");
     }
-
 }

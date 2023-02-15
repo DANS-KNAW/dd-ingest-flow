@@ -13,22 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.ToString;
-import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
+public enum OutboxSubDir {
+    PROCESSED("processed"),
+    REJECTED("rejected"),
+    FAILED("failed");
 
-import java.nio.file.Path;
+    private final String value;
 
-@Data
-@ToString
-@AllArgsConstructor
-public class FileInfo {
+    OutboxSubDir(String value) {
+        this.value = value;
+    }
 
-    private Path path;
-    private String checksum;
-    private FileMeta metadata;
-
+    public String getValue() {
+        return value;
+    }
 }

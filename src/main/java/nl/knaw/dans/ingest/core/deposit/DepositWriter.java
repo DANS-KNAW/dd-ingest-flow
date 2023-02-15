@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.deposit;
 
-public enum OutboxSubDir {
-    PROCESSED("processed"),
-    REJECTED("rejected"),
-    FAILED("failed");
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 
-    private final String value;
+import java.io.IOException;
+import java.nio.file.Path;
 
-    OutboxSubDir(String value) {
-        this.value = value;
-    }
+public interface DepositWriter {
 
-    public String getValue() {
-        return value;
-    }
+    void saveDeposit(Deposit deposit) throws InvalidDepositException;
+
+    void moveDeposit(Deposit deposit, Path outbox) throws IOException;
+
+    void moveDeposit(Path source, Path outbox) throws IOException;
 }

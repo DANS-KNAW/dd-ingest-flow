@@ -13,22 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
+import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
+
+import java.nio.file.Path;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @ToString
-public class VaultMetadata {
-    private String pid;
-    private String bagId;
-    private String nbn;
-    private String otherId;
-    private String otherIdVersion;
-    private String swordToken;
+@AllArgsConstructor
+public class FileInfo {
+    private Path path;
+    private String checksum;
+    private FileMeta metadata;
 }

@@ -16,7 +16,7 @@
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.DatasetAuthor;
+import nl.knaw.dans.ingest.core.domain.DatasetAuthor;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.ingest.core.service.mapper.builder.CompoundFieldGenerator;
 import org.apache.commons.lang3.StringUtils;

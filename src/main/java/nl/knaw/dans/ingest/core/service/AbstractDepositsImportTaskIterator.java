@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.service.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,11 +80,11 @@ public abstract class AbstractDepositsImportTaskIterator implements Iterator<Dep
 
     protected void addTask(DepositIngestTask task) {
         if (log.isDebugEnabled()) {
-            log.debug("Adding task for {}", task.getDeposit().getDir().getFileName());
+//            log.debug("Adding task for {}", task.getDeposit().getDir().getFileName());
+            // TODO add debug statement
         }
         deque.add(task);
     }
-
 
     @Override
     public boolean hasNext() {

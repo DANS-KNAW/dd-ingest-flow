@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.exception;
 
-import java.nio.file.Path;
+public class MissingRequiredFieldException extends RuntimeException {
+    private final String title;
 
-public class BoundedDepositImportTaskIterator extends AbstractDepositsImportTaskIterator {
-    public BoundedDepositImportTaskIterator(Path inboxDir, Path outBox, DepositIngestTaskFactory taskFactory,
-        EventWriter eventWriter) {
-        super(inboxDir, outBox, taskFactory, eventWriter);
-        createDepositIngestTasks(getAllDepositPathsFromInbox()).forEach(this::addTask);
+    public MissingRequiredFieldException(String title) {
+        super(String.format("Required metadata field '%s' is missing", title));
+        this.title = title;
     }
-
 }

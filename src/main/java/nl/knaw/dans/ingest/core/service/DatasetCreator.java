@@ -17,7 +17,9 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.exception.FailedDepositException;
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.FileInfo;
+import nl.knaw.dans.ingest.core.exception.FailedDepositException;
 import nl.knaw.dans.lib.dataverse.DataverseApi;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;

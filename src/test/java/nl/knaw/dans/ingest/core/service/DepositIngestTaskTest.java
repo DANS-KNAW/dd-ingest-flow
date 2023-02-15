@@ -15,10 +15,13 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.DepositState;
 import nl.knaw.dans.ingest.core.TaskEvent.EventType;
 import nl.knaw.dans.ingest.core.TaskEvent.Result;
-import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
+import nl.knaw.dans.ingest.core.deposit.DepositManager;
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.domain.DepositState;
+import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.validatedansbag.api.ValidateOk;
@@ -27,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.nio.file.Path;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,10 +59,21 @@ public class DepositIngestTaskTest {
         Mockito.reset(blockedTargetService);
     }
 
-    DepositIngestTask getDepositIngestTask(String doi, String depositId, String isVersionOf) {
+    DepositIngestTask getDepositIngestTask(String doi, String depositId, String isVersionOf) throws Throwable {
+
+        Mockito.when(depositManager.readDeposit(Mockito.any()))
+            .thenReturn(new Deposit());
+
+        var path = Path.of("path/to/", depositId);
+        var depositLocation = new DepositLocation(
+            path,
+            doi != null ? doi : isVersionOf,
+            depositId,
+            OffsetDateTime.now()
+        );
         var deposit = new Deposit();
         deposit.setDataverseDoi(doi);
-        deposit.setDir(Path.of("path/to/", depositId));
+        deposit.setDir(path);
         deposit.setIsVersionOf(isVersionOf);
         deposit.setUpdate(isVersionOf != null);
 
@@ -69,9 +84,12 @@ public class DepositIngestTaskTest {
         Mockito.when(dansBagValidator.validateBag(Mockito.any(), Mockito.any(), Mockito.anyInt(), Mockito.any()))
             .thenReturn(validateOk);
 
+        Mockito.when(depositManager.readDeposit(Mockito.eq(depositLocation)))
+            .thenReturn(deposit);
+
         return new DepositIngestTask(
             depositToDvDatasetMetadataMapperFactory,
-            deposit,
+            depositLocation,
             dataverseClient,
             "role",
             null,
@@ -89,7 +107,7 @@ public class DepositIngestTaskTest {
     }
 
     @Test
-    void run_should_fail_deposit_if_isBlocked_returns_true_and_not_write_new_blocked_record_to_database() throws Exception {
+    void run_should_fail_deposit_if_isBlocked_returns_true_and_not_write_new_blocked_record_to_database() throws Throwable {
         var depositId = UUID.fromString("4466a9d0-b835-4bff-81e2-ef104f8195d0");
         var task = getDepositIngestTask("doi:id", depositId.toString(), "version1");
 
@@ -125,7 +143,7 @@ public class DepositIngestTaskTest {
     }
 
     @Test
-    void run_should_block_deposit_if_deposit_is_rejected() throws Exception {
+    void run_should_block_deposit_if_deposit_is_rejected() throws Throwable {
         var depositId = UUID.fromString("4466a9d0-b835-4bff-81e2-ef104f8195d0");
         var task = getDepositIngestTask("doi:id", depositId.toString(), "version1");
 
@@ -148,7 +166,7 @@ public class DepositIngestTaskTest {
     }
 
     @Test
-    void run_should_not_block_deposit_if_deposit_is_rejected_but_not_an_update_of_existing_deposit() throws Exception {
+    void run_should_not_block_deposit_if_deposit_is_rejected_but_not_an_update_of_existing_deposit() throws Throwable {
         var depositId = UUID.fromString("4466a9d0-b835-4bff-81e2-ef104f8195d0");
         // if the doi is null, it will be assumed to be a new deposit that has not been created in dataverse yet
         var task = getDepositIngestTask(null, depositId.toString(), null);
@@ -175,7 +193,7 @@ public class DepositIngestTaskTest {
     }
 
     @Test
-    void run_should_not_block_deposit_if_deposit_is_ok() throws Exception {
+    void run_should_not_block_deposit_if_deposit_is_ok() throws Throwable {
         var depositId = UUID.fromString("4466a9d0-b835-4bff-81e2-ef104f8195d0");
         // if the doi is null, it will be assumed to be a new deposit that has not been created in dataverse yet
         var task = getDepositIngestTask(null, depositId.toString(), null);

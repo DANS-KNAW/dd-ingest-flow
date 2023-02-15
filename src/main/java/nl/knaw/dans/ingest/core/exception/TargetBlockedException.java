@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core;
+package nl.knaw.dans.ingest.core.exception;
 
-public enum DepositState {
-    ARCHIVED, DRAFT, FAILED, FINALIZING, INVALID, REJECTED, SUBMITTED, UPLOADED, PUBLISHED
+public class TargetBlockedException extends Exception {
+    public TargetBlockedException(String msg) {
+        super(msg);
+    }
 }

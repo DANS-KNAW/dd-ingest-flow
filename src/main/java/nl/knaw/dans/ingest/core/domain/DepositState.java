@@ -13,13 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.exception;
+package nl.knaw.dans.ingest.core.domain;
 
-public class MissingRequiredFieldException extends RuntimeException {
-    private final String title;
-
-    public MissingRequiredFieldException(String title) {
-        super(String.format("Required metadata field '%s' is missing", title));
-        this.title = title;
-    }
+public enum DepositState {
+    ARCHIVED, DRAFT, FAILED, FINALIZING, INVALID, REJECTED, SUBMITTED, UPLOADED, PUBLISHED
 }

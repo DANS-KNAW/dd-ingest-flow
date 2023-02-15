@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.exception;
+package nl.knaw.dans.ingest.core.exception;
 
-public class TargetNotFoundException extends Exception {
-    public TargetNotFoundException(String msg) {
+public class InvalidDepositException extends Throwable {
+    public InvalidDepositException(String msg) {
         super(msg);
+    }
+
+    public InvalidDepositException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 }

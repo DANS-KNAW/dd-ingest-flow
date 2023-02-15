@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.mapper.mapping;
+package nl.knaw.dans.ingest.core.deposit;
 
-import lombok.extern.slf4j.Slf4j;
-import org.w3c.dom.Node;
+import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 
-@Slf4j
-public class PersonalStatement extends Base {
-    public static String toHasPersonalDataValue(Node node) {
-        if (hasChildNode(node, "agreements:notAvailable")) {
-            return "Unknown";
-        }
+import java.io.IOException;
+import java.nio.file.Path;
 
-        return getChildNode(node, "agreements:containsPrivacySensitiveData")
-            .map(Node::getTextContent)
-            .map(Boolean::parseBoolean)
-            .map(n -> n ? "Yes" : "No")
-            .orElse(null);
-    }
+public interface DepositLocationReader {
 
+    DepositLocation readDepositLocation(Path depositDir) throws InvalidDepositException, IOException;
 }

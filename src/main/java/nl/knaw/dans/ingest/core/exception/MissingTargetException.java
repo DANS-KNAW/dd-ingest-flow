@@ -13,18 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core;
+package nl.knaw.dans.ingest.core.exception;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
-
-@Data
-@Builder
-@ToString
-public class DatasetOrganization {
-    private String name;
-    private String role;
-    private String isni;
-    private String viaf;
+public class MissingTargetException extends Exception {
+    public MissingTargetException(String message) {
+        super(message);
+    }
 }

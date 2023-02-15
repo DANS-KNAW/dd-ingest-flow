@@ -13,21 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core;
+package nl.knaw.dans.ingest.core.domain;
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.nio.file.Path;
+import java.time.OffsetDateTime;
+
+/**
+ * This class represents the location of a deposit that was done in one of the inboxes. It is intended to be a lightweight pointer to the deposit to be used for enqueuing a large number of deposits
+ * without incurring the overhead of loading all the deposit metadata into memory.
+ */
 @Data
-@Builder
-public class DatasetAuthor {
-    private String titles;
-    private String initials;
-    private String insertions;
-    private String surname;
-    private String dai;
-    private String isni;
-    private String orcid;
-    private String role;
-    private String organization;
+@NoArgsConstructor
+@AllArgsConstructor
+public class DepositLocation {
+    private Path dir;
+    private String target;
+    private String depositId;
+    private OffsetDateTime created;
 }

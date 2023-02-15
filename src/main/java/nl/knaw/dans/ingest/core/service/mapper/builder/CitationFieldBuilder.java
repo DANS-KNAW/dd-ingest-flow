@@ -113,7 +113,7 @@ public class CitationFieldBuilder extends FieldBuilder {
         addSingleString(DISTRIBUTION_DATE, stream);
     }
 
-    public void addDateOfCollections(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+    public void addDatesOfCollection(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
         addMultiple(DATE_OF_COLLECTION, stream, generator);
     }
 

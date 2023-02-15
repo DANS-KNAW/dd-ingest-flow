@@ -18,9 +18,9 @@ package nl.knaw.dans.ingest.core.service.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.VaultMetadata;
+import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
-import nl.knaw.dans.ingest.core.service.exception.MissingRequiredFieldException;
+import nl.knaw.dans.ingest.core.exception.MissingRequiredFieldException;
 import nl.knaw.dans.ingest.core.service.mapper.builder.ArchaeologyFieldBuilder;
 import nl.knaw.dans.ingest.core.service.mapper.builder.CitationFieldBuilder;
 import nl.knaw.dans.ingest.core.service.mapper.builder.DataVaultFieldBuilder;
@@ -44,7 +44,7 @@ import nl.knaw.dans.ingest.core.service.mapper.mapping.Description;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Identifier;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.InCollection;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Language;
-import nl.knaw.dans.ingest.core.service.mapper.mapping.PersonalStatement;
+import nl.knaw.dans.ingest.core.service.mapper.mapping.PersonalData;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Publisher;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Relation;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.SpatialBox;
@@ -119,61 +119,62 @@ public class DepositToDvDatasetMetadataMapper {
             checkRequiredField(SUBJECT, getAudiences(ddm));
 
             var alternativeTitles = getAlternativeTitles(ddm).collect(Collectors.toList());
-            citationFields.addTitle(getTitles(ddm));
-            citationFields.addAlternativeTitle(alternativeTitles.stream().map(Node::getTextContent));
+            citationFields.addTitle(getTitles(ddm)); // CIT001
+            citationFields.addAlternativeTitle(alternativeTitles.stream().map(Node::getTextContent)); // CIT002
 
             if (vaultMetadata != null) {
-                citationFields.addOtherIdsStrings(Stream.ofNullable(vaultMetadata.getOtherId())
+                citationFields.addOtherIdsStrings(Stream.ofNullable(vaultMetadata.getOtherId()) // CIT002A
                     .filter(DepositPropertiesVaultMetadata::isValidOtherIdValue), DepositPropertiesVaultMetadata.toOtherIdValue);
             }
 
-            citationFields.addOtherIds(getIdentifiers(ddm).filter(Identifier::canBeMappedToOtherId), Identifier.toOtherIdValue);
-            citationFields.addOtherIdsStrings(Stream.ofNullable(otherDoiId), DepositPropertiesOtherDoi.toOtherIdValue);
-            citationFields.addAuthors(getCreators(ddm), Author.toAuthorValueObject);
-            citationFields.addDatasetContact(Stream.ofNullable(contactData), Contact.toOtherIdValue);
-            citationFields.addDescription(getProfileDescriptions(ddm), Description.toDescription);
+            citationFields.addOtherIds(getIdentifiers(ddm).filter(Identifier::canBeMappedToOtherId), Identifier.toOtherIdValue); // CIT002B, CIT004
+            citationFields.addOtherIdsStrings(Stream.ofNullable(otherDoiId), DepositPropertiesOtherDoi.toOtherIdValue); // PAN second version DOIs (migration)
+            // TODO: CIT003
+            citationFields.addAuthors(getCreators(ddm), Author.toAuthorValueObject); // CIT005, CIT006, CIT007
+            citationFields.addDatasetContact(Stream.ofNullable(contactData), Contact.toContactValue); // CIT008
+            citationFields.addDescription(getProfileDescriptions(ddm), Description.toDescription); // CIT009
 
-            if (alternativeTitles.size() > 0) {
-                citationFields.addDescription(Stream.of(alternativeTitles.get(alternativeTitles.size() - 1)), Description.toDescription);
+            // CIT010
+            if (alternativeTitles.size() > 1) {
+                citationFields.addDescription(alternativeTitles.stream().skip(1), Description.toDescription);
             }
 
-            citationFields.addDescription(getDcmiDctermsDescriptions(ddm), Description.toDescription);
-            citationFields.addDescription(getDcmiDdmDescriptions(ddm).filter(Description::isNotMapped), Description.toDescription);
+            citationFields.addDescription(getOtherDescriptions(ddm).filter(Description::isNotBlank), Description.toPrefixedDescription); // CIT011
+            citationFields.addDescription(getDcmiDctermsDescriptions(ddm), Description.toDescription); // CIT012
+            citationFields.addDescription(getDcmiDdmDescriptions(ddm).filter(Description::isNotMapped), Description.toDescription); // CIT012
 
-            citationFields.addDescription(getOtherDescriptions(ddm).filter(Description::isNotBlank), Description.toPrefixedDescription);
 
             if (hasRestrictedOrNoneFiles) {
+                // TODO: FIX: access request enabled -> always fill in, otherwise: only if accessRights found.
+                // TRM004, TRM005
                 // stick to initial value if nothing is found
                 termsOfAccess = getDctAccessRights(ddm).map(Node::getTextContent).findFirst().orElse(termsOfAccess);
             }
             else {
+                // CIT012A
                 citationFields.addDescription(getDctAccessRights(ddm), Description.toDescription);
             }
 
-            citationFields.addSubject(getAudiences(ddm), Audience::toCitationBlockSubject);
-
-            citationFields.addKeywords(getSubjects(ddm).filter(Subject::hasNoCvAttributes), Subject.toKeywordValue);
-            citationFields.addKeywords(getSubjects(ddm).filter(Subject::isPanTerm), Subject.toPanKeywordValue);
-            citationFields.addKeywords(getSubjects(ddm).filter(Subject::isAatTerm), Subject.toAatKeywordValue);
-            citationFields.addKeywords(getLanguages(ddm).filter(Language::isNotIsoLanguage), Language.toKeywordValue);
-            citationFields.addPublications(getIdentifiers(ddm).filter(Identifier::isRelatedPublication), Identifier.toRelatedPublicationValue);
-            citationFields.addLanguages(getLanguages(ddm), node -> Language.toCitationBlockLanguage(node, iso1ToDataverseLanguage, iso2ToDataverseLanguage));
-            citationFields.addProductionDate(getCreated(ddm).map(Base::toYearMonthDayFormat));
-            citationFields.addContributors(getContributorDetails(ddm).filter(Contributor::isValidContributor), Contributor.toContributorValueObject);
-            citationFields.addContributors(getDcmiDdmDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Contributor.toContributorValueObject);
-            citationFields.addGrantNumbers(getIdentifiers(ddm).filter(Identifier::isNwoGrantNumber), Identifier.toNwoGrantNumber);
-
-            citationFields.addDistributor(getPublishers(ddm).filter(Publisher::isNotDans), Publisher.toDistributorValueObject);
-            citationFields.addDistributionDate(getAvailable(ddm).map(Base::toYearMonthDayFormat));
-
-            citationFields.addDateOfDeposit(dateOfDeposit);
-
-            citationFields.addDateOfCollections(getDatesOfCollection(ddm)
-                .filter(DatesOfCollection::isValidDistributorDate), DatesOfCollection.toDistributorValueObject);
-            citationFields.addDataSources(getDataSources(ddm));
-            citationFields.addNotesText(getProvenance(ddm));
-            citationFields.addSeries(getDcmiDdmDescriptions(ddm).filter(Description::isSeriesInformation), Description.toSeries);
-
+            citationFields.addSubject(getAudiences(ddm), Audience::toCitationBlockSubject);  // CIT013
+            citationFields.addKeywords(getSubjects(ddm).filter(Subject::hasNoCvAttributes), Subject.toKeywordValue); // CIT014
+            citationFields.addKeywords(getSubjects(ddm).filter(Subject::isPanTerm), Subject.toPanKeywordValue); // CIT015
+            citationFields.addKeywords(getSubjects(ddm).filter(Subject::isAatTerm), Subject.toAatKeywordValue); // CIT015
+            citationFields.addKeywords(getLanguages(ddm).filter(Language::isNotIsoLanguage), Language.toKeywordValue); // CIT016
+            citationFields.addPublications(getIdentifiers(ddm).filter(Identifier::isRelatedPublication), Identifier.toRelatedPublicationValue); // CIT017
+            citationFields.addNotesText(getProvenance(ddm)); // CIT017A
+            citationFields.addLanguages(getLanguages(ddm), node -> Language.toCitationBlockLanguage(node, iso1ToDataverseLanguage, iso2ToDataverseLanguage)); // CIT018
+            citationFields.addProductionDate(getCreated(ddm).map(Base::toYearMonthDayFormat)); // CIT019
+            citationFields.addContributors(getContributorDetails(ddm).filter(Contributor::isValidContributor), Contributor.toContributorValueObject); // CIT020, CIT021
+            citationFields.addContributors(getDcmiDdmDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Contributor.toContributorValueObject); // TODO: REMOVE AFTER MIGRATION
+            citationFields.addGrantNumbers(getIdentifiers(ddm).filter(Identifier::isNwoGrantNumber), Identifier.toNwoGrantNumber); // CIT023
+            // TODO: CIT022 ?? (role = funder)
+            citationFields.addDistributor(getPublishers(ddm).filter(Publisher::isNotDans), Publisher.toDistributorValueObject); // CIT024
+            citationFields.addDistributionDate(getAvailable(ddm).map(Base::toYearMonthDayFormat)); // CIT025
+            citationFields.addDateOfDeposit(dateOfDeposit); // CIT025A
+            citationFields.addDatesOfCollection(getDatesOfCollection(ddm)
+                .filter(DatesOfCollection::isValidDatesOfCollectionPattern), DatesOfCollection.toDateOfCollectionValue); // CIT026
+            citationFields.addSeries(getDcmiDdmDescriptions(ddm).filter(Description::isSeriesInformation), Description.toSeries); // CIT027
+            citationFields.addDataSources(getDataSources(ddm)); // CIT028
         }
         else {
             throw new IllegalStateException("Metadatablock citation should always be active");
@@ -181,45 +182,40 @@ public class DepositToDvDatasetMetadataMapper {
 
         if (activeMetadataBlocks.contains("dansRights")) {
             checkRequiredField(RIGHTS_HOLDER, getRightsHolders(ddm));
-            rightsFields.addRightsHolders(getRightsHolders(ddm));
-
-            rightsFields.addPersonalDataPresent(getPersonalDataPresent(agreements).map(PersonalStatement::toHasPersonalDataValue));
-            rightsFields.addRightsHolders(getContributorDetailsAuthors(ddm).filter(DcxDaiAuthor::isRightsHolder).map(DcxDaiAuthor::toRightsHolder));
-            rightsFields.addRightsHolders(getContributorDetailsOrganizations(ddm).filter(DcxDaiOrganization::isRightsHolder).map(DcxDaiOrganization::toRightsHolder));
+            rightsFields.addRightsHolders(getContributorDetailsAuthors(ddm).filter(DcxDaiAuthor::isRightsHolder).map(DcxDaiAuthor::toRightsHolder)); // RIG000A
+            rightsFields.addRightsHolders(getContributorDetailsOrganizations(ddm).filter(DcxDaiOrganization::isRightsHolder).map(DcxDaiOrganization::toRightsHolder)); // RIG000B
+            rightsFields.addRightsHolders(getRightsHolders(ddm)); // RIG001
+            rightsFields.addPersonalDataPresent(getPersonalData(ddm).map(PersonalData::toPersonalDataPresent)); // RIG002
             rightsFields.addLanguageOfMetadata(getLanguageAttributes(ddm)
-                .map(n -> Language.isoToDataverse(n, iso1ToDataverseLanguage, iso2ToDataverseLanguage)));
+                .map(s -> Language.isoToDataverse(s, iso1ToDataverseLanguage, iso2ToDataverseLanguage))); // RIG003
         }
 
         if (activeMetadataBlocks.contains("dansRelationMetadata")) {
-            relationFields.addAudiences(getAudiences(ddm).map(Audience::toNarcisTerm));
-            relationFields.addCollections(getInCollections(ddm).map(InCollection::toCollection));
+            relationFields.addAudiences(getAudiences(ddm).map(Audience::toNarcisTerm)); // REL001
+            relationFields.addCollections(getInCollections(ddm).map(InCollection::toCollection)); // REL002
             relationFields.addRelations(getRelations(ddm)
-                .filter(Relation::isRelation), Relation.toRelationObject);
+                .filter(Relation::isRelation), Relation.toRelationObject); // REL003
         }
 
         if (activeMetadataBlocks.contains("dansArchaeologyMetadata")) {
-            archaeologyFields.addArchisZaakId(getIdentifiers(ddm).filter(Identifier::isArchisZaakId).map(Identifier::toArchisZaakId));
-            archaeologyFields.addArchisNumber(getIdentifiers(ddm).filter(Identifier::isArchisNumber), Identifier.toArchisNumberValue);
-            archaeologyFields.addRapportType(getReportNumbers(ddm).filter(AbrReportType::isAbrReportType).map(AbrReportType::toAbrRapportType));
-            archaeologyFields.addRapportNummer(getReportNumbers(ddm).map(Base::asText));
-            archaeologyFields.addVerwervingswijze(getAcquisitionMethods(ddm).map(AbrAcquisitionMethod::toVerwervingswijze));
-            archaeologyFields.addComplex(getSubjects(ddm).filter(SubjectAbr::isAbrComplex).map(SubjectAbr::toAbrComplex));
-            archaeologyFields.addArtifact(getSubjects(ddm).filter(SubjectAbr::isOldAbr).map(SubjectAbr::fromAbrOldToAbrArtifact));
-            archaeologyFields.addArtifact(getSubjects(ddm).filter(SubjectAbr::isAbrArtifact).map(SubjectAbr::toAbrArtifact));
-            archaeologyFields.addPeriod(getSubjects(ddm).filter(TemporalAbr::isAbrPeriod).map(TemporalAbr::toAbrPeriod));
+            archaeologyFields.addArchisZaakId(getIdentifiers(ddm).filter(Identifier::isArchisZaakId).map(Identifier::toArchisZaakId)); // AR001
+            archaeologyFields.addArchisNumber(getIdentifiers(ddm).filter(Identifier::isArchisNumber), Identifier.toArchisNumberValue); // AR002
+            archaeologyFields.addRapportType(getReportNumbers(ddm).filter(AbrReportType::isAbrReportType).map(AbrReportType::toAbrRapportType)); // AR003
+            archaeologyFields.addRapportNummer(getReportNumbers(ddm).map(Base::asText)); // AR004
+            archaeologyFields.addVerwervingswijze(getAcquisitionMethods(ddm).map(AbrAcquisitionMethod::toVerwervingswijze)); // AR005
+            archaeologyFields.addComplex(getSubjects(ddm).filter(SubjectAbr::isAbrComplex).map(SubjectAbr::toAbrComplex)); // AR006
+            archaeologyFields.addArtifact(getSubjects(ddm).filter(SubjectAbr::isOldAbr).map(SubjectAbr::fromAbrOldToAbrArtifact)); // TODO: REMOVE AFTER MIGRATION
+            archaeologyFields.addArtifact(getSubjects(ddm).filter(SubjectAbr::isAbrArtifact).map(SubjectAbr::toAbrArtifact)); // AR007
+            archaeologyFields.addPeriod(getSubjects(ddm).filter(TemporalAbr::isAbrPeriod).map(TemporalAbr::toAbrPeriod)); // TODO: FIX: USE ddm:temporal AR008
         }
 
         if (activeMetadataBlocks.contains("dansTemporalSpatial")) {
-            temporalSpatialFields.addTemporalCoverage(getTemporal(ddm).filter(TemporalAbr::isNotAbrPeriod).map(TemporalAbr::asText));
-            temporalSpatialFields.addSpatialPoint(getSpatial(ddm)
-                .filter(node -> SpatialPoint.hasChildNode(node, "/Point")), SpatialPoint.toEasyTsmSpatialPointValueObject);
-
-            temporalSpatialFields.addSpatialBox(getBoundedBy(ddm), SpatialBox.toEasyTsmSpatialBoxValueObject);
-            temporalSpatialFields.addSpatialCoverageControlled(getSpatial(ddm)
-                .filter(SpatialCoverage::hasNoChildElement).map(SpatialCoverage::toControlledSpatialValue));
-
-            temporalSpatialFields.addSpatialCoverageUncontrolled(getSpatial(ddm)
-                .filter(SpatialCoverage::hasNoChildElement).map(SpatialCoverage::toUncontrolledSpatialValue));
+            temporalSpatialFields.addTemporalCoverage(getDctermsTemporal(ddm).map(TemporalAbr::asText)); // TS001
+            temporalSpatialFields.addSpatialPoint(getDcxGmlSpatial(ddm)
+                .filter(node -> SpatialPoint.hasChildNode(node, "/Point")), SpatialPoint.toEasyTsmSpatialPointValueObject); // TS002, TS003
+            temporalSpatialFields.addSpatialBox(getBoundedBy(ddm), SpatialBox.toEasyTsmSpatialBoxValueObject); // TS004, TS005
+            temporalSpatialFields.addSpatialCoverageControlled(getSpatial(ddm).map(SpatialCoverage::toControlledSpatialValue)); // TS006
+            temporalSpatialFields.addSpatialCoverageUncontrolled(getSpatial(ddm).map(SpatialCoverage::toUncontrolledSpatialValue)); // TS007
         }
 
         if (activeMetadataBlocks.contains("dansDataVaultMetadata") && vaultMetadata != null) {
@@ -232,6 +228,10 @@ public class DepositToDvDatasetMetadataMapper {
         }
 
         return assembleDataverseDataset(termsOfAccess);
+    }
+
+    private Stream<Node> getPersonalData(Document ddm) {
+        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:profile/ddm:personalData");
     }
 
     private Stream<Node> getPersonalDataPresent(Document agreements) {
@@ -316,7 +316,7 @@ public class DepositToDvDatasetMetadataMapper {
         return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:provenance");
     }
 
-    Stream<Node> getTemporal(Document ddm) {
+    Stream<Node> getDctermsTemporal(Document ddm) {
         return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:temporal");
     }
 
@@ -324,8 +324,12 @@ public class DepositToDvDatasetMetadataMapper {
         return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:spatial");
     }
 
+    Stream<Node> getDcxGmlSpatial(Document ddm) {
+        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/gml:spatial");
+    }
+
     Stream<Node> getBoundedBy(Document ddm) {
-        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:spatial//gml:boundedBy");
+        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/gml:spatial//gml:boundedBy");
     }
 
     Stream<Node> getSubjects(Document ddm) {

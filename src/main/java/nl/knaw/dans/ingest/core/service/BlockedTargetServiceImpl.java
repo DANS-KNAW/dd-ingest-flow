@@ -17,8 +17,8 @@ package nl.knaw.dans.ingest.core.service;
 
 import io.dropwizard.hibernate.UnitOfWork;
 import nl.knaw.dans.ingest.core.BlockedTarget;
-import nl.knaw.dans.ingest.core.service.exception.TargetBlockedException;
-import nl.knaw.dans.ingest.core.service.exception.TargetNotFoundException;
+import nl.knaw.dans.ingest.core.exception.TargetBlockedException;
+import nl.knaw.dans.ingest.core.exception.TargetNotFoundException;
 import nl.knaw.dans.ingest.db.BlockedTargetDAO;
 
 public class BlockedTargetServiceImpl implements BlockedTargetService {

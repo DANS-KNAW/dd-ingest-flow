@@ -16,8 +16,8 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.service.exception.TargetBlockedException;
-import nl.knaw.dans.ingest.core.service.exception.TargetNotFoundException;
+import nl.knaw.dans.ingest.core.exception.TargetBlockedException;
+import nl.knaw.dans.ingest.core.exception.TargetNotFoundException;
 
 public interface BlockedTargetService {
     void unblockTarget(String target) throws TargetNotFoundException;

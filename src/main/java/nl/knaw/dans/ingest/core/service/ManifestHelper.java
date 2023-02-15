@@ -87,6 +87,7 @@ public class ManifestHelper {
                 }
             }
         };
+
         Files.walkFileTree(bagRootDir, tagVisitor);
         bag.getTagManifests().clear();
         bag.getTagManifests().addAll(tagFilesMap.keySet());

@@ -51,7 +51,6 @@ public class Description extends Base {
     };
     public static CompoundFieldGenerator<Node> toSeries = (builder, value) -> {
         var text = newlineToHtml(value.getTextContent());
-        //builder.addSubfield(SERIES_NAME, "?");
         builder.addSubfield(SERIES_INFORMATION, text);
     };
 

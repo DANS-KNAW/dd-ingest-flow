@@ -13,14 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.exception;
+package nl.knaw.dans.ingest.core.domain;
 
-public class InvalidDepositException extends Throwable {
-    public InvalidDepositException(String msg) {
-        super(msg);
-    }
+import lombok.Builder;
+import lombok.Data;
 
-    public InvalidDepositException(String msg, Throwable cause) {
-        super(msg, cause);
-    }
+@Data
+@Builder
+public class DatasetAuthor {
+    private String titles;
+    private String initials;
+    private String insertions;
+    private String surname;
+    private String dai;
+    private String isni;
+    private String orcid;
+    private String role;
+    private String organization;
 }

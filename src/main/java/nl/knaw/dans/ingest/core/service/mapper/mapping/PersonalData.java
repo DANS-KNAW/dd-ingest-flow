@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service;
+package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
-import java.nio.file.Path;
+import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.service.XmlReader;
+import org.w3c.dom.Node;
 
-public class BoundedDepositImportTaskIterator extends AbstractDepositsImportTaskIterator {
-    public BoundedDepositImportTaskIterator(Path inboxDir, Path outBox, DepositIngestTaskFactory taskFactory,
-        EventWriter eventWriter) {
-        super(inboxDir, outBox, taskFactory, eventWriter);
-        createDepositIngestTasks(getAllDepositPathsFromInbox()).forEach(this::addTask);
+@Slf4j
+public class PersonalData extends Base {
+    public static String toPersonalDataPresent(Node node) {
+        return getAttribute(node, "present")
+            .map(Node::getTextContent)
+            .orElseGet(() -> {
+                log.error("Missing 'present' attribute on ddm:personalData element");
+                return null;
+            });
     }
 
 }

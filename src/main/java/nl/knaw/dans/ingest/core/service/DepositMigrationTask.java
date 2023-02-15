@@ -16,7 +16,11 @@
 package nl.knaw.dans.ingest.core.service;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
+import nl.knaw.dans.ingest.core.deposit.DepositManager;
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.domain.VaultMetadata;
+import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
@@ -40,7 +44,7 @@ import java.util.stream.Collectors;
 public class DepositMigrationTask extends DepositIngestTask {
     public DepositMigrationTask(
         DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
-        Deposit deposit,
+        DepositLocation depositLocation,
         DataverseClient dataverseClient,
         String depositorRole,
         Pattern fileExclusionPattern,
@@ -56,14 +60,13 @@ public class DepositMigrationTask extends DepositIngestTask {
         BlockedTargetService blockedTargetService
     ) {
         super(
-            datasetMetadataMapperFactory, deposit, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
+            datasetMetadataMapperFactory, depositLocation, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
             publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries, outboxDir, eventWriter, depositManager, blockedTargetService);
+
     }
 
     @Override
     void checkDepositType() {
-        var deposit = getDeposit();
-
         if (StringUtils.isEmpty(deposit.getDoi())) {
             throw new IllegalArgumentException("Deposit for migrated dataset MUST have deposit property identifier.doi set");
         }
@@ -103,21 +106,19 @@ public class DepositMigrationTask extends DepositIngestTask {
     @Override
     void checkPersonalDataPresent(Document document) {
         if (document == null) {
-            throw new RejectedDepositException(getDeposit(), "Migration deposit MUST have an agreements.xml");
+            throw new RejectedDepositException(deposit, "Migration deposit MUST have an agreements.xml");
         }
     }
 
     @Override
     Optional<String> getDateOfDeposit() {
-        return Optional.ofNullable(getDeposit().getAmd())
+        return Optional.ofNullable(deposit.getAmd())
             .map(Amd::toDateOfDeposit)
             .flatMap(i -> i);
     }
 
     @Override
     void publishDataset(String persistentId) throws IOException, DataverseException {
-
-        var deposit = getDeposit();
         var amd = deposit.getAmd();
 
         if (amd == null) {
@@ -145,8 +146,6 @@ public class DepositMigrationTask extends DepositIngestTask {
     }
 
     void validateDeposit() {
-        var deposit = getDeposit();
-
         if (dansBagValidator != null) {
             var result = dansBagValidator.validateBag(
                 deposit.getBagDir(), ValidateCommand.PackageTypeEnum.MIGRATION, 1, ValidateCommand.LevelEnum.STAND_ALONE);

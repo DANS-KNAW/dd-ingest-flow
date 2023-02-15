@@ -1,0 +1,47 @@
+@startuml
+
+participant Start
+participant DatasetValidator
+participant DepositValidator
+participant DansBagValidator
+boundary "dd-validate-dans-bag (http)" as DDValidate
+
+Start -> DatasetValidator: validate deposit on path
+    DatasetValidator -> DepositValidator: validate deposit on path
+    note right
+        This will validate:
+        - the presence or absence of a doi
+        - if agreements.xml is in a migration deposit
+        - if a date is available in bag-info.txt
+        - any other rule that is scattered across
+            the code currently
+    end note
+    return throw DepositInvalidException if invalid
+
+    DatasetValidator -> DansBagValidator: validate deposit on path
+        DansBagValidator -> DDValidate: validate deposit
+        return validate result
+
+    alt no errors
+        DatasetValidator <-- DansBagValidator: void
+    else not valid
+        DansBagValidator -> DansBagValidatorExceptionFormatter: format exception
+        DansBagValidator <-- DansBagValidatorExceptionFormatter: formatted exception
+        note right
+            The exception contains a formatted
+            version of the output of the dans
+            bag validator. You might want to
+            separate the formatting from the
+            validation, but that might just
+            make this too complex. This breaks
+            the single responsibility principle
+            but prevents a ton of SRP classes
+            just for the sake of adhering to
+            principles.
+        end note
+        DatasetValidator <-- DansBagValidator: throws DepositInvalidException
+    end
+
+Start <-- DatasetValidator: DepositInvalidException if not valid
+
+@enduml

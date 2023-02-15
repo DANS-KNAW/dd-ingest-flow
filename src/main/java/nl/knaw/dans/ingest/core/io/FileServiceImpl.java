@@ -13,16 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.exception;
+package nl.knaw.dans.ingest.core.io;
 
-import nl.knaw.dans.ingest.core.service.Deposit;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 
-public class FailedDepositException extends RuntimeException {
-    public FailedDepositException(Deposit deposit, String message) {
-        super(String.format("Failed %s: %s", deposit.getDir(), message));
+public class FileServiceImpl implements FileService {
+    @Override
+    public boolean isDirectory(Path path) {
+        return Files.isDirectory(path);
     }
 
-    public FailedDepositException(Deposit deposit, String message, Throwable e) {
-        super(String.format("Failed %s: %s", deposit.getDir(), message), e);
+    @Override
+    public Stream<Path> listDirectories(Path path) throws IOException {
+        return Files.list(path).filter(Files::isDirectory);
+    }
+
+    @Override
+    public boolean fileExists(Path path) {
+        return Files.exists(path);
     }
 }

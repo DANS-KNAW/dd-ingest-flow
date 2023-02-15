@@ -15,10 +15,13 @@
  */
 package nl.knaw.dans.ingest.resources;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.BlockedTargetService;
 import nl.knaw.dans.ingest.core.exception.TargetBlockedException;
 import nl.knaw.dans.ingest.core.exception.TargetNotFoundException;
+import nl.knaw.dans.ingest.core.service.BlockedTargetService;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.DELETE;
@@ -50,10 +53,13 @@ public class BlockedTargetsResource {
             blockedTargetService.blockTarget(target);
         }
         catch (TargetBlockedException e) {
-            throw new ClientErrorException(Status.CONFLICT);
+            throw new ClientErrorException(
+                String.format("Target %s is already blocked", target),
+                Status.CONFLICT
+            );
         }
 
-        return Response.ok().build();
+        return Response.ok(new BlockTargetResponse(String.format("Target %s is blocked", target))).build();
     }
 
     @DELETE
@@ -64,9 +70,16 @@ public class BlockedTargetsResource {
             blockedTargetService.unblockTarget(target);
         }
         catch (TargetNotFoundException e) {
-            throw new NotFoundException();
+            throw new NotFoundException(String.format("Target %s could not be found", target));
         }
 
-        return Response.ok().build();
+        return Response.ok(new BlockTargetResponse(String.format("Target %s is unblocked", target))).build();
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    static class BlockTargetResponse {
+        private String message;
     }
 }

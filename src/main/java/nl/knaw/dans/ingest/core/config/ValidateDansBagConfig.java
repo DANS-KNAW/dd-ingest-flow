@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ingest.core.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.client.JerseyClientConfiguration;
 
 import javax.validation.Valid;

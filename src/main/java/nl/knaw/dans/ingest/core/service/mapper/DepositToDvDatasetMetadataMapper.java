@@ -19,8 +19,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
-import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.ingest.core.exception.MissingRequiredFieldException;
+import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.ingest.core.service.mapper.builder.ArchaeologyFieldBuilder;
 import nl.knaw.dans.ingest.core.service.mapper.builder.CitationFieldBuilder;
 import nl.knaw.dans.ingest.core.service.mapper.builder.DataVaultFieldBuilder;
@@ -107,11 +107,10 @@ public class DepositToDvDatasetMetadataMapper {
     public Dataset toDataverseDataset(
         @NonNull Document ddm,
         @Nullable String otherDoiId,
-        @Nullable Document agreements,
         @Nullable String dateOfDeposit,
         @Nullable AuthenticatedUser contactData,
         @Nullable VaultMetadata vaultMetadata,
-        boolean hasRestrictedOrNoneFiles) throws MissingRequiredFieldException {
+        boolean filesThatAreAccessibleToNonePresentInDeposit) throws MissingRequiredFieldException {
         var termsOfAccess = "N/a";
 
         if (activeMetadataBlocks.contains("citation")) {
@@ -144,10 +143,8 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addDescription(getDcmiDdmDescriptions(ddm).filter(Description::isNotMapped), Description.toDescription); // CIT012
 
 
-            if (hasRestrictedOrNoneFiles) {
-                // TODO: FIX: access request enabled -> always fill in, otherwise: only if accessRights found.
+            if (filesThatAreAccessibleToNonePresentInDeposit) {
                 // TRM004, TRM005
-                // stick to initial value if nothing is found
                 termsOfAccess = getDctAccessRights(ddm).map(Node::getTextContent).findFirst().orElse(termsOfAccess);
             }
             else {
@@ -227,7 +224,7 @@ public class DepositToDvDatasetMetadataMapper {
 
         }
 
-        return assembleDataverseDataset(termsOfAccess);
+        return assembleDataverseDataset(termsOfAccess, !filesThatAreAccessibleToNonePresentInDeposit);
     }
 
     private Stream<Node> getPersonalData(Document ddm) {
@@ -270,7 +267,7 @@ public class DepositToDvDatasetMetadataMapper {
         fields.put(title, block);
     }
 
-    Dataset assembleDataverseDataset(String termsOfAccess) {
+    Dataset assembleDataverseDataset(String termsOfAccess, boolean enableFileAccessRequest) {
         var fields = new HashMap<String, MetadataBlock>();
 
         processMetadataBlock(deduplicate, fields, "citation", "Citation Metadata", citationFields);
@@ -282,6 +279,7 @@ public class DepositToDvDatasetMetadataMapper {
 
         var version = new DatasetVersion();
         version.setTermsOfAccess(termsOfAccess);
+        version.setFileAccessRequest(enableFileAccessRequest);
         version.setMetadataBlocks(fields);
         version.setFiles(new ArrayList<>());
 

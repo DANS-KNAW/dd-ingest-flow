@@ -61,7 +61,7 @@ class MappingIntegrationTest {
         iso2ToDataverseLanguage.put("ger", "German");
         return new DepositToDvDatasetMetadataMapper(
             true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage
-        ).toDataverseDataset(ddm, null, null, null, null, vaultMetadata, hasRestrictedOrNoneFiles);
+        ).toDataverseDataset(ddm, null, null, null, vaultMetadata, hasRestrictedOrNoneFiles);
     }
 
     private String toPrettyJsonString(Dataset result) throws JsonProcessingException {

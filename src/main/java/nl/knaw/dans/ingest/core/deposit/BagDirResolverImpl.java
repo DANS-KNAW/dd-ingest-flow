@@ -15,8 +15,8 @@
  */
 package nl.knaw.dans.ingest.core.deposit;
 
-import nl.knaw.dans.ingest.core.io.FileService;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.io.FileService;
 
 import java.io.IOException;
 import java.nio.file.Path;

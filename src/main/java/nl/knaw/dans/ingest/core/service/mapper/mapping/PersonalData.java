@@ -16,7 +16,6 @@
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.XmlReader;
 import org.w3c.dom.Node;
 
 @Slf4j

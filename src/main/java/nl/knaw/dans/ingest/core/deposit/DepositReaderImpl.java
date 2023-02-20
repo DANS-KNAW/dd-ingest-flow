@@ -18,10 +18,10 @@ package nl.knaw.dans.ingest.core.deposit;
 import gov.loc.repository.bagit.domain.Bag;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.io.BagDataManager;
 import nl.knaw.dans.ingest.core.io.FileService;
 import nl.knaw.dans.ingest.core.service.XmlReader;
-import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
@@ -65,7 +65,6 @@ public class DepositReaderImpl implements DepositReader {
             deposit.setBag(bagInfo);
             deposit.setDdm(readOptionalXmlFile(deposit.getDdmPath()));
             deposit.setFilesXml(readOptionalXmlFile(deposit.getFilesXmlPath()));
-            deposit.setAgreements(readOptionalXmlFile(deposit.getAgreementsXmlPath()));
             deposit.setAmd(readOptionalXmlFile(deposit.getAmdPath()));
 
             return deposit;

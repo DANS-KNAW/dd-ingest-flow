@@ -25,5 +25,5 @@ public interface DansBagValidator {
 
     void checkConnection();
 
-    ValidateOk validateBag(Path bagDir, PackageTypeEnum informationPackageType, int profileVersion, ValidateCommand.LevelEnum level);
+    ValidateOk validateBag(Path bagDir, PackageTypeEnum informationPackageType, int profileVersion);
 }

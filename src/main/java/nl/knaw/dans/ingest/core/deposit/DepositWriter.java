@@ -28,4 +28,6 @@ public interface DepositWriter {
     void moveDeposit(Deposit deposit, Path outbox) throws IOException;
 
     void moveDeposit(Path source, Path outbox) throws IOException;
+
+    void saveBagInfo(Deposit deposit) throws IOException;
 }

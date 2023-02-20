@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core.io;
 
 import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.domain.Metadata;
+import gov.loc.repository.bagit.domain.Version;
 import gov.loc.repository.bagit.exceptions.InvalidBagitFileFormatException;
 import gov.loc.repository.bagit.exceptions.MaliciousPathException;
 import gov.loc.repository.bagit.exceptions.UnparsableVersionException;
@@ -24,15 +25,23 @@ import gov.loc.repository.bagit.exceptions.UnsupportedAlgorithmException;
 import gov.loc.repository.bagit.reader.BagReader;
 import gov.loc.repository.bagit.reader.BagitTextFileReader;
 import gov.loc.repository.bagit.reader.KeyValueReader;
+import gov.loc.repository.bagit.writer.ManifestWriter;
+import gov.loc.repository.bagit.writer.MetadataWriter;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 public class BagDataManagerImpl implements BagDataManager {
@@ -53,6 +62,23 @@ public class BagDataManagerImpl implements BagDataManager {
         metadata.addAll(values);
 
         return metadata;
+    }
+
+    public void writeBagMetadata(Bag bag) throws IOException {
+        MetadataWriter.writeBagMetadata(bag.getMetadata(), Version.LATEST_BAGIT_VERSION(), bag.getRootDir(), StandardCharsets.UTF_8);
+        try {
+            for (var m : bag.getTagManifests()) {
+                var messageDigest = MessageDigest.getInstance(m.getAlgorithm().getMessageDigestName());
+                try (var is = FileUtils.openInputStream(bag.getRootDir().resolve("bag-info.txt").toFile())) {
+                    var hash = Hex.encodeHexString(DigestUtils.digest(messageDigest, is));
+                    m.getFileToChecksumMap().put(bag.getRootDir().resolve("bag-info.txt"), hash);
+                }
+            }
+            ManifestWriter.writeTagManifests(bag.getTagManifests(), bag.getRootDir(), bag.getRootDir(), StandardCharsets.UTF_8);
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Bag declared to have a tagmanifest with an algorithm but the algorithm does not exist ???", e);
+        }
     }
 
     @Override

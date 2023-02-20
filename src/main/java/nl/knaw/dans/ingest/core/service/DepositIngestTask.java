@@ -40,7 +40,6 @@ import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 
 import java.io.IOException;
 import java.net.URI;
@@ -296,31 +295,34 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     }
 
     void validateDeposit() {
-        var deposit = getDeposit();
+        try {
+            deposit.addOrUpdateBagInfoElement("Data-Station-User-Account", deposit.getDepositorUserId());
+            depositManager.saveBagInfo(deposit);
+        }
+        catch (IOException e) {
+            throw new FailedDepositException(deposit, "Could not add 'Data-Station-User-Account' element to bag-info.txt");
+        }
+        var result = dansBagValidator.validateBag(
+            deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
 
-        if (dansBagValidator != null) {
-            var result = dansBagValidator.validateBag(
-                deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1, ValidateCommand.LevelEnum.WITH_DATA_STATION_CONTEXT);
-
-            if (result.getIsCompliant()) {
-                try {
-                    ManifestHelper.ensureSha1ManifestPresent(deposit.getBag());
-                }
-                catch (Exception e) {
-                    log.error("could not add SHA1 manifest", e);
-                    throw new FailedDepositException(deposit, e.getMessage());
-                }
+        if (result.getIsCompliant()) {
+            try {
+                ManifestHelper.ensureSha1ManifestPresent(deposit.getBag());
             }
-            else {
-                var violations = result.getRuleViolations().stream()
-                    .map(r -> String.format("- [%s] %s", r.getRule(), r.getViolation()))
-                    .collect(Collectors.joining("\n"));
-
-                throw new RejectedDepositException(deposit, String.format(
-                    "Bag was not valid according to Profile Version %s. Violations: %s",
-                    result.getProfileVersion(), violations)
-                );
+            catch (Exception e) {
+                log.error("could not add SHA1 manifest", e);
+                throw new FailedDepositException(deposit, e.getMessage());
             }
+        }
+        else {
+            var violations = result.getRuleViolations().stream()
+                .map(r -> String.format("- [%s] %s", r.getRule(), r.getViolation()))
+                .collect(Collectors.joining("\n"));
+
+            throw new RejectedDepositException(deposit, String.format(
+                "Bag was not valid according to Profile Version %s. Violations: %s",
+                result.getProfileVersion(), violations)
+            );
         }
     }
 
@@ -435,25 +437,15 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         var accessibleToValues = XPathEvaluator
             .strings(deposit.getFilesXml(), "/files:files/files:file/files:accessibleToRights")
             .collect(Collectors.toList());
-        var hasRestrictedOrNoneFiles = accessibleToValues.contains("RESTRICTED_REQUEST") || accessibleToValues.contains("NONE");
 
-        // TODO think about putting assertions inside a getter method
-        checkPersonalDataPresent(deposit.getAgreements());
-
-        var mapper = datasetMetadataMapperFactory.createMapper(false);
-
+        var mapper = datasetMetadataMapperFactory.createMapper(false); // TODO: WHY IS THIS ALWAYS FALSE?
         return mapper.toDataverseDataset(
             deposit.getDdm(),
             deposit.getOtherDoiId(),
-            deposit.getAgreements(),
             date.orElse(null),
             contact.orElse(null),
             deposit.getVaultMetadata(),
-            hasRestrictedOrNoneFiles);
-    }
-
-    void checkPersonalDataPresent(Document agreements) {
-        // do nothing
+            accessibleToValues.contains("NONE"));
     }
 
     Optional<String> getDateOfDeposit() {

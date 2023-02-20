@@ -34,6 +34,11 @@ public class DepositManagerImpl implements DepositManager {
     }
 
     @Override
+    public void saveBagInfo(Deposit deposit) throws IOException {
+        depositWriter.saveBagInfo(deposit);
+    }
+
+    @Override
     public Deposit readDeposit(DepositLocation location) throws InvalidDepositException {
         return depositReader.readDeposit(location);
     }

@@ -37,7 +37,6 @@ public class Deposit {
     private String doi;
     private String urn;
     private String dataverseDoi;
-
     private String depositorUserId;
     private String otherId;
     private String otherIdVersion;
@@ -62,8 +61,6 @@ public class Deposit {
     private Document ddm;
     private Document filesXml;
     private Document amd;
-    private Document agreements;
-
     private Bag bag;
 
     public VaultMetadata getVaultMetadata() {
@@ -72,6 +69,11 @@ public class Deposit {
 
     public String getDataversePid() {
         return String.format("%s:%s/%s", dataverseIdProtocol, dataverseIdAuthority, dataverseId);
+    }
+
+    public void addOrUpdateBagInfoElement(String name, String value) {
+        bag.getMetadata().remove(name);
+        bag.getMetadata().add(name, value);
     }
 
     public String getOtherDoiId() {

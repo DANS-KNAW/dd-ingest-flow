@@ -81,7 +81,7 @@ public class DepositIngestTaskTest {
         validateOk.setIsCompliant(true);
         validateOk.setRuleViolations(List.of());
 
-        Mockito.when(dansBagValidator.validateBag(Mockito.any(), Mockito.any(), Mockito.anyInt(), Mockito.any()))
+        Mockito.when(dansBagValidator.validateBag(Mockito.any(), Mockito.any(), Mockito.anyInt()))
             .thenReturn(validateOk);
 
         Mockito.when(depositManager.readDeposit(Mockito.eq(depositLocation)))
@@ -203,6 +203,10 @@ public class DepositIngestTaskTest {
         Mockito.doNothing()
             .when(spiedTask)
             .createOrUpdateDataset(Mockito.anyBoolean());
+
+        Mockito.doNothing()
+            .when(spiedTask)
+            .validateDeposit();
 
         Mockito.doReturn("doi:id")
             .when(spiedTask).resolveDoi(Mockito.any());

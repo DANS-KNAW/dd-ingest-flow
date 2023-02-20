@@ -42,6 +42,14 @@ public interface BagDataManager {
     Metadata readBagMetadata(Path bagDir) throws UnparsableVersionException, InvalidBagitFileFormatException, IOException;
 
     /**
+     * Writes the current bag metadata to disk and updates the entry for bag-info.txt in all existing tag manifests, so that the bag stays valid.
+     *
+     * @param bag the bag object
+     * @throws IOException
+     */
+    void writeBagMetadata(Bag bag) throws IOException;
+
+    /**
      * Reads the bag on the path that contains bag-info.txt and bagit.txt, among other files
      *
      * @param bagDir the path that contains bag-info.txt and bagit.txt

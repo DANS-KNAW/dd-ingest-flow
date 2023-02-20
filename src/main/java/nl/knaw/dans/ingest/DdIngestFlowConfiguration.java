@@ -16,9 +16,7 @@
 
 package nl.knaw.dans.ingest;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
-import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.db.DataSourceFactory;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
@@ -26,7 +24,6 @@ import nl.knaw.dans.ingest.core.config.ValidateDansBagConfig;
 import nl.knaw.dans.lib.util.DataverseClientFactory;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public class DdIngestFlowConfiguration extends Configuration {

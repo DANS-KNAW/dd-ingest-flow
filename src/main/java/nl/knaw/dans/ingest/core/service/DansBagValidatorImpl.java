@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -65,9 +64,8 @@ public class DansBagValidatorImpl implements DansBagValidator {
     }
 
     @Override
-    public ValidateOk validateBag(Path bagDir, PackageTypeEnum informationPackageType, int profileVersion, ValidateCommand.LevelEnum level) {
+    public ValidateOk validateBag(Path bagDir, PackageTypeEnum informationPackageType, int profileVersion) {
         var command = new ValidateCommand()
-            .level(level)
             .bagLocation(bagDir.toString())
             .packageType(informationPackageType);
 

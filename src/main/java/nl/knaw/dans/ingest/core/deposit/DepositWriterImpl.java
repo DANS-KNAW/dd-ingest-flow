@@ -57,4 +57,9 @@ public class DepositWriterImpl implements DepositWriter {
     public void moveDeposit(Path source, Path outbox) throws IOException {
         Files.move(source, outbox.resolve(source.getFileName()));
     }
+
+    @Override
+    public void saveBagInfo(Deposit deposit) throws IOException {
+        bagDataManager.writeBagMetadata(deposit.getBag());
+    }
 }

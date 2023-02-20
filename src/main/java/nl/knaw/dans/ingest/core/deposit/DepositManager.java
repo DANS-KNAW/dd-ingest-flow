@@ -28,6 +28,7 @@ import java.nio.file.Path;
  * An adapter class around several functionalities regarding deposit reading, writing and moving.
  */
 public interface DepositManager {
+    void saveBagInfo(Deposit deposit) throws IOException;
 
     /**
      * Reads a Deposit object given the data found in a DepositLocation's <code>dir</code> property.

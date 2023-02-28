@@ -17,6 +17,13 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.configuration.ConfigurationException;
+import io.dropwizard.configuration.YamlConfigurationFactory;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.jersey.validation.Validators;
+import nl.knaw.dans.ingest.DdIngestFlowConfiguration;
+import nl.knaw.dans.ingest.IngestFlowConfigReader;
+import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
@@ -26,11 +33,14 @@ import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.SingleValueField;
+import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -38,25 +48,57 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 class MappingTestHelper {
+    static final AuthenticatedUser mockedContact = new AuthenticatedUser();
+
+    {
+        mockedContact.setDisplayName("D. O'Seven");
+        mockedContact.setEmail("J.Bond@does.not.exist.dans.knaw.nl");
+        mockedContact.setAffiliation("DANS");
+    }
+
+    static final VaultMetadata mockedVaultMetadata = new VaultMetadata(
+        "doi:10.17026/AR/6L7NBB",
+        "urn:uuid:ced0be49-f863-4477-9473-23010526abf3",
+        "urn:nbn:nl:ui:13-c7c5a4b2-539e-4b0c-831d-fe31eb197950",
+        "otherId:something",
+        "1.0",
+        "swordToken");
+
+    private static final IngestFlowConfig config = getIngestFlowConfig();
+
+    private static IngestFlowConfig getIngestFlowConfig() {
+        IngestFlowConfig config;
+        try {
+            config = new YamlConfigurationFactory<>(DdIngestFlowConfiguration.class, Validators.newValidator(), Jackson.newObjectMapper(), "dw")
+                .build(FileInputStream::new, "src/test/resources/debug-etc/config.yml")
+                .getIngestFlow();
+            IngestFlowConfigReader.readIngestFlowConfiguration(config);
+        }
+        catch (IOException | ConfigurationException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        return config;
+    }
 
     static Document readDocumentFromString(String xml) throws ParserConfigurationException, IOException, SAXException {
         return new XmlReaderImpl().readXmlString(xml);
     }
 
-    static Dataset mapDdmToDataset(Document ddm, boolean filesThatAreAccessibleToNonePresentInDeposit, boolean filesThatAreRestrictedRequestPresentInDeposit) {
-        final Set<String> activeMetadataBlocks = Set.of("citation", "dansRights", "dansRelationalMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata");
-        final VaultMetadata vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
-        final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
-        final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
-        iso1ToDataverseLanguage.put("nl", "Dutch");
-        iso1ToDataverseLanguage.put("de", "German");
+    static DepositToDvDatasetMetadataMapper mapper() {
 
-        iso2ToDataverseLanguage.put("dut", "Dutch");
-        iso2ToDataverseLanguage.put("ger", "German");
         return new DepositToDvDatasetMetadataMapper(
-            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage, List.of("Netherlands", "United Kingdom", "Belgium", "Germany")
-        ).toDataverseDataset(ddm, null, null, null, vaultMetadata, filesThatAreAccessibleToNonePresentInDeposit, filesThatAreRestrictedRequestPresentInDeposit);
+            true,
+            Set.of("citation", "dansRights", "dansRelationalMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata"),
+            config.getIso1ToDataverseLanguage(),
+            config.getIso2ToDataverseLanguage(),
+            config.getSpatialCoverageCountryTerms());
+    }
+
+    static Dataset mapDdmToDataset(Document ddm, boolean filesThatAreAccessibleToNonePresentInDeposit, boolean filesThatAreRestrictedRequestPresentInDeposit) {
+        return mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, filesThatAreAccessibleToNonePresentInDeposit, filesThatAreRestrictedRequestPresentInDeposit);
     }
 
     static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"

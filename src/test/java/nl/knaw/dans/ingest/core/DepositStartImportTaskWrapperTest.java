@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core;
 
 import gov.loc.repository.bagit.reader.BagReader;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
@@ -90,22 +91,24 @@ public class DepositStartImportTaskWrapperTest {
         //        var depositLocation = depositLocationReader.readDepositLocation(testDepositsBasedir.resolve(depositName));
         var date = OffsetDateTime.parse(created);
         var depositLocation = new DepositLocation(testDepositsBasedir.resolve(depositName), depositName, UUID.randomUUID().toString(), date);
+        var datasetService = Mockito.mock(DatasetService.class);
 
         return new DepositMigrationTask(
             mapper,
             depositLocation,
             client,
             "dummy",
+            "dummy",
+            "dummy",
             null,
             new ZipFileHandler(Path.of("target/test")),
             Map.of(),
             List.of(),
             validator,
-            1000,
-            1000,
             Path.of("dummy"),
             eventWriter,
-            depositManager
+            depositManager,
+            datasetService
         );
     }
 

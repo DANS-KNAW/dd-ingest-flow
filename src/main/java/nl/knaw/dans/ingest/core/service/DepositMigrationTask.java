@@ -16,9 +16,11 @@
 package nl.knaw.dans.ingest.core.service;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
+import nl.knaw.dans.ingest.core.exception.FailedDepositException;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
@@ -27,7 +29,6 @@ import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import org.apache.commons.lang3.StringUtils;
-import org.w3c.dom.Document;
 
 import java.io.IOException;
 import java.net.URI;
@@ -46,20 +47,21 @@ public class DepositMigrationTask extends DepositIngestTask {
         DepositLocation depositLocation,
         DataverseClient dataverseClient,
         String depositorRole,
+        String datasetCreatorRole,
+        String datasetUpdaterRole,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
         Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
         DansBagValidator dansBagValidator,
-        int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries,
         Path outboxDir,
         EventWriter eventWriter,
-        DepositManager depositManager
+        DepositManager depositManager,
+        DatasetService datasetService
     ) {
         super(
-            datasetMetadataMapperFactory, depositLocation, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
-            publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries, outboxDir, eventWriter, depositManager);
+            datasetMetadataMapperFactory, depositLocation, depositorRole, datasetCreatorRole, datasetUpdaterRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
+            outboxDir, eventWriter, depositManager, datasetService);
     }
 
     @Override
@@ -121,13 +123,7 @@ public class DepositMigrationTask extends DepositIngestTask {
             throw new IllegalArgumentException(String.format("no publication date found in AMD for %s", persistentId));
         }
 
-        var dataset = dataverseClient.dataset(persistentId);
-
-        var datePublishJsonLd = String.format("{\"http://schema.org/datePublished\": \"%s\"}", date.get());
-
-        dataset.releaseMigrated(datePublishJsonLd, true);
-        dataset.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
-
+        datasetService.releaseMigrated(persistentId, date.get());
     }
 
     @Override
@@ -151,5 +147,28 @@ public class DepositMigrationTask extends DepositIngestTask {
         }
     }
 
+    @Override
+    String getDoi() {
+        var isVersionOf = deposit.getIsVersionOf();
+
+        if (isVersionOf == null) {
+            throw new IllegalArgumentException("Update-deposit without Is-Version-Of");
+        }
+
+        try {
+            var items = datasetService.searchDatasets("dansBagId", isVersionOf);
+
+            if (items.size() != 1) {
+                throw new FailedDepositException(deposit, String.format(
+                    "Deposit is update of %s datasets; should always be 1!", items.size()
+                ), null);
+            }
+
+            return items.get(0).getGlobalId();
+        }
+        catch (IOException | DataverseException e) {
+            throw new FailedDepositException(deposit, "Error searching datasets on dataverse", e);
+        }
+    }
 }
 

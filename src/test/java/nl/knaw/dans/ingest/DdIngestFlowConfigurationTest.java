@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -44,7 +43,6 @@ public class DdIngestFlowConfigurationTest {
 
     @Test
     public void canReadAssembly() throws IOException, ConfigurationException {
-        System.out.println(new ObjectMapper().writeValueAsString(Map.of("http://schema.org/license", "")));
         factory.build(FileInputStream::new, "src/main/assembly/dist/cfg/config.yml");
     }
 

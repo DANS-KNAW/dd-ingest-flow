@@ -18,6 +18,7 @@ package nl.knaw.dans.ingest.core.service;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
@@ -35,6 +36,8 @@ import java.util.regex.Pattern;
 public class DepositIngestTaskFactory {
 
     private final String depositorRole;
+    private final String datasetCreatorRole;
+    private final String datasetUpdaterRole;
     private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
 
@@ -45,20 +48,25 @@ public class DepositIngestTaskFactory {
     private final boolean isMigration;
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
+    private final DatasetService datasetService;
 
     public DepositIngestTaskFactory(
         boolean isMigration,
         String depositorRole,
+        String datasetCreatorRole,
+        String datasetUpdaterRole,
         DataverseClient dataverseClient,
         DansBagValidator dansBagValidator,
         IngestFlowConfig ingestFlowConfig,
         DataverseExtra dataverseExtra,
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
-        ZipFileHandler zipFileHandler
-    ) throws IOException, URISyntaxException {
+        ZipFileHandler zipFileHandler,
+        DatasetService datasetService) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;
+        this.datasetCreatorRole = datasetCreatorRole;
+        this.datasetUpdaterRole = datasetUpdaterRole;
         this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
         this.ingestFlowConfig = ingestFlowConfig;
@@ -66,6 +74,7 @@ public class DepositIngestTaskFactory {
         this.depositManager = depositManager;
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
+        this.datasetService = datasetService;
     }
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
@@ -107,36 +116,36 @@ public class DepositIngestTaskFactory {
                 depositToDvDatasetMetadataMapperFactory,
                 depositLocation,
                 dataverseClient,
+                datasetCreatorRole,
+                datasetUpdaterRole,
                 depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),
                 ingestFlowConfig.getSupportedLicenses(),
                 dansBagValidator,
-                dataverseExtra.getPublishAwaitUnlockMaxRetries(),
-                dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir,
                 eventWriter,
-                depositManager
+                depositManager,
+                datasetService
             );
         }
         else {
             return new DepositIngestTask(
                 depositToDvDatasetMetadataMapperFactory,
                 depositLocation,
-                dataverseClient,
                 depositorRole,
+                datasetCreatorRole,
+                datasetUpdaterRole,
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),
                 ingestFlowConfig.getSupportedLicenses(),
                 dansBagValidator,
-                dataverseExtra.getPublishAwaitUnlockMaxRetries(),
-                dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir,
                 eventWriter,
-                depositManager
-            );
+                depositManager,
+                datasetService);
         }
 
     }

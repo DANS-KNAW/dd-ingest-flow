@@ -17,8 +17,8 @@ package nl.knaw.dans.ingest.core.service;
 
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
-import nl.knaw.dans.ingest.core.deposit.DepositReader;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 
@@ -33,7 +33,7 @@ public class DepositIngestTaskFactoryBuilder {
     private final DepositManager depositManager;
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
-    private final DepositReader depositReader;
+    private final DatasetService datasetService;
 
     public DepositIngestTaskFactoryBuilder(
         DataverseClient dataverseClient,
@@ -42,8 +42,7 @@ public class DepositIngestTaskFactoryBuilder {
         DataverseExtra dataverseExtra,
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
-        ZipFileHandler zipFileHandler,
-        DepositReader depositReader) {
+        ZipFileHandler zipFileHandler, DatasetService datasetService) {
         this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
         this.ingestFlowConfig = ingestFlowConfig;
@@ -51,20 +50,23 @@ public class DepositIngestTaskFactoryBuilder {
         this.depositManager = depositManager;
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
-        this.depositReader = depositReader;
+        this.datasetService = datasetService;
     }
 
-    public DepositIngestTaskFactory createTaskFactory(boolean isMigration, String depositorRole) throws IOException, URISyntaxException {
+    public DepositIngestTaskFactory createTaskFactory(boolean isMigration, String depositorRole, String datasetCreatorRole, String datasetUpdaterRole) throws IOException, URISyntaxException {
         return new DepositIngestTaskFactory(
             isMigration,
             depositorRole,
+            datasetCreatorRole,
+            datasetUpdaterRole,
             dataverseClient,
             dansBagValidator,
             ingestFlowConfig,
             dataverseExtra,
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
-            zipFileHandler
+            zipFileHandler,
+            datasetService
         );
     }
 }

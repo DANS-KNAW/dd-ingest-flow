@@ -56,6 +56,10 @@ public class IngestFlowConfig {
     private String depositorRole;
 
     @Valid
+    @NotNull
+    private DatasetAuthorizationConfig authorization;
+
+    @Valid
     private boolean deduplicate;
 
     @NotNull
@@ -187,5 +191,13 @@ public class IngestFlowConfig {
 
     public void setSpatialCoverageCountryTerms(List<String> spatialCoverageCountryTerms) {
         this.spatialCoverageCountryTerms = spatialCoverageCountryTerms;
+    }
+
+    public DatasetAuthorizationConfig getAuthorization() {
+        return authorization;
+    }
+
+    public void setAuthorization(DatasetAuthorizationConfig authorization) {
+        this.authorization = authorization;
     }
 }

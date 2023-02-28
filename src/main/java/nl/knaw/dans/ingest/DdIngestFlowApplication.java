@@ -30,6 +30,9 @@ import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
+import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
+import nl.knaw.dans.ingest.core.dataverse.DataverseDatasetServiceImpl;
 import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
@@ -124,6 +127,12 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getValidateDansBag().getBaseUrl(),
             configuration.getValidateDansBag().getPingUrl());
 
+        final DatasetService datasetService = new DataverseDatasetServiceImpl(
+            dataverseClient,
+            configuration.getDataverse().getAwaitLockStateMillisecondsBetweenRetries(),
+            configuration.getDataverse().getAwaitLockStateMaxNumberOfRetries()
+        );
+
         final DepositIngestTaskFactoryBuilder builder = new DepositIngestTaskFactoryBuilder(
             dataverseClient,
             validator,
@@ -132,7 +141,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler,
-            depositReader);
+            datasetService);
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
@@ -141,7 +150,12 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final ImportArea importArea = new ImportArea(
             importConfig.getInbox(),
             importConfig.getOutbox(),
-            builder.createTaskFactory(false, importConfig.getDepositorRole()),
+            builder.createTaskFactory(
+                false,
+                importConfig.getDepositorRole(),
+                getDatasetCreatorRole(configuration.getIngestFlow(), importConfig),
+                getDatasetUpdaterRole(configuration.getIngestFlow(), importConfig)
+            ),
             taskEventService,
             enqueuingService);
 
@@ -150,7 +164,12 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final ImportArea migrationArea = new ImportArea(
             migrationConfig.getInbox(),
             migrationConfig.getOutbox(),
-            builder.createTaskFactory(true, migrationConfig.getDepositorRole()),
+            builder.createTaskFactory(
+                true,
+                migrationConfig.getDepositorRole(),
+                getDatasetCreatorRole(configuration.getIngestFlow(), migrationConfig),
+                getDatasetUpdaterRole(configuration.getIngestFlow(), migrationConfig)
+            ),
             taskEventService,
             enqueuingService);
 
@@ -158,7 +177,12 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final AutoIngestArea autoIngestArea = new AutoIngestArea(
             autoIngestConfig.getInbox(),
             autoIngestConfig.getOutbox(),
-            builder.createTaskFactory(false, autoIngestConfig.getDepositorRole()),
+            builder.createTaskFactory(
+                false,
+                autoIngestConfig.getDepositorRole(),
+                getDatasetCreatorRole(configuration.getIngestFlow(), autoIngestConfig),
+                getDatasetUpdaterRole(configuration.getIngestFlow(), autoIngestConfig)
+            ),
             taskEventService,
             enqueuingService
         );
@@ -173,4 +197,19 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         environment.jersey().register(new CsvMessageBodyWriter());
     }
 
+    String getDatasetCreatorRole(IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {
+        if (ingestAreaConfig.getAuthorization() != null && ingestAreaConfig.getAuthorization().getDatasetCreator() != null) {
+            return ingestAreaConfig.getAuthorization().getDatasetCreator();
+        }
+
+        return ingestFlowConfig.getAuthorization().getDatasetCreator();
+    }
+
+    String getDatasetUpdaterRole(IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {
+        if (ingestAreaConfig.getAuthorization() != null && ingestAreaConfig.getAuthorization().getDatasetUpdater() != null) {
+            return ingestAreaConfig.getAuthorization().getDatasetUpdater();
+        }
+
+        return ingestFlowConfig.getAuthorization().getDatasetUpdater();
+    }
 }

@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.FileInfo;
 import nl.knaw.dans.ingest.core.exception.CannotUpdateDraftDatasetException;
@@ -50,13 +51,13 @@ import java.util.stream.Stream;
 public class DatasetUpdater extends DatasetEditor {
     private final Map<String, MetadataBlock> metadataBlocks;
 
-    protected DatasetUpdater(DataverseClient dataverseClient, boolean isMigration, Dataset dataset,
-        Deposit deposit, Map<String, String> variantToLicense, List<URI> supportedLicenses, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Pattern fileExclusionPattern, ZipFileHandler zipFileHandler,
-        ObjectMapper objectMapper, Map<String, MetadataBlock> metadataBlocks) {
-        super(dataverseClient, isMigration, dataset, deposit, variantToLicense, supportedLicenses, publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries,
+    protected DatasetUpdater(boolean isMigration, Dataset dataset,
+        Deposit deposit, Map<String, String> variantToLicense, List<URI> supportedLicenses,
+        Pattern fileExclusionPattern, ZipFileHandler zipFileHandler,
+        ObjectMapper objectMapper, Map<String, MetadataBlock> metadataBlocks, DatasetService datasetService) {
+        super(isMigration, dataset, deposit, variantToLicense, supportedLicenses,
             fileExclusionPattern,
-            zipFileHandler, objectMapper);
+            zipFileHandler, objectMapper, datasetService);
         this.metadataBlocks = metadataBlocks;
     }
 
@@ -419,8 +420,9 @@ public class DatasetUpdater extends DatasetEditor {
 
     private String getDoiByIsVersionOf() throws IOException, DataverseException {
         var isVersionOf = deposit.getIsVersionOf();
-        if (isVersionOf == null)
+        if (isVersionOf == null) {
             throw new IllegalArgumentException("Update-deposit without Is-Version-Of");
+        }
         return getDoi(String.format("dansBagId:\"%s\"", isVersionOf));
     }
 

@@ -134,8 +134,8 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
         final DatasetService datasetService = new DataverseDatasetServiceImpl(
             dataverseClient,
-            configuration.getDataverse().getAwaitLockStateMillisecondsBetweenRetries(),
-            configuration.getDataverse().getAwaitLockStateMaxNumberOfRetries()
+            configuration.getDataverseExtra().getPublishAwaitUnlockWaitTimeMs(),
+            configuration.getDataverseExtra().getPublishAwaitUnlockMaxRetries()
         );
 
         final BlockedTargetDAO blockedTargetDAO = new BlockedTargetDAO(hibernateBundle.getSessionFactory());

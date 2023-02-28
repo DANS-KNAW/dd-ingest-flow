@@ -113,6 +113,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final var depositToDvDatasetMetadataMapperFactory = new DepositToDvDatasetMetadataMapperFactory(
             configuration.getIngestFlow().getIso1ToDataverseLanguage(),
             configuration.getIngestFlow().getIso2ToDataverseLanguage(),
+            configuration.getIngestFlow().getSpatialCoverageCountryTerms(),
             dataverseClient
         );
 

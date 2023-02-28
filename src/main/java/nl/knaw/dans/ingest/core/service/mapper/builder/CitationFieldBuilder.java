@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper.builder;
 
+import nl.knaw.dans.ingest.core.service.mapper.mapping.Description;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import org.w3c.dom.Node;
 
@@ -49,8 +50,10 @@ public class CitationFieldBuilder extends FieldBuilder {
         addSingleString(TITLE, nodes);
     }
 
-    public void addSeries(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
-        addSingleCompound(SERIES, stream, generator);
+    public void addSeries(Stream<Node> stream) {
+        var builder = getCompoundBuilder(SERIES, false);
+        Description.toSeries(builder, stream);
+        builder.build();
     }
 
     public void addOtherIds(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {

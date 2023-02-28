@@ -28,9 +28,9 @@ public class SpatialPoint extends Spatial {
 
     public static CompoundFieldGenerator<Node> toEasyTsmSpatialPointValueObject = (builder, node) -> {
         var isRd = isRd(node);
-        var point = getChildNode(node, "//Point")
+        var point = getChildNode(node, "gml:Point/gml:pos")
             .map(n -> getPoint(n, isRd))
-            .orElseThrow(() -> new RuntimeException(String.format("No point node found in node %s", node.getNodeName())));
+            .orElseThrow(() -> new RuntimeException(String.format("No Point/pos node found in node %s", node.getNodeName())));
 
         builder.addControlledSubfield(SPATIAL_POINT_SCHEME, isRd ? RD_SCHEME : LONLAT_SCHEME);
         builder.addSubfield(SPATIAL_POINT_X, point.getX());

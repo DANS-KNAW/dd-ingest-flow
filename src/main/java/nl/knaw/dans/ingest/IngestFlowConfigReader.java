@@ -37,6 +37,7 @@ public class IngestFlowConfigReader {
         config.setReportIdToTerm(getMap(config, "ABR-reports.csv", "URI-suffix", "Term"));
         config.setVariantToLicense(getMap(config, "license-uri-variants.csv", "Variant", "Normalized"));
         config.setSupportedLicenses(getUriList(config, "supported-licenses.txt"));
+        config.setSpatialCoverageCountryTerms(FileUtils.readLines(config.getMappingDefsDir().resolve("spatial-coverage-country-terms.txt").toFile(), StandardCharsets.UTF_8));
     }
 
     private static Map<String, String> loadCsvToMap(Path path, String keyColumn, String valueColumn) throws IOException {

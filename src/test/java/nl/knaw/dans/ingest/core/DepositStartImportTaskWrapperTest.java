@@ -124,6 +124,7 @@ public class DepositStartImportTaskWrapperTest {
     DepositToDvDatasetMetadataMapperFactory getMapperFactory() {
         return new DepositToDvDatasetMetadataMapperFactory(
             iso1ToDataverseLanguage, iso2ToDataverseLanguage,
+            List.of("Netherlands", "United Kingdom", "Belgium", "Germany"),
             Mockito.mock(DataverseClient.class)
         );
     }

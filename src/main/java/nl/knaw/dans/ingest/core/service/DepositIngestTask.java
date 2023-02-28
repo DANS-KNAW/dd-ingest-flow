@@ -445,7 +445,9 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             date.orElse(null),
             contact.orElse(null),
             deposit.getVaultMetadata(),
-            accessibleToValues.contains("NONE"));
+            // TRM002
+            accessibleToValues.contains("NONE"),
+            accessibleToValues.contains("RESTRICTED_REQUEST") || accessibleToValues.contains("KNOWN"));
     }
 
     Optional<String> getDateOfDeposit() {

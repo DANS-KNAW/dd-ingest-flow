@@ -207,6 +207,7 @@ public abstract class DatasetEditor {
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
+    // FIL008, FIL009
     void embargoFiles(String persistentId, Instant dateAvailable) throws IOException, DataverseException {
         var now = Instant.now();
 
@@ -218,7 +219,7 @@ public abstract class DatasetEditor {
             var files = api.getFiles(Version.LATEST.toString()).getData();
 
             var items = files.stream()
-                .filter(f -> !"easy-migration.zip".equals(f.getLabel()))
+                .filter(f -> !"easy-migration.zip".equals(f.getLabel()) && !"original-metadata.zip".equals(f.getLabel()))
                 .map(FileMeta::getDataFile)
                 .map(DataFile::getId)
                 .collect(Collectors.toList());

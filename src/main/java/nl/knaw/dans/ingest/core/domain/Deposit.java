@@ -36,6 +36,7 @@ public class Deposit {
 
     private String doi;
     private String urn;
+    private String dataverseDoi;
     private String depositorUserId;
     private String otherId;
     private String otherIdVersion;

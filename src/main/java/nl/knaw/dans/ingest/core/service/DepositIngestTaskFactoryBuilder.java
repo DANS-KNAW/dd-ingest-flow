@@ -34,6 +34,7 @@ public class DepositIngestTaskFactoryBuilder {
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
     private final DatasetService datasetService;
+    private final BlockedTargetService blockedTargetService;
 
     public DepositIngestTaskFactoryBuilder(
         DataverseClient dataverseClient,
@@ -42,7 +43,10 @@ public class DepositIngestTaskFactoryBuilder {
         DataverseExtra dataverseExtra,
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
-        ZipFileHandler zipFileHandler, DatasetService datasetService) {
+        ZipFileHandler zipFileHandler,
+        DatasetService datasetService,
+        BlockedTargetService blockedTargetService
+    ) {
         this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
         this.ingestFlowConfig = ingestFlowConfig;
@@ -51,6 +55,7 @@ public class DepositIngestTaskFactoryBuilder {
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
         this.datasetService = datasetService;
+        this.blockedTargetService = blockedTargetService;
     }
 
     public DepositIngestTaskFactory createTaskFactory(boolean isMigration, String depositorRole, String datasetCreatorRole, String datasetUpdaterRole) throws IOException, URISyntaxException {
@@ -66,7 +71,8 @@ public class DepositIngestTaskFactoryBuilder {
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler,
-            datasetService
+            datasetService,
+            blockedTargetService
         );
     }
 }

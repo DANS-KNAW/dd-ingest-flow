@@ -26,6 +26,7 @@ import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ingest.core.AutoIngestArea;
+import nl.knaw.dans.ingest.core.BlockedTarget;
 import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
@@ -41,6 +42,8 @@ import nl.knaw.dans.ingest.core.deposit.DepositWriterImpl;
 import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
 import nl.knaw.dans.ingest.core.io.FileServiceImpl;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
+import nl.knaw.dans.ingest.core.service.BlockedTargetService;
+import nl.knaw.dans.ingest.core.service.BlockedTargetServiceImpl;
 import nl.knaw.dans.ingest.core.service.DansBagValidator;
 import nl.knaw.dans.ingest.core.service.DansBagValidatorImpl;
 import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactoryBuilder;
@@ -51,9 +54,11 @@ import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.ingest.core.service.ZipFileHandler;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.db.BlockedTargetDAO;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
 import nl.knaw.dans.ingest.health.DansBagValidatorHealthCheck;
 import nl.knaw.dans.ingest.health.DataverseHealthCheck;
+import nl.knaw.dans.ingest.resources.BlockedTargetsResource;
 import nl.knaw.dans.ingest.resources.EventsResource;
 import nl.knaw.dans.ingest.resources.ImportsResource;
 import nl.knaw.dans.ingest.resources.MigrationsResource;
@@ -64,7 +69,7 @@ import java.net.URISyntaxException;
 
 public class DdIngestFlowApplication extends Application<DdIngestFlowConfiguration> {
 
-    private final HibernateBundle<DdIngestFlowConfiguration> hibernateBundle = new HibernateBundle<>(TaskEvent.class) {
+    private final HibernateBundle<DdIngestFlowConfiguration> hibernateBundle = new HibernateBundle<>(TaskEvent.class, BlockedTarget.class) {
 
         @Override
         public PooledDataSourceFactory getDataSourceFactory(DdIngestFlowConfiguration configuration) {
@@ -133,6 +138,10 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getDataverse().getAwaitLockStateMaxNumberOfRetries()
         );
 
+        final BlockedTargetDAO blockedTargetDAO = new BlockedTargetDAO(hibernateBundle.getSessionFactory());
+        final BlockedTargetService blockedTargetService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
+            .create(BlockedTargetServiceImpl.class, BlockedTargetDAO.class, blockedTargetDAO);
+
         final DepositIngestTaskFactoryBuilder builder = new DepositIngestTaskFactoryBuilder(
             dataverseClient,
             validator,
@@ -141,7 +150,10 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler,
-            datasetService);
+            datasetService,
+        blockedTargetService
+        );
+
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
@@ -194,6 +206,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         environment.jersey().register(new ImportsResource(importArea));
         environment.jersey().register(new MigrationsResource(migrationArea));
         environment.jersey().register(new EventsResource(taskEventDAO));
+        environment.jersey().register(new BlockedTargetsResource(blockedTargetService));
         environment.jersey().register(new CsvMessageBodyWriter());
     }
 

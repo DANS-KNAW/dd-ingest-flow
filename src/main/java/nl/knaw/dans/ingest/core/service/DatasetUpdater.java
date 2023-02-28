@@ -21,15 +21,12 @@ import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.FileInfo;
 import nl.knaw.dans.ingest.core.exception.CannotUpdateDraftDatasetException;
-import nl.knaw.dans.ingest.core.exception.FailedDepositException;
 import nl.knaw.dans.lib.dataverse.DatasetApi;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
-import nl.knaw.dans.lib.dataverse.model.search.DatasetResultItem;
 
 import java.io.IOException;
 import java.net.URI;
@@ -67,9 +64,7 @@ public class DatasetUpdater extends DatasetEditor {
         try {
             Thread.sleep(4000);
 
-            var doi = isMigration
-                ? getDoiByIsVersionOf()
-                : getDoi(String.format("dansSwordToken:\"%s\"", deposit.getVaultMetadata().getSwordToken()));
+            var doi = deposit.getDataverseDoi();
 
             try {
                 var api = dataverseClient.dataset(doi);
@@ -85,8 +80,7 @@ public class DatasetUpdater extends DatasetEditor {
                     throw new CannotUpdateDraftDatasetException(deposit);
                 }
 
-                var blocks = objectMapper.writeValueAsString(metadataBlocks);
-                api.updateMetadataFromJsonLd(blocks, true);
+                api.updateMetadata(metadataBlocks);
                 api.awaitUnlock();
 
                 var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.getDdm())));
@@ -416,31 +410,5 @@ public class DatasetUpdater extends DatasetEditor {
             })
             .filter(Objects::nonNull)
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    private String getDoiByIsVersionOf() throws IOException, DataverseException {
-        var isVersionOf = deposit.getIsVersionOf();
-        if (isVersionOf == null) {
-            throw new IllegalArgumentException("Update-deposit without Is-Version-Of");
-        }
-        return getDoi(String.format("dansBagId:\"%s\"", isVersionOf));
-    }
-
-    String getDoi(String query) throws IOException, DataverseException {
-        log.trace("searching dataset with query '{}'", query);
-        var results = dataverseClient.search().find(query);
-        var items = results.getData().getItems();
-        var count = items.size();
-
-        if (count != 1) {
-            throw new FailedDepositException(deposit, String.format(
-                "Deposit is update of %s datasets; should always be 1!", count
-            ), null);
-        }
-
-        var doi = ((DatasetResultItem) items.get(0)).getGlobalId();
-        log.debug("Deposit is update of dataset {}", doi);
-
-        return doi;
     }
 }

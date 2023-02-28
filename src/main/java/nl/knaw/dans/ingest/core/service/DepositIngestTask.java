@@ -28,6 +28,7 @@ import nl.knaw.dans.ingest.core.exception.FailedDepositException;
 import nl.knaw.dans.ingest.core.exception.InvalidDatasetStateException;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
+import nl.knaw.dans.ingest.core.exception.TargetBlockedException;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.lib.dataverse.DataverseException;
@@ -67,7 +68,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     private final EventWriter eventWriter;
 
     private final DepositManager depositManager;
-
+    private final BlockedTargetService blockedTargetService;
     protected Deposit deposit;
 
     public DepositIngestTask(
@@ -84,7 +85,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         Path outboxDir,
         EventWriter eventWriter,
         DepositManager depositManager,
-        DatasetService datasetService) {
+        DatasetService datasetService,
+        BlockedTargetService blockedTargetService) {
         this.datasetCreatorRole = datasetCreatorRole;
         this.datasetMetadataMapperFactory = datasetMetadataMapperFactory;
 
@@ -99,8 +101,13 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         this.outboxDir = outboxDir;
         this.eventWriter = eventWriter;
         this.depositManager = depositManager;
+        this.blockedTargetService = blockedTargetService;
         this.depositLocation = depositLocation;
         this.datasetService = datasetService;
+    }
+
+    public Deposit getDeposit() {
+        return this.deposit;
     }
 
     @Override
@@ -131,11 +138,18 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         catch (RejectedDepositException e) {
             log.error("deposit was rejected", e);
             updateDepositFromResult(DepositState.REJECTED, e.getMessage());
+            blockTarget(e.getMessage(), DepositState.REJECTED);
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.REJECTED, e.getMessage());
+        }
+        catch (TargetBlockedException e) {
+            log.error("deposit was rejected because a previous deposit with the same target failed", e);
+            updateDepositFromResult(DepositState.FAILED, e.getMessage());
+            writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.FAILED, e.getMessage());
         }
         catch (Throwable e) {
             log.error("deposit failed", e);
             updateDepositFromResult(DepositState.FAILED, e.getMessage());
+            blockTarget(e.getMessage(), DepositState.FAILED);
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.FAILED, e.getMessage());
         }
     }
@@ -197,14 +211,30 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     }
 
     void doRun() throws Exception {
+        var deposit = getDeposit();
+        var isUpdate = deposit.isUpdate();
+
+        if (isUpdate) {
+            log.debug("Figuring out the doi for deposit {}", deposit.getDepositId());
+            var dataverseDoi = resolveDoi(deposit);
+            deposit.setDataverseDoi(dataverseDoi);
+
+            // only check for blocked targets if this is an update to an existing dataset
+            checkBlockedTarget();
+        }
+
         // do some checks
         checkDepositType();
         validateDeposit();
         checkUserRoles();
 
+        // now create or update the dataset with dataverse
+        createOrUpdateDataset(isUpdate);
+    }
+
+    void createOrUpdateDataset(boolean isUpdate) throws Exception {
         // get metadata
         var dataverseDataset = getMetadata();
-        var isUpdate = deposit.isUpdate();
 
         log.debug("Is update: {}", isUpdate);
 
@@ -238,7 +268,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             var roles = datasetService.getDataverseRoleAssignments(deposit.getDepositorUserId());
             log.debug("Roles for user {}: {}", deposit.getDepositorUserId(), roles);
 
-            for (var role: roles) {
+            for (var role : roles) {
                 System.out.println("ROLE: (" + role + ") ==  " + datasetCreatorRole + " = " + datasetCreatorRole.equals(role));
             }
             if (!roles.contains(datasetCreatorRole)) {
@@ -258,6 +288,46 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         }
         else {
             checkUserRolesForCreate();
+        }
+    }
+
+    void checkBlockedTarget() throws TargetBlockedException {
+        var deposit = getDeposit();
+
+        if (!deposit.isUpdate()) {
+            log.debug("Deposit is not an update, no need to check for previously failed versions");
+            return;
+        }
+
+        var target = deposit.getDataverseDoi();
+        var depositId = deposit.getDepositId();
+
+        if (blockedTargetService.isBlocked(target)) {
+            throw new TargetBlockedException(String.format(
+                "Deposit with id %s and target %s is blocked by a previous deposit", depositId, target
+            ));
+        }
+    }
+
+    void blockTarget(String message, DepositState depositState) {
+        var deposit = getDeposit();
+        var target = deposit.getDataverseDoi();
+
+        if (target == null) {
+            log.warn("Target for deposit {} is null, unable to block target. This probably means it is the first version of a deposit and can be ignored", deposit);
+            return;
+        }
+
+        try {
+            blockedTargetService.blockTarget(
+                deposit.getDepositId(),
+                target,
+                depositState.toString(),
+                message
+            );
+        }
+        catch (TargetBlockedException e) {
+            log.warn("Target {} is already blocked", target);
         }
     }
 
@@ -387,6 +457,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         return newDatasetCreator(dataset, depositorRole, false);
     }
 
+    // TODO extract this to a new component that supports both normal and migration tasks
+    // Because this is hard to use in tests and does not feel SOLID
     Dataset getMetadata() {
         var date = getDateOfDeposit();
         var contact = getDatasetContact();
@@ -424,5 +496,23 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
     public OffsetDateTime getCreatedInstant() {
         return depositLocation.getCreated();
+    }
+
+    String resolveDoi(Deposit deposit) throws IOException, DataverseException {
+        return getDoi("dansSwordToken", deposit.getVaultMetadata().getSwordToken());
+    }
+
+    String getDoi(String key, String value) throws IOException, DataverseException {
+        var items = datasetService.searchDatasets(key, value);
+
+        if (items.size() != 1) {
+            throw new FailedDepositException(deposit, String.format(
+                "Deposit is update of %s datasets; should always be 1!", items.size()
+            ), null);
+        }
+
+        var doi = items.get(0).getGlobalId();
+        log.debug("Deposit is update of dataset {}", doi);
+        return doi;
     }
 }

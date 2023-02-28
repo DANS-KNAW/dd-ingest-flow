@@ -18,9 +18,9 @@ package nl.knaw.dans.ingest.core.service;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
+import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
-import nl.knaw.dans.ingest.core.exception.FailedDepositException;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
@@ -57,11 +57,13 @@ public class DepositMigrationTask extends DepositIngestTask {
         Path outboxDir,
         EventWriter eventWriter,
         DepositManager depositManager,
-        DatasetService datasetService
+        DatasetService datasetService,
+        BlockedTargetService blockedTargetService
     ) {
         super(
-            datasetMetadataMapperFactory, depositLocation, depositorRole, datasetCreatorRole, datasetUpdaterRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
-            outboxDir, eventWriter, depositManager, datasetService);
+            datasetMetadataMapperFactory, depositLocation, depositorRole, datasetCreatorRole, datasetUpdaterRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses,
+            dansBagValidator,
+            outboxDir, eventWriter, depositManager, datasetService, blockedTargetService);
     }
 
     @Override
@@ -148,27 +150,8 @@ public class DepositMigrationTask extends DepositIngestTask {
     }
 
     @Override
-    String getDoi() {
-        var isVersionOf = deposit.getIsVersionOf();
-
-        if (isVersionOf == null) {
-            throw new IllegalArgumentException("Update-deposit without Is-Version-Of");
-        }
-
-        try {
-            var items = datasetService.searchDatasets("dansBagId", isVersionOf);
-
-            if (items.size() != 1) {
-                throw new FailedDepositException(deposit, String.format(
-                    "Deposit is update of %s datasets; should always be 1!", items.size()
-                ), null);
-            }
-
-            return items.get(0).getGlobalId();
-        }
-        catch (IOException | DataverseException e) {
-            throw new FailedDepositException(deposit, "Error searching datasets on dataverse", e);
-        }
+    String resolveDoi(Deposit deposit) throws IOException, DataverseException {
+        return getDoi("dansBagId", deposit.getIsVersionOf());
     }
 }
 

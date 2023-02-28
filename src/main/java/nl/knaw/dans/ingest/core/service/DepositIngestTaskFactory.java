@@ -40,15 +40,14 @@ public class DepositIngestTaskFactory {
     private final String datasetUpdaterRole;
     private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
-
     private final IngestFlowConfig ingestFlowConfig;
     private final DataverseExtra dataverseExtra;
     private final DepositManager depositManager;
-
     private final boolean isMigration;
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
     private final DatasetService datasetService;
+    private final BlockedTargetService blockedTargetService;
 
     public DepositIngestTaskFactory(
         boolean isMigration,
@@ -62,7 +61,9 @@ public class DepositIngestTaskFactory {
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler,
-        DatasetService datasetService) throws IOException, URISyntaxException {
+        DatasetService datasetService,
+        BlockedTargetService blockedTargetService
+    ) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;
         this.datasetCreatorRole = datasetCreatorRole;
@@ -75,6 +76,7 @@ public class DepositIngestTaskFactory {
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
         this.datasetService = datasetService;
+        this.blockedTargetService = blockedTargetService;
     }
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
@@ -127,7 +129,8 @@ public class DepositIngestTaskFactory {
                 outboxDir,
                 eventWriter,
                 depositManager,
-                datasetService
+                datasetService,
+                blockedTargetService
             );
         }
         else {
@@ -145,7 +148,9 @@ public class DepositIngestTaskFactory {
                 outboxDir,
                 eventWriter,
                 depositManager,
-                datasetService);
+                datasetService,
+                blockedTargetService
+            );
         }
 
     }

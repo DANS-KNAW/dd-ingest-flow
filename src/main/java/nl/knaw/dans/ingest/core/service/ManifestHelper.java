@@ -42,8 +42,10 @@ public class ManifestHelper {
     static public void ensureSha1ManifestPresent(Bag bag) throws NoSuchAlgorithmException, IOException {
         var manifests = bag.getPayLoadManifests();
         var algorithms = manifests.stream().map(Manifest::getAlgorithm);
-        if (algorithms.anyMatch(SHA1::equals))
+
+        if (algorithms.anyMatch(SHA1::equals)) {
             return;
+        }
 
         var payloadFilesMap = Hasher.createManifestToMessageDigestMap(List.of(SHA1));
         var payloadVisitor = new CreatePayloadManifestsVistor(payloadFilesMap, true);
@@ -70,18 +72,22 @@ public class ManifestHelper {
                  * the CreateTagManifestsVistor, once it finds an entry for a tag file in ONE of the tag manifests,
                  * will add an entry in ALL tag manifests.
                  *
-                 * Therefore we adopt the strategy NOT to calculate any checksums for the tag manifests themselves.
+                 * Therefore, we adopt the strategy NOT to calculate any checksums for the tag manifests themselves.
                  *
                  * Update: this is actually required in V1.0: https://tools.ietf.org/html/rfc8493#section-2.2.1
                  */
                 var isTagManifest = bagRootDir.relativize(path).getNameCount() == 1 &&
                     path.getFileName().toString().startsWith("tagmanifest-");
-                if (isTagManifest)
+
+                if (isTagManifest) {
                     return FileVisitResult.CONTINUE;
-                else
+                }
+                else {
                     return super.visitFile(path, attrs);
+                }
             }
         };
+
         Files.walkFileTree(bagRootDir, tagVisitor);
         bag.getTagManifests().clear();
         bag.getTagManifests().addAll(tagFilesMap.keySet());

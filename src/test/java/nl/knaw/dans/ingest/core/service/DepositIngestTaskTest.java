@@ -127,6 +127,9 @@ public class DepositIngestTaskTest {
                 .when(spiedTask)
                 .createOrUpdateDataset(Mockito.anyBoolean());
 
+            Mockito.doNothing()
+                .when(spiedTask)
+                .checkUserRoles();
             Mockito.doReturn("doi:id")
                 .when(spiedTask).resolveDoi(Mockito.any());
 
@@ -157,6 +160,10 @@ public class DepositIngestTaskTest {
             .when(spiedTask)
             .createOrUpdateDataset(Mockito.anyBoolean());
 
+        Mockito.doNothing()
+            .when(spiedTask)
+            .checkUserRoles();
+
         Mockito.doReturn("doi:id")
             .when(spiedTask).resolveDoi(Mockito.any());
 
@@ -176,6 +183,10 @@ public class DepositIngestTaskTest {
         var spiedTask = Mockito.spy(task);
         Mockito.doThrow(RejectedDepositException.class)
             .when(spiedTask).validateDeposit();
+
+        Mockito.doNothing()
+            .when(spiedTask)
+            .checkUserRoles();
 
         Mockito.doNothing()
             .when(spiedTask)
@@ -205,6 +216,10 @@ public class DepositIngestTaskTest {
         Mockito.doNothing()
             .when(spiedTask)
             .createOrUpdateDataset(Mockito.anyBoolean());
+
+        Mockito.doNothing()
+            .when(spiedTask)
+            .checkUserRoles();
 
         Mockito.doNothing()
             .when(spiedTask)

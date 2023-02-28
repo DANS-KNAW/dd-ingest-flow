@@ -44,19 +44,21 @@ public class DdIngestFlowConfiguration extends Configuration {
     private DataSourceFactory taskEventDatabase;
 
     public IngestFlowConfig getIngestFlow() {
-        if(StringUtils.isBlank(ingestFlow.getAutoIngest().getDepositorRole()))
+        if (StringUtils.isBlank(ingestFlow.getAutoIngest().getDepositorRole())) {
             ingestFlow.getAutoIngest().setDepositorRole(ingestFlow.getDepositorRole());
-        if(StringUtils.isBlank(ingestFlow.getImportConfig().getDepositorRole()))
+        }
+        if (StringUtils.isBlank(ingestFlow.getImportConfig().getDepositorRole())) {
             ingestFlow.getImportConfig().setDepositorRole(ingestFlow.getDepositorRole());
-        if(StringUtils.isBlank(ingestFlow.getMigration().getDepositorRole()))
+        }
+        if (StringUtils.isBlank(ingestFlow.getMigration().getDepositorRole())) {
             ingestFlow.getMigration().setDepositorRole(ingestFlow.getDepositorRole());
+        }
         return ingestFlow;
     }
 
     public void setIngestFlow(IngestFlowConfig ingestFlow) {
         this.ingestFlow = ingestFlow;
     }
-
 
     public DataverseClientFactory getDataverse() {
         return dataverse;

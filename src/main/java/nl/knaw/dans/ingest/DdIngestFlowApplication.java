@@ -151,7 +151,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler,
             datasetService,
-        blockedTargetService
+            blockedTargetService
         );
 
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);

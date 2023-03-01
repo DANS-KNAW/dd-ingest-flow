@@ -39,6 +39,16 @@ ingestFlow:
     inbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/inbox
     outbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/outbox
     depositorRole: swordupdater
+    authorization:
+      datasetCreator: swordcreator
+      datasetUpdater: swordupdater
+
+  authorization:
+    # Required role on the dataverse for the depositor.userId to create a dataset
+    datasetCreator: datasetcreator
+    # Required role on the dataset for the depositor.userId to create a new version
+    # of dataset
+    datasetUpdater: curator
 
   #
   # Filtering. Files with a path matching the pattern will not be added to the dataset. Renaming/moving files is not affected.

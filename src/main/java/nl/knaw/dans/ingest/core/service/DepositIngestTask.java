@@ -24,13 +24,16 @@ import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.DepositState;
 import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
+import nl.knaw.dans.ingest.core.exception.DataverseApiException;
 import nl.knaw.dans.ingest.core.exception.FailedDepositException;
 import nl.knaw.dans.ingest.core.exception.InvalidDatasetStateException;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositorRoleException;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.exception.TargetBlockedException;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
@@ -54,8 +57,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
     private static final Logger log = LoggerFactory.getLogger(DepositIngestTask.class);
     protected final String depositorRole;
-    protected final String datasetCreatorRole;
-    protected final String datasetUpdaterRole;
     protected final Pattern fileExclusionPattern;
     protected final ZipFileHandler zipFileHandler;
     protected final Map<String, String> variantToLicense;
@@ -69,14 +70,14 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
     private final DepositManager depositManager;
     private final BlockedTargetService blockedTargetService;
+
+    private final DepositorAuthorizationValidator depositorAuthorizationValidator;
     protected Deposit deposit;
 
     public DepositIngestTask(
         DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
         DepositLocation depositLocation,
         String depositorRole,
-        String datasetCreatorRole,
-        String datasetUpdaterRole,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
         Map<String, String> variantToLicense,
@@ -86,12 +87,12 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         EventWriter eventWriter,
         DepositManager depositManager,
         DatasetService datasetService,
-        BlockedTargetService blockedTargetService) {
-        this.datasetCreatorRole = datasetCreatorRole;
+        BlockedTargetService blockedTargetService,
+        DepositorAuthorizationValidator depositorAuthorizationValidator
+    ) {
         this.datasetMetadataMapperFactory = datasetMetadataMapperFactory;
 
         this.depositorRole = depositorRole;
-        this.datasetUpdaterRole = datasetUpdaterRole;
         this.fileExclusionPattern = fileExclusionPattern;
 
         this.zipFileHandler = zipFileHandler;
@@ -104,6 +105,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         this.blockedTargetService = blockedTargetService;
         this.depositLocation = depositLocation;
         this.datasetService = datasetService;
+        this.depositorAuthorizationValidator = depositorAuthorizationValidator;
     }
 
     public Deposit getDeposit() {
@@ -225,8 +227,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
         // do some checks
         checkDepositType();
+        validateDepositorRoles();
         validateDeposit();
-        checkUserRoles();
 
         // now create or update the dataset with dataverse
         createOrUpdateDataset(isUpdate);
@@ -246,48 +248,15 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         postPublication(persistentId);
     }
 
-    void checkUserRolesForUpdate() {
+    void validateDepositorRoles() {
         try {
-            var doi = getDoi();
-            var roles = datasetService.getDatasetRoleAssignments(deposit.getDepositorUserId(), doi);
-            log.debug("Roles for user {} on deposit with doi {}: {}", deposit.getDepositorUserId(), doi, roles);
-
-            if (!roles.contains(datasetUpdaterRole)) {
-                throw new RejectedDepositException(deposit, String.format(
-                    "Depositor %s does not have role %s on dataset doi:%s", deposit.getDepositorUserId(), datasetUpdaterRole, doi
-                ));
-            }
+            depositorAuthorizationValidator.validateDepositorAuthorization(deposit);
         }
-        catch (DataverseException | IOException e) {
-            throw new FailedDepositException(deposit, "Error checking user roles for dataset update");
+        catch (InvalidDepositorRoleException e) {
+            throw new RejectedDepositException(deposit, e.getMessage());
         }
-    }
-
-    void checkUserRolesForCreate() {
-        try {
-            var roles = datasetService.getDataverseRoleAssignments(deposit.getDepositorUserId());
-            log.debug("Roles for user {}: {}", deposit.getDepositorUserId(), roles);
-
-            for (var role : roles) {
-                System.out.println("ROLE: (" + role + ") ==  " + datasetCreatorRole + " = " + datasetCreatorRole.equals(role));
-            }
-            if (!roles.contains(datasetCreatorRole)) {
-                throw new RejectedDepositException(deposit, String.format(
-                    "Depositor %s does not have role %s on dataverse root", deposit.getDepositorUserId(), datasetCreatorRole
-                ));
-            }
-        }
-        catch (DataverseException | IOException e) {
-            throw new FailedDepositException(deposit, "Error checking user roles for dataset creation");
-        }
-    }
-
-    void checkUserRoles() {
-        if (deposit.isUpdate()) {
-            checkUserRolesForUpdate();
-        }
-        else {
-            checkUserRolesForCreate();
+        catch (DataverseApiException e) {
+            throw new FailedDepositException(deposit, e.getMessage());
         }
     }
 
@@ -339,32 +308,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         }
     }
 
-    String getDoi() {
-        try {
-            var items = datasetService.searchDatasets("dansSwordToken", deposit.getVaultMetadata().getSwordToken());
-
-            if (items.size() != 1) {
-                throw new FailedDepositException(deposit, String.format(
-                    "Deposit is update of %s datasets; should always be 1!", items.size()
-                ), null);
-            }
-
-            return items.get(0).getGlobalId();
-        }
-        catch (IOException | DataverseException e) {
-            throw new FailedDepositException(deposit, "Error searching datasets on dataverse", e);
-        }
-    }
-
     void validateDeposit() {
-        //        try {
-        //            deposit.addOrUpdateBagInfoElement("Data-Station-User-Account", deposit.getDepositorUserId());
-        //            depositManager.saveBagInfo(deposit);
-        //        }
-        //        catch (IOException e) {
-        //            throw new FailedDepositException(deposit, "Could not add 'Data-Station-User-Account' element to bag-info.txt");
-        //        }
-
         var result = dansBagValidator.validateBag(
             deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
 
@@ -457,8 +401,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         return newDatasetCreator(dataset, depositorRole, false);
     }
 
-    // TODO extract this to a new component that supports both normal and migration tasks
-    // Because this is hard to use in tests and does not feel SOLID
     Dataset getMetadata() {
         var date = getDateOfDeposit();
         var contact = getDatasetContact();

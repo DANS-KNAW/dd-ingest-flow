@@ -54,6 +54,8 @@ import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.ingest.core.service.ZipFileHandler;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidatorImpl;
 import nl.knaw.dans.ingest.db.BlockedTargetDAO;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
 import nl.knaw.dans.ingest.health.DansBagValidatorHealthCheck;
@@ -142,6 +144,16 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final BlockedTargetService blockedTargetService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
             .create(BlockedTargetServiceImpl.class, BlockedTargetDAO.class, blockedTargetDAO);
 
+        // validate depositors
+        final DepositorAuthorizationValidator importValidator = buildDepositorAuthorizationValidator(
+            datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getImportConfig());
+
+        final DepositorAuthorizationValidator migrationValidator = buildDepositorAuthorizationValidator(
+            datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getMigration());
+
+        final DepositorAuthorizationValidator autoIngestValidator = buildDepositorAuthorizationValidator(
+            datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getAutoIngest());
+
         final DepositIngestTaskFactoryBuilder builder = new DepositIngestTaskFactoryBuilder(
             dataverseClient,
             validator,
@@ -165,8 +177,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             builder.createTaskFactory(
                 false,
                 importConfig.getDepositorRole(),
-                getDatasetCreatorRole(configuration.getIngestFlow(), importConfig),
-                getDatasetUpdaterRole(configuration.getIngestFlow(), importConfig)
+                importValidator
             ),
             taskEventService,
             enqueuingService);
@@ -179,8 +190,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             builder.createTaskFactory(
                 true,
                 migrationConfig.getDepositorRole(),
-                getDatasetCreatorRole(configuration.getIngestFlow(), migrationConfig),
-                getDatasetUpdaterRole(configuration.getIngestFlow(), migrationConfig)
+                migrationValidator
             ),
             taskEventService,
             enqueuingService);
@@ -192,8 +202,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             builder.createTaskFactory(
                 false,
                 autoIngestConfig.getDepositorRole(),
-                getDatasetCreatorRole(configuration.getIngestFlow(), autoIngestConfig),
-                getDatasetUpdaterRole(configuration.getIngestFlow(), autoIngestConfig)
+                autoIngestValidator
             ),
             taskEventService,
             enqueuingService
@@ -208,6 +217,13 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         environment.jersey().register(new EventsResource(taskEventDAO));
         environment.jersey().register(new BlockedTargetsResource(blockedTargetService));
         environment.jersey().register(new CsvMessageBodyWriter());
+    }
+
+    DepositorAuthorizationValidator buildDepositorAuthorizationValidator(DatasetService datasetService, IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {
+        var creator = getDatasetCreatorRole(ingestFlowConfig, ingestAreaConfig);
+        var updater = getDatasetUpdaterRole(ingestFlowConfig, ingestAreaConfig);
+
+        return new DepositorAuthorizationValidatorImpl(datasetService, creator, updater);
     }
 
     String getDatasetCreatorRole(IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {

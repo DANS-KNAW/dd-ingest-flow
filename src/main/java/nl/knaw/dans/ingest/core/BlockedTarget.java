@@ -15,6 +15,8 @@
  */
 package nl.knaw.dans.ingest.core;
 
+import org.hibernate.annotations.Type;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -35,6 +37,7 @@ public class BlockedTarget {
     private String state;
 
     @Column(name = "message")
+    @Type(type = "text")
     private String message;
 
     public BlockedTarget() {

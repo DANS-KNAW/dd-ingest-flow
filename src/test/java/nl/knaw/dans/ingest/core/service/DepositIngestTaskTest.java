@@ -24,6 +24,7 @@ import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.DepositState;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.validatedansbag.api.ValidateOk;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,7 @@ public class DepositIngestTaskTest {
     final EventWriter eventWriter = Mockito.mock(EventWriter.class);
     final DepositManager depositManager = Mockito.mock(DepositManager.class);
     final DatasetService datasetService = Mockito.mock(DatasetService.class);
+    final DepositorAuthorizationValidator depositorAuthorizationValidator = Mockito.mock(DepositorAuthorizationValidator.class);
 
     @BeforeEach
     void setUp() {
@@ -59,6 +61,7 @@ public class DepositIngestTaskTest {
         Mockito.reset(eventWriter);
         Mockito.reset(depositManager);
         Mockito.reset(blockedTargetService);
+        Mockito.reset();
     }
 
     DepositIngestTask getDepositIngestTask(String doi, String depositId, String isVersionOf) throws Throwable {
@@ -93,8 +96,6 @@ public class DepositIngestTaskTest {
             depositToDvDatasetMetadataMapperFactory,
             depositLocation,
             "dummy",
-            "role",
-            "role",
             null,
             zipFileHandler,
             Map.of(),
@@ -104,7 +105,8 @@ public class DepositIngestTaskTest {
             eventWriter,
             depositManager,
             datasetService,
-            blockedTargetService
+            blockedTargetService,
+            depositorAuthorizationValidator
         );
     }
 
@@ -129,7 +131,7 @@ public class DepositIngestTaskTest {
 
             Mockito.doNothing()
                 .when(spiedTask)
-                .checkUserRoles();
+                .validateDepositorRoles();
             Mockito.doReturn("doi:id")
                 .when(spiedTask).resolveDoi(Mockito.any());
 
@@ -162,7 +164,7 @@ public class DepositIngestTaskTest {
 
         Mockito.doNothing()
             .when(spiedTask)
-            .checkUserRoles();
+            .validateDepositorRoles();
 
         Mockito.doReturn("doi:id")
             .when(spiedTask).resolveDoi(Mockito.any());
@@ -186,7 +188,7 @@ public class DepositIngestTaskTest {
 
         Mockito.doNothing()
             .when(spiedTask)
-            .checkUserRoles();
+            .validateDepositorRoles();
 
         Mockito.doNothing()
             .when(spiedTask)
@@ -219,7 +221,7 @@ public class DepositIngestTaskTest {
 
         Mockito.doNothing()
             .when(spiedTask)
-            .checkUserRoles();
+            .validateDepositorRoles();
 
         Mockito.doNothing()
             .when(spiedTask)

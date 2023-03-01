@@ -20,6 +20,7 @@ import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 
 import java.io.IOException;
@@ -45,8 +46,7 @@ public class DepositIngestTaskFactoryBuilder {
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler,
         DatasetService datasetService,
-        BlockedTargetService blockedTargetService
-    ) {
+        BlockedTargetService blockedTargetService) {
         this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
         this.ingestFlowConfig = ingestFlowConfig;
@@ -58,12 +58,11 @@ public class DepositIngestTaskFactoryBuilder {
         this.blockedTargetService = blockedTargetService;
     }
 
-    public DepositIngestTaskFactory createTaskFactory(boolean isMigration, String depositorRole, String datasetCreatorRole, String datasetUpdaterRole) throws IOException, URISyntaxException {
+    // TODO this should really be refactored so that we don't need a task factory builder, we just create ingest task factories for each importarea with the proper config
+    public DepositIngestTaskFactory createTaskFactory(boolean isMigration, String depositorRole, DepositorAuthorizationValidator depositorAuthorizationValidator) throws IOException, URISyntaxException {
         return new DepositIngestTaskFactory(
             isMigration,
             depositorRole,
-            datasetCreatorRole,
-            datasetUpdaterRole,
             dataverseClient,
             dansBagValidator,
             ingestFlowConfig,
@@ -72,7 +71,8 @@ public class DepositIngestTaskFactoryBuilder {
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler,
             datasetService,
-            blockedTargetService
+            blockedTargetService,
+            depositorAuthorizationValidator
         );
     }
 }

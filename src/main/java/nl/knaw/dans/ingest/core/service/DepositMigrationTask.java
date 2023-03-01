@@ -24,6 +24,7 @@ import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
@@ -45,10 +46,7 @@ public class DepositMigrationTask extends DepositIngestTask {
     public DepositMigrationTask(
         DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
         DepositLocation depositLocation,
-        DataverseClient dataverseClient,
         String depositorRole,
-        String datasetCreatorRole,
-        String datasetUpdaterRole,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
         Map<String, String> variantToLicense,
@@ -58,12 +56,13 @@ public class DepositMigrationTask extends DepositIngestTask {
         EventWriter eventWriter,
         DepositManager depositManager,
         DatasetService datasetService,
-        BlockedTargetService blockedTargetService
+        BlockedTargetService blockedTargetService,
+        DepositorAuthorizationValidator depositorAuthorizationValidator
     ) {
         super(
-            datasetMetadataMapperFactory, depositLocation, depositorRole, datasetCreatorRole, datasetUpdaterRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses,
+            datasetMetadataMapperFactory, depositLocation, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses,
             dansBagValidator,
-            outboxDir, eventWriter, depositManager, datasetService, blockedTargetService);
+            outboxDir, eventWriter, depositManager, datasetService, blockedTargetService, depositorAuthorizationValidator);
     }
 
     @Override

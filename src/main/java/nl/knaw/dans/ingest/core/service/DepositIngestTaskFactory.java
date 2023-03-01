@@ -24,6 +24,7 @@ import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 
 import java.io.IOException;
@@ -36,8 +37,6 @@ import java.util.regex.Pattern;
 public class DepositIngestTaskFactory {
 
     private final String depositorRole;
-    private final String datasetCreatorRole;
-    private final String datasetUpdaterRole;
     private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
     private final IngestFlowConfig ingestFlowConfig;
@@ -48,12 +47,11 @@ public class DepositIngestTaskFactory {
     private final ZipFileHandler zipFileHandler;
     private final DatasetService datasetService;
     private final BlockedTargetService blockedTargetService;
+    private final DepositorAuthorizationValidator depositorAuthorizationValidator;
 
     public DepositIngestTaskFactory(
         boolean isMigration,
         String depositorRole,
-        String datasetCreatorRole,
-        String datasetUpdaterRole,
         DataverseClient dataverseClient,
         DansBagValidator dansBagValidator,
         IngestFlowConfig ingestFlowConfig,
@@ -62,12 +60,10 @@ public class DepositIngestTaskFactory {
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler,
         DatasetService datasetService,
-        BlockedTargetService blockedTargetService
-    ) throws IOException, URISyntaxException {
+        BlockedTargetService blockedTargetService,
+        DepositorAuthorizationValidator depositorAuthorizationValidator) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;
-        this.datasetCreatorRole = datasetCreatorRole;
-        this.datasetUpdaterRole = datasetUpdaterRole;
         this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
         this.ingestFlowConfig = ingestFlowConfig;
@@ -77,6 +73,7 @@ public class DepositIngestTaskFactory {
         this.zipFileHandler = zipFileHandler;
         this.datasetService = datasetService;
         this.blockedTargetService = blockedTargetService;
+        this.depositorAuthorizationValidator = depositorAuthorizationValidator;
     }
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
@@ -117,9 +114,6 @@ public class DepositIngestTaskFactory {
             return new DepositMigrationTask(
                 depositToDvDatasetMetadataMapperFactory,
                 depositLocation,
-                dataverseClient,
-                datasetCreatorRole,
-                datasetUpdaterRole,
                 depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
@@ -130,7 +124,8 @@ public class DepositIngestTaskFactory {
                 eventWriter,
                 depositManager,
                 datasetService,
-                blockedTargetService
+                blockedTargetService,
+                depositorAuthorizationValidator
             );
         }
         else {
@@ -138,8 +133,6 @@ public class DepositIngestTaskFactory {
                 depositToDvDatasetMetadataMapperFactory,
                 depositLocation,
                 depositorRole,
-                datasetCreatorRole,
-                datasetUpdaterRole,
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),
@@ -149,7 +142,8 @@ public class DepositIngestTaskFactory {
                 eventWriter,
                 depositManager,
                 datasetService,
-                blockedTargetService
+                blockedTargetService,
+                depositorAuthorizationValidator
             );
         }
 

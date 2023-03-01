@@ -16,10 +16,10 @@
 package nl.knaw.dans.ingest.core.validation;
 
 import nl.knaw.dans.ingest.core.domain.Deposit;
-import nl.knaw.dans.ingest.core.exception.DataverseApiException;
+import nl.knaw.dans.ingest.core.exception.DepositorValidatorException;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositorRoleException;
 
 public interface DepositorAuthorizationValidator {
 
-    void validateDepositorAuthorization(Deposit deposit) throws InvalidDepositorRoleException, DataverseApiException;
+    void validateDepositorAuthorization(Deposit deposit) throws InvalidDepositorRoleException, DepositorValidatorException;
 }

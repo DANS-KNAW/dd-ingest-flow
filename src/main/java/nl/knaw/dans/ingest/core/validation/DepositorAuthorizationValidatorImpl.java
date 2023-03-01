@@ -17,7 +17,7 @@ package nl.knaw.dans.ingest.core.validation;
 
 import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.domain.Deposit;
-import nl.knaw.dans.ingest.core.exception.DataverseApiException;
+import nl.knaw.dans.ingest.core.exception.DepositorValidatorException;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositorRoleException;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ public class DepositorAuthorizationValidatorImpl implements DepositorAuthorizati
     }
 
     @Override
-    public void validateDepositorAuthorization(Deposit deposit) throws InvalidDepositorRoleException, DataverseApiException {
+    public void validateDepositorAuthorization(Deposit deposit) throws InvalidDepositorRoleException, DepositorValidatorException {
         if (deposit.isUpdate()) {
             validateUpdaterRoles(deposit);
         }
@@ -48,7 +48,7 @@ public class DepositorAuthorizationValidatorImpl implements DepositorAuthorizati
         }
     }
 
-    void validateCreatorRoles(Deposit deposit) throws InvalidDepositorRoleException, DataverseApiException {
+    void validateCreatorRoles(Deposit deposit) throws InvalidDepositorRoleException, DepositorValidatorException {
         try {
             var roles = datasetService.getDataverseRoleAssignments(deposit.getDepositorUserId());
             log.debug("Roles for user {}: {}; expecting role {} to be present", deposit.getDepositorUserId(), roles, datasetCreatorRole);
@@ -60,11 +60,11 @@ public class DepositorAuthorizationValidatorImpl implements DepositorAuthorizati
             }
         }
         catch (DataverseException | IOException e) {
-            throw new DataverseApiException(e);
+            throw new DepositorValidatorException(e);
         }
     }
 
-    void validateUpdaterRoles(Deposit deposit) throws InvalidDepositorRoleException, DataverseApiException {
+    void validateUpdaterRoles(Deposit deposit) throws InvalidDepositorRoleException, DepositorValidatorException {
         try {
             var doi = deposit.getDataverseDoi();
             var roles = datasetService.getDatasetRoleAssignments(deposit.getDepositorUserId(), doi);
@@ -77,7 +77,7 @@ public class DepositorAuthorizationValidatorImpl implements DepositorAuthorizati
             }
         }
         catch (DataverseException | IOException e) {
-            throw new DataverseApiException(e);
+            throw new DepositorValidatorException(e);
         }
     }
 }

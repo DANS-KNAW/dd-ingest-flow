@@ -15,8 +15,8 @@
  */
 package nl.knaw.dans.ingest.core.exception;
 
-public class DataverseApiException extends Exception {
-    public DataverseApiException(Throwable e) {
+public class DepositorValidatorException extends Exception {
+    public DepositorValidatorException(Throwable e) {
         super(e);
     }
 }

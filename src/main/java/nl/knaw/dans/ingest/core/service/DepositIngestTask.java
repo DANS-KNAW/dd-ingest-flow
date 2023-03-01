@@ -24,7 +24,7 @@ import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.DepositState;
 import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
-import nl.knaw.dans.ingest.core.exception.DataverseApiException;
+import nl.knaw.dans.ingest.core.exception.DepositorValidatorException;
 import nl.knaw.dans.ingest.core.exception.FailedDepositException;
 import nl.knaw.dans.ingest.core.exception.InvalidDatasetStateException;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
@@ -255,7 +255,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         catch (InvalidDepositorRoleException e) {
             throw new RejectedDepositException(deposit, e.getMessage());
         }
-        catch (DataverseApiException e) {
+        catch (DepositorValidatorException e) {
             throw new FailedDepositException(deposit, e.getMessage());
         }
     }

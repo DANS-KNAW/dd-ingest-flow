@@ -179,14 +179,14 @@ public class DatasetUpdater extends DatasetEditor {
                 var fileIdsToEmbargo = union(fileReplacements.keySet(), fileAdditions.keySet())
                     .stream()
                     .map(key -> Map.entry(key, fileReplacements.getOrDefault(key, fileAdditions.get(key))))
-                    .filter(entry -> !"easy-migration.zip".equals(entry.getValue().getLabel()))
+                    .filter(entry -> !embargoExclusions.contains(entry.getValue().getLabel()))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toSet());
 
                 embargoFiles(doi, dateAvailable, fileIdsToEmbargo);
 
                 /*
-                 * Cannot enable requests if they were disallowed because of closed files in a previous version. However disabling is possible because a the update may add a closed file.
+                 * Cannot enable requests if they were disallowed because of closed files in a previous version. However, disabling is possible because the update may add a closed file.
                  */
                 configureEnableAccessRequests(doi, false);
 

@@ -59,7 +59,6 @@ import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
-import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.w3c.dom.Document;
@@ -117,9 +116,6 @@ public class DepositToDvDatasetMetadataMapper {
         var termsOfAccess = "N/a";
 
         if (activeMetadataBlocks.contains("citation")) {
-            checkRequiredField(TITLE, getTitles(ddm));
-            checkRequiredField(SUBJECT, getAudiences(ddm));
-
             var otherTitlesAndAlternativeTitles = getOtherTitles(ddm).collect(Collectors.toList());
             citationFields.addTitle(getTitles(ddm)); // CIT001
             citationFields.addAlternativeTitle(otherTitlesAndAlternativeTitles.stream().map(Node::getTextContent)); // CIT002
@@ -184,7 +180,6 @@ public class DepositToDvDatasetMetadataMapper {
         }
 
         if (activeMetadataBlocks.contains("dansRights")) {
-            checkForAnyRightsHolder(ddm);
             rightsFields.addRightsHolders(getContributorDetailsAuthors(ddm).filter(DcxDaiAuthor::isRightsHolder).map(DcxDaiAuthor::toRightsHolder)); // RIG000A
             rightsFields.addRightsHolders(getContributorDetailsOrganizations(ddm).filter(DcxDaiOrganization::isRightsHolder).map(DcxDaiOrganization::toRightsHolder)); // RIG000B
             rightsFields.addRightsHolders(getRightsHolders(ddm)); // RIG001
@@ -275,6 +270,10 @@ public class DepositToDvDatasetMetadataMapper {
         processMetadataBlock(deduplicate, fields, "dansArchaeologyMetadata", "Archaeology-Specific Metadata", archaeologyFields);
         processMetadataBlock(deduplicate, fields, "dansTemporalSpatial", "Temporal and Spatial Coverage", temporalSpatialFields);
         processMetadataBlock(deduplicate, fields, "dansDataVaultMetadata", "Dans Vault Metadata", dataVaultFieldBuilder);
+
+        checkRequiredField(fields, "citation", TITLE);
+        checkRequiredField(fields, "citation", SUBJECT);
+        checkRequiredField(fields, "dansRights", RIGHTS_HOLDER);
 
         var version = new DatasetVersion();
         version.setTermsOfAccess(termsOfAccess);
@@ -455,22 +454,9 @@ public class DepositToDvDatasetMetadataMapper {
         return XPathEvaluator.strings(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:rightsHolder");
     }
 
-    void checkForAnyRightsHolder(Document ddm) {
-        if (XPathEvaluator.strings(ddm, "/ddm:DDM/ddm:dcmiMetadata//dcx-dai:role")
-            .filter(s -> s.contains("RightsHolder")).findFirst().isEmpty()
-        ) { // parsing the other way around might be more efficient, but this way we can reuse
-            checkRequiredField(RIGHTS_HOLDER, getRightsHolders(ddm));
-        }
-    }
+    private void checkRequiredField(HashMap<String, MetadataBlock> blocks, String blockName, String fieldName) {
 
-    void checkRequiredField(String fieldName, Stream<String> nodes) {
-        var result = nodes
-            .map(String::trim)
-            .filter(StringUtils::isNotBlank)
-            .findFirst();
-
-        if (result.isEmpty()) {
+        if (blocks.get(blockName).getFields().stream().map(MetadataField::getTypeName).noneMatch(fieldName::equals))
             throw new MissingRequiredFieldException(fieldName);
-        }
     }
 }

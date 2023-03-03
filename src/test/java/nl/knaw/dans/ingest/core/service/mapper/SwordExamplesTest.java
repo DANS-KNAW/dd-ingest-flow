@@ -76,13 +76,16 @@ public class SwordExamplesTest {
             "dansRightsHolder", // RIG000 + RIG001
             "dansPersonalDataPresent", // RIG002
             "dansMetadataLanguage")); // RIG003
-        assertThat(fieldNames.get("dansRelationMetadata")).hasSameElementsAs(List.of()); // TODO RELnnn
+        assertThat(fieldNames.get("dansRelationMetadata")).hasSameElementsAs(List.of(
+            "dansAudience", // REL001
+            "dansCollection", // REL002
+            "dansRelation")); // REL003
         assertThat(fieldNames.get("dansArchaeologyMetadata")).hasSameElementsAs(List.of(
             "dansArchisZaakId", // AR001
             "dansArchisNumber", // AR002
             "dansAbrRapportType", // AR003
             "dansAbrRapportNummer", // AR004
-            // TODO dansAbrVerwervingswijze // AR005
+            // TODO dansAbrVerwervingswijze // AR005 supposed to map
             "dansAbrComplex", // AR006
             "dansAbrArtifact", // AR007
             "dansAbrPeriod")); // AR008
@@ -103,6 +106,17 @@ public class SwordExamplesTest {
         assertThat(result.getDatasetVersion().getTermsOfAccess())
             .isEqualTo("Restricted files accessible under the following conditions: ...");
         // TODO FILnnn
+    }
+
+    @Test
+    public void audiences() throws Exception {
+
+        var ddm = parseSwordExampleDdm("audiences/metadata/dataset.xml");
+        var result = mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, true, true);
+        var fieldNames = getFieldNamesOfMetadataBlocks(result);
+        // only checking what adds to assertions of all_mappings
+        assertThat(result.getDatasetVersion().getTermsOfAccess())
+            .isEqualTo("N/a"); // same for embargoed, audiences, restricted-files-with-access-request ...
     }
 
     private Map<String, List<String>> getFieldNamesOfMetadataBlocks(Dataset result) {

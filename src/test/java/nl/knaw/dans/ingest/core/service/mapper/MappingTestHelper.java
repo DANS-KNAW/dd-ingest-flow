@@ -34,13 +34,21 @@ import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.SingleValueField;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +83,7 @@ class MappingTestHelper {
             config = new YamlConfigurationFactory<>(DdIngestFlowConfiguration.class, Validators.newValidator(), Jackson.newObjectMapper(), "dw")
                 .build(FileInputStream::new, "src/test/resources/debug-etc/config.yml")
                 .getIngestFlow();
+            config.setMappingDefsDir(Paths.get("src/test/resources/debug-etc"));
             IngestFlowConfigReader.readIngestFlowConfiguration(config);
         }
         catch (IOException | ConfigurationException | URISyntaxException e) {

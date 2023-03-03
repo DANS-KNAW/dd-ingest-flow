@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper;
 
+import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
@@ -33,24 +34,25 @@ import java.util.stream.Collectors;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapper;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedContact;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedVaultMetadata;
+import static nl.knaw.dans.ingest.core.service.mapper.mapping.FileElement.toFileMeta;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SwordExamplesTest {
 
     private final String examplesTagOrBranch = "38f0e8901b5ce57117445c4f819f6613eb1f05ee"; // 2023-02-28
 
-    private Document parseSwordExampleDdm(String path) throws SAXException, IOException, ParserConfigurationException {
+    private Document parseSwordExampleXml(String path) throws SAXException, IOException, ParserConfigurationException {
         // TODO copy via maven plugin to target directory and make getFactory private again
         String uri = String.format("https://raw.githubusercontent.com/DANS-KNAW/dd-dans-sword2-examples/%s/src/main/resources/example-bags/valid/%s", examplesTagOrBranch, path);
         return new XmlReaderImpl().getFactory().newDocumentBuilder().parse(new InputSource(uri));
     }
 
     @Test
-    public void all_mappings_example_produces_most_documented_sub_fields() throws Exception {
+    public void all_mappings_produces_most_documented_sub_fields() throws Exception {
 
-        var ddm = parseSwordExampleDdm("all-mappings/metadata/dataset.xml");
-        var result = mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, true, true);
-        var fieldNames = getFieldNamesOfMetadataBlocks(result);
+        var ddm = parseSwordExampleXml("all-mappings/metadata/dataset.xml");
+        var dastaset = mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, true, true);
+        var fieldNames = getFieldNamesOfMetadataBlocks(dastaset);
         assertThat(fieldNames.get("citation")).hasSameElementsAs(List.of(
             "title", // CIT001
             "alternativeTitle", // CIT002
@@ -103,15 +105,30 @@ public class SwordExamplesTest {
             "dansOtherIdVersion", // VLT006
             "dansSwordToken")); // VLT007
         // TODO terms / restricted files // TRMnnn
-        assertThat(result.getDatasetVersion().getTermsOfAccess())
+        assertThat(dastaset.getDatasetVersion().getTermsOfAccess())
             .isEqualTo("Restricted files accessible under the following conditions: ...");
-        // TODO FILnnn
+
+        var filesXml = parseSwordExampleXml("all-mappings/metadata/files.xml");
+        var files = XPathEvaluator.nodes(filesXml, "/files:files/files:file")
+            .map(node -> toFileMeta(node, true))
+            .collect(Collectors.toList());
+
+        assertThat(files).extracting("label") // FIL001
+            .containsExactlyInAnyOrder("file1.txt", "file2.txt", "c_a_q_d_l_g_p_s_h_.txt");
+        assertThat(files).extracting("directoryLabel")
+            .containsExactlyInAnyOrder(null, "subdir", "subdir__"); // FIL002
+        assertThat(files).extracting("description") // FIL003 + FIL004
+            .containsExactlyInAnyOrder(null,
+                "original_filepath: \"subdir_υποφάκελο/c:a*q?d\"l<g>p|s;h#.txt\"; description: \"A file with a problematic name\"",
+                "A file with a simple description");
+        assertThat(files).extracting("restrict") // FIL005
+            .containsExactlyInAnyOrder(true, true, true);
     }
 
     @Test
     public void audiences() throws Exception {
 
-        var ddm = parseSwordExampleDdm("audiences/metadata/dataset.xml");
+        var ddm = parseSwordExampleXml("audiences/metadata/dataset.xml");
         var result = mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, true, true);
         var fieldNames = getFieldNamesOfMetadataBlocks(result);
         // only checking what adds to assertions of all_mappings

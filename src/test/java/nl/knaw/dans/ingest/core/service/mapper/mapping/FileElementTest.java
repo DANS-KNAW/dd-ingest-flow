@@ -54,17 +54,21 @@ class FileElementTest extends BaseTest {
     }
 
     @Test
-    void toFileMetadata_should_represent_keyvalue_pairs_in_the_description_for_keys_on_the_fixed_keys_list() throws Exception {
+    void toFileMetadata_should_represent_keyvalue_pairs_in_the_description() throws Exception {
         var doc = readDocumentFromString(
-            "    <file filepath=\"data/this/is/the/directory/label/leeg.txt\" xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" xmlns:dcterms=\"http://purl.org/dc/terms/\">\n"
-                + "       <othmat_codebook>the code book</othmat_codebook>"
+            "    <file filepath=\"data/this/is/the/directory/label/leeg.txt\" xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" xmlns:afm=\"http://easy.dans.knaw.nl/schemas/bag/metadata/afm/\">\n"
+                + "       <afm:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</afm:othmat_codebook>"
+                + "       <afm:keyvaluepair>\n"
+                + "             <afm:key>FOTONR</afm:key>\n"
+                + "             <afm:value>3</afm:value>\n"
+                + "       </afm:keyvaluepair>"
                 + "    </file>");
 
         var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
         assertEquals("leeg.txt", result.getLabel());
         assertEquals("this/is/the/directory/label", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
-        assertEquals("othmat_codebook: \"the code book\"", result.getDescription());
+        assertEquals("othmat_codebook: \"FOTOBEST.csv; FOTOLST.csv\"; FOTONR: \"3\"", result.getDescription()); // FIL002A/B (migration only)
     }
 
     @Test

@@ -22,7 +22,7 @@ import org.w3c.dom.Node;
 @Slf4j
 public class AbrAcquisitionMethod extends Base {
     public static String toVerwervingswijze(Node node) {
-        return getAttribute(node, XmlReader.NAMESPACE_DDM, "valueURI")
+        return getAttribute(node, "valueURI")
             .map(Node::getTextContent)
             .orElseGet(() -> {
                 log.error("Missing valueURI attribute on ddm:acquisitionMethod node");

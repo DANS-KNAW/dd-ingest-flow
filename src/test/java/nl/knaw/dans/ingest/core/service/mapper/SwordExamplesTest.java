@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class SwordExamplesTest {
 
-    private final String examplesTagOrBranch = "38f0e8901b5ce57117445c4f819f6613eb1f05ee"; // 2023-02-26
+    private final String examplesTagOrBranch = "38f0e8901b5ce57117445c4f819f6613eb1f05ee"; // 2023-02-28
 
     private Document parseSwordExampleDdm(String path) throws SAXException, IOException, ParserConfigurationException {
         // TODO copy via maven plugin to target directory and make getFactory private again
@@ -85,7 +85,7 @@ public class SwordExamplesTest {
             "dansArchisNumber", // AR002
             "dansAbrRapportType", // AR003
             "dansAbrRapportNummer", // AR004
-            // TODO dansAbrVerwervingswijze // AR005 supposed to map
+            "dansAbrVerwervingswijze", // AR005
             "dansAbrComplex", // AR006
             "dansAbrArtifact", // AR007
             "dansAbrPeriod")); // AR008

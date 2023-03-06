@@ -17,11 +17,11 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.FileInfo;
 import nl.knaw.dans.ingest.core.exception.CannotUpdateDraftDatasetException;
 import nl.knaw.dans.lib.dataverse.DatasetApi;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
@@ -48,13 +48,13 @@ import java.util.stream.Stream;
 public class DatasetUpdater extends DatasetEditor {
     private final Map<String, MetadataBlock> metadataBlocks;
 
-    protected DatasetUpdater(DataverseClient dataverseClient, boolean isMigration, Dataset dataset,
-        Deposit deposit, Map<String, String> variantToLicense, List<URI> supportedLicenses, int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Pattern fileExclusionPattern, ZipFileHandler zipFileHandler,
-        ObjectMapper objectMapper, Map<String, MetadataBlock> metadataBlocks) {
-        super(dataverseClient, isMigration, dataset, deposit, variantToLicense, supportedLicenses, publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries,
+    protected DatasetUpdater(boolean isMigration, Dataset dataset,
+        Deposit deposit, Map<String, String> variantToLicense, List<URI> supportedLicenses,
+        Pattern fileExclusionPattern, ZipFileHandler zipFileHandler,
+        ObjectMapper objectMapper, Map<String, MetadataBlock> metadataBlocks, DatasetService datasetService) {
+        super(isMigration, dataset, deposit, variantToLicense, supportedLicenses,
             fileExclusionPattern,
-            zipFileHandler, objectMapper);
+            zipFileHandler, objectMapper, datasetService);
         this.metadataBlocks = metadataBlocks;
     }
 

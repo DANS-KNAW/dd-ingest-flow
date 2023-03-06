@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.FileInfo;
 import nl.knaw.dans.ingest.core.exception.FailedDepositException;
@@ -39,28 +40,25 @@ public class DatasetCreator extends DatasetEditor {
     private final String depositorRole;
 
     public DatasetCreator(
-        DataverseClient dataverseClient,
         boolean isMigration,
         Dataset dataset,
         Deposit deposit,
         ObjectMapper objectMapper,
         Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
-        int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
-        String depositorRole) {
-        super(dataverseClient,
+        String depositorRole,
+        DatasetService datasetService
+    ) {
+        super(
             isMigration,
             dataset,
             deposit,
             variantToLicense,
             supportedLicenses,
-            publishAwaitUnlockMillisecondsBetweenRetries,
-            publishAwaitUnlockMaxNumberOfRetries,
             fileExclusionPattern,
-            zipFileHandler, objectMapper);
+            zipFileHandler, objectMapper, datasetService);
 
         this.depositorRole = depositorRole;
     }

@@ -18,23 +18,24 @@ package nl.knaw.dans.ingest.core.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.TaskEvent.Result;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.DepositState;
 import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
+import nl.knaw.dans.ingest.core.exception.DepositorValidatorException;
 import nl.knaw.dans.ingest.core.exception.FailedDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDatasetStateException;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositorRoleException;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.exception.TargetBlockedException;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
-import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
-import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType;
-import nl.knaw.dans.lib.dataverse.model.search.DatasetResultItem;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import org.apache.commons.lang3.StringUtils;
@@ -55,7 +56,6 @@ import java.util.stream.Collectors;
 public class DepositIngestTask implements TargetedTask, Comparable<DepositIngestTask> {
 
     private static final Logger log = LoggerFactory.getLogger(DepositIngestTask.class);
-    protected final DataverseClient dataverseClient;
     protected final String depositorRole;
     protected final Pattern fileExclusionPattern;
     protected final ZipFileHandler zipFileHandler;
@@ -63,33 +63,34 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     protected final List<URI> supportedLicenses;
     protected final DansBagValidator dansBagValidator;
     protected final DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory;
-    protected final int publishAwaitUnlockMillisecondsBetweenRetries;
-    protected final int publishAwaitUnlockMaxNumberOfRetries;
     protected final Path outboxDir;
     protected final DepositLocation depositLocation;
+    protected final DatasetService datasetService;
     private final EventWriter eventWriter;
+
     private final DepositManager depositManager;
     private final BlockedTargetService blockedTargetService;
+
+    private final DepositorAuthorizationValidator depositorAuthorizationValidator;
     protected Deposit deposit;
 
     public DepositIngestTask(
         DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
         DepositLocation depositLocation,
-        DataverseClient dataverseClient,
         String depositorRole,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
         Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
         DansBagValidator dansBagValidator,
-        int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries,
         Path outboxDir,
         EventWriter eventWriter,
         DepositManager depositManager,
-        BlockedTargetService blockedTargetService) {
+        DatasetService datasetService,
+        BlockedTargetService blockedTargetService,
+        DepositorAuthorizationValidator depositorAuthorizationValidator
+    ) {
         this.datasetMetadataMapperFactory = datasetMetadataMapperFactory;
-        this.dataverseClient = dataverseClient;
 
         this.depositorRole = depositorRole;
         this.fileExclusionPattern = fileExclusionPattern;
@@ -98,13 +99,13 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         this.variantToLicense = variantToLicense;
         this.supportedLicenses = supportedLicenses;
         this.dansBagValidator = dansBagValidator;
-        this.publishAwaitUnlockMillisecondsBetweenRetries = publishAwaitUnlockMillisecondsBetweenRetries;
-        this.publishAwaitUnlockMaxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries;
         this.outboxDir = outboxDir;
         this.eventWriter = eventWriter;
         this.depositManager = depositManager;
         this.blockedTargetService = blockedTargetService;
         this.depositLocation = depositLocation;
+        this.datasetService = datasetService;
+        this.depositorAuthorizationValidator = depositorAuthorizationValidator;
     }
 
     public Deposit getDeposit() {
@@ -226,6 +227,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
         // do some checks
         checkDepositType();
+        validateDepositorRoles();
         validateDeposit();
 
         // now create or update the dataset with dataverse
@@ -244,6 +246,18 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
         publishDataset(persistentId);
         postPublication(persistentId);
+    }
+
+    void validateDepositorRoles() {
+        try {
+            depositorAuthorizationValidator.validateDepositorAuthorization(deposit);
+        }
+        catch (InvalidDepositorRoleException e) {
+            throw new RejectedDepositException(deposit, e.getMessage());
+        }
+        catch (DepositorValidatorException e) {
+            throw new FailedDepositException(deposit, e.getMessage());
+        }
     }
 
     void checkBlockedTarget() throws TargetBlockedException {
@@ -295,13 +309,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     }
 
     void validateDeposit() {
-        try {
-            deposit.addOrUpdateBagInfoElement("Data-Station-User-Account", deposit.getDepositorUserId());
-            depositManager.saveBagInfo(deposit);
-        }
-        catch (IOException e) {
-            throw new FailedDepositException(deposit, "Could not add 'Data-Station-User-Account' element to bag-info.txt");
-        }
         var result = dansBagValidator.validateBag(
             deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
 
@@ -327,57 +334,26 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     }
 
     void postPublication(String persistentId) throws IOException, DataverseException, InterruptedException {
-        waitForReleasedState(persistentId);
-        savePersistentIdentifiersInDepositProperties(persistentId);
+        try {
+            datasetService.waitForState(persistentId, "RELEASED");
+            savePersistentIdentifiersInDepositProperties(persistentId);
+        }
+        catch (InvalidDatasetStateException e) {
+            throw new FailedDepositException(deposit, e.getMessage());
+        }
     }
 
     void savePersistentIdentifiersInDepositProperties(String persistentId) throws IOException, DataverseException {
-        var dataset = dataverseClient.dataset(persistentId);
-        dataset.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
-
-        deposit.setDoi(persistentId);
-
-        var version = dataset.getVersion();
-        var data = version.getData();
-        var metadata = data.getMetadataBlocks().get("dansDataVaultMetadata");
-
-        var urn = metadata.getFields().stream()
-            .filter(f -> f.getTypeName().equals("dansNbn"))
-            .map(f -> (PrimitiveSingleValueField) f)
-            .map(PrimitiveSingleValueField::getValue)
-            .findFirst()
+        var urn = datasetService.getDatasetUrnNbn(persistentId)
             .orElseThrow(() -> new IllegalStateException(String.format("Dataset %s did not obtain a URN:NBN", persistentId)));
 
+        deposit.setDoi(persistentId);
         deposit.setUrn(urn);
-    }
-
-    String getDatasetState(String persistentId) throws IOException, DataverseException {
-        var version = dataverseClient.dataset(persistentId).getLatestVersion();
-        return version.getData().getLatestVersion().getVersionState();
-    }
-
-    void waitForReleasedState(String persistentId) throws InterruptedException, IOException, DataverseException {
-        var numberOfTimesTried = 0;
-        var state = getDatasetState(persistentId);
-
-        while (!"RELEASED".equals(state) && numberOfTimesTried < publishAwaitUnlockMaxNumberOfRetries) {
-            Thread.sleep(publishAwaitUnlockMillisecondsBetweenRetries);
-
-            state = getDatasetState(persistentId);
-            numberOfTimesTried += 1;
-        }
-
-        if (!"RELEASED".equals(state)) {
-            throw new FailedDepositException(deposit, "Dataset did not become RELEASED within the wait period");
-        }
     }
 
     void publishDataset(String persistentId) throws Exception {
         try {
-            var dataset = dataverseClient.dataset(persistentId);
-
-            dataset.publish(UpdateType.major, true);
-            dataset.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
+            datasetService.publishDataset(persistentId);
         }
         catch (IOException | DataverseException e) {
             log.error("Unable to publish dataset", e);
@@ -389,18 +365,16 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         var blocks = dataset.getDatasetVersion().getMetadataBlocks();
 
         return new DatasetUpdater(
-            dataverseClient,
             isMigration,
             dataset,
             deposit,
             variantToLicense,
             supportedLicenses,
-            publishAwaitUnlockMillisecondsBetweenRetries,
-            publishAwaitUnlockMaxNumberOfRetries,
             fileExclusionPattern,
             zipFileHandler,
             new ObjectMapper(),
-            blocks
+            blocks,
+            datasetService
         );
     }
 
@@ -410,18 +384,16 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
     DatasetEditor newDatasetCreator(Dataset dataset, String depositorRole, boolean isMigration) {
         return new DatasetCreator(
-            dataverseClient,
             isMigration,
             dataset,
             deposit,
             new ObjectMapper(),
             variantToLicense,
             supportedLicenses,
-            publishAwaitUnlockMillisecondsBetweenRetries,
-            publishAwaitUnlockMaxNumberOfRetries,
             fileExclusionPattern,
             zipFileHandler,
-            depositorRole
+            depositorRole,
+            datasetService
         );
     }
 
@@ -429,8 +401,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         return newDatasetCreator(dataset, depositorRole, false);
     }
 
-    // TODO extract this to a new component that supports both normal and migration tasks
-    // Because this is hard to use in tests and does not feel SOLID
     Dataset getMetadata() {
         var date = getDateOfDeposit();
         var contact = getDatasetContact();
@@ -457,15 +427,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     Optional<AuthenticatedUser> getDatasetContact() {
         return Optional.ofNullable(deposit.getDepositorUserId())
             .filter(StringUtils::isNotBlank)
-            .map(userId -> {
-                try {
-                    return dataverseClient.admin().listSingleUser(userId).getData();
-                }
-                catch (IOException | DataverseException e) {
-                    log.error("Unable to fetch user with id {}", userId, e);
-                    throw new RuntimeException(e);
-                }
-            });
+            .map(userId -> datasetService.getUserById(userId)
+                .orElseThrow(() -> new RuntimeException("Unable to fetch user with id " + userId)));
     }
 
     @Override
@@ -478,24 +441,20 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     }
 
     String resolveDoi(Deposit deposit) throws IOException, DataverseException {
-        return getDoi(String.format("dansSwordToken:%s", deposit.getVaultMetadata().getSwordToken()));
+        return getDoi("dansSwordToken", deposit.getVaultMetadata().getSwordToken());
     }
 
-    String getDoi(String query) throws IOException, DataverseException {
-        log.trace("searching dataset with query '{}'", query);
-        var results = dataverseClient.search().find(query);
-        var items = results.getData().getItems();
-        var count = items.size();
+    String getDoi(String key, String value) throws IOException, DataverseException {
+        var items = datasetService.searchDatasets(key, value);
 
-        if (count != 1) {
+        if (items.size() != 1) {
             throw new FailedDepositException(deposit, String.format(
-                "Deposit is update of %s datasets; should always be 1!", count
+                "Deposit is update of %s datasets; should always be 1!", items.size()
             ), null);
         }
 
-        var doi = ((DatasetResultItem) items.get(0)).getGlobalId();
+        var doi = items.get(0).getGlobalId();
         log.debug("Deposit is update of dataset {}", doi);
-
         return doi;
     }
 }

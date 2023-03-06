@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ingest.core;
 
-import gov.loc.repository.bagit.reader.BagReader;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
@@ -33,6 +33,7 @@ import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.ingest.core.service.ZipFileHandler;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidatorImpl;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -84,7 +85,6 @@ public class DepositStartImportTaskWrapperTest {
         var bagDataManager = Mockito.mock(BagDataManager.class);
         var bagDirResolver = new BagDirResolverImpl(fileService);
         var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
-        var bagReader = new BagReader();
         var depositReader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager);
         var depositWriter = new DepositWriterImpl(bagDataManager);
         var depositManager = new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);
@@ -92,23 +92,24 @@ public class DepositStartImportTaskWrapperTest {
         //        var depositLocation = depositLocationReader.readDepositLocation(testDepositsBasedir.resolve(depositName));
         var date = OffsetDateTime.parse(created);
         var depositLocation = new DepositLocation(testDepositsBasedir.resolve(depositName), depositName, UUID.randomUUID().toString(), date);
+        var datasetService = Mockito.mock(DatasetService.class);
+        var depositorAuthorizationValidator = Mockito.mock(DepositorAuthorizationValidatorImpl.class);
 
         return new DepositMigrationTask(
             mapper,
             depositLocation,
-            client,
             "dummy",
             null,
             new ZipFileHandler(Path.of("target/test")),
             Map.of(),
             List.of(),
             validator,
-            1000,
-            1000,
             Path.of("dummy"),
             eventWriter,
             depositManager,
-            blockedTargetService
+            datasetService,
+            blockedTargetService,
+            depositorAuthorizationValidator
         );
     }
 

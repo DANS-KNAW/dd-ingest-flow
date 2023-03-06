@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.service;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
@@ -23,12 +24,12 @@ import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import org.apache.commons.lang3.StringUtils;
-import org.w3c.dom.Document;
 
 import java.io.IOException;
 import java.net.URI;
@@ -45,24 +46,23 @@ public class DepositMigrationTask extends DepositIngestTask {
     public DepositMigrationTask(
         DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
         DepositLocation depositLocation,
-        DataverseClient dataverseClient,
         String depositorRole,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
         Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
         DansBagValidator dansBagValidator,
-        int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries,
         Path outboxDir,
         EventWriter eventWriter,
         DepositManager depositManager,
-        BlockedTargetService blockedTargetService
+        DatasetService datasetService,
+        BlockedTargetService blockedTargetService,
+        DepositorAuthorizationValidator depositorAuthorizationValidator
     ) {
         super(
-            datasetMetadataMapperFactory, depositLocation, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
-            publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries, outboxDir, eventWriter, depositManager, blockedTargetService);
-
+            datasetMetadataMapperFactory, depositLocation, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses,
+            dansBagValidator,
+            outboxDir, eventWriter, depositManager, datasetService, blockedTargetService, depositorAuthorizationValidator);
     }
 
     @Override
@@ -124,13 +124,7 @@ public class DepositMigrationTask extends DepositIngestTask {
             throw new IllegalArgumentException(String.format("no publication date found in AMD for %s", persistentId));
         }
 
-        var dataset = dataverseClient.dataset(persistentId);
-
-        var datePublishJsonLd = String.format("{\"http://schema.org/datePublished\": \"%s\"}", date.get());
-
-        dataset.releaseMigrated(datePublishJsonLd, true);
-        dataset.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
-
+        datasetService.releaseMigrated(persistentId, date.get());
     }
 
     @Override
@@ -156,13 +150,7 @@ public class DepositMigrationTask extends DepositIngestTask {
 
     @Override
     String resolveDoi(Deposit deposit) throws IOException, DataverseException {
-        var isVersionOf = deposit.getIsVersionOf();
-
-        if (isVersionOf == null) {
-            throw new IllegalArgumentException("Update-deposit without Is-Version-Of");
-        }
-
-        return getDoi(String.format("dansBagId:\"%s\"", isVersionOf));
+        return getDoi("dansBagId", deposit.getIsVersionOf());
     }
 }
 

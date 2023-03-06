@@ -57,7 +57,10 @@ public class FileElement extends Base {
         // FIL001
         var filename = pathInDataset.getFileName().toString();
         var sanitizedFilename = replaceForbiddenCharactersInFilename(filename);
-        var dirPath = Optional.ofNullable(pathInDataset.getParent()).map(Path::toString).orElse(null);
+        var dirPath = Optional.ofNullable(pathInDataset.getParent()).map(Path::toString)
+            // Work-around for DD-1308
+            // PLEASE, DO NOT TRIM!!! No kidding, providing a space will remove the directoryLabel if it exists.
+            .orElse(" ");
         // FIL002
         var sanitizedDirLabel = replaceForbiddenCharactersInPath(dirPath);
 

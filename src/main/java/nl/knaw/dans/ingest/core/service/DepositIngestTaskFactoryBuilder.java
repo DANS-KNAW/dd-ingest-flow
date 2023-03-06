@@ -17,9 +17,10 @@ package nl.knaw.dans.ingest.core.service;
 
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
-import nl.knaw.dans.ingest.core.deposit.DepositReader;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 
 import java.io.IOException;
@@ -33,8 +34,8 @@ public class DepositIngestTaskFactoryBuilder {
     private final DepositManager depositManager;
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
+    private final DatasetService datasetService;
     private final BlockedTargetService blockedTargetService;
-    private final DepositReader depositReader;
 
     public DepositIngestTaskFactoryBuilder(
         DataverseClient dataverseClient,
@@ -44,8 +45,8 @@ public class DepositIngestTaskFactoryBuilder {
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler,
-        BlockedTargetService blockedTargetService,
-        DepositReader depositReader) {
+        DatasetService datasetService,
+        BlockedTargetService blockedTargetService) {
         this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
         this.ingestFlowConfig = ingestFlowConfig;
@@ -53,11 +54,12 @@ public class DepositIngestTaskFactoryBuilder {
         this.depositManager = depositManager;
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
+        this.datasetService = datasetService;
         this.blockedTargetService = blockedTargetService;
-        this.depositReader = depositReader;
     }
 
-    public DepositIngestTaskFactory createTaskFactory(boolean isMigration, String depositorRole) throws IOException, URISyntaxException {
+    // TODO this should really be refactored so that we don't need a task factory builder, we just create ingest task factories for each importarea with the proper config
+    public DepositIngestTaskFactory createTaskFactory(boolean isMigration, String depositorRole, DepositorAuthorizationValidator depositorAuthorizationValidator) throws IOException, URISyntaxException {
         return new DepositIngestTaskFactory(
             isMigration,
             depositorRole,
@@ -68,7 +70,9 @@ public class DepositIngestTaskFactoryBuilder {
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler,
-            blockedTargetService
+            datasetService,
+            blockedTargetService,
+            depositorAuthorizationValidator
         );
     }
 }

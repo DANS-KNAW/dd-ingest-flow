@@ -110,7 +110,7 @@ public class DepositToDvDatasetMetadataMapper {
         @Nullable String otherDoiId,
         @Nullable String dateOfDeposit,
         @Nullable AuthenticatedUser contactData,
-        @Nullable VaultMetadata vaultMetadata,
+        @NonNull VaultMetadata vaultMetadata,
         boolean filesThatAreAccessibleToNonePresentInDeposit,
         boolean filesThatAreRestrictedRequestPresentInDeposit) throws MissingRequiredFieldException {
         var termsOfAccess = "N/a";
@@ -218,14 +218,15 @@ public class DepositToDvDatasetMetadataMapper {
                 .map((Node node) -> SpatialCoverage.toUncontrolledSpatialValue(node, spatialCoverageCountryTerms))); // TS007
         }
 
-        if (activeMetadataBlocks.contains("dansDataVaultMetadata") && vaultMetadata != null) {
-            dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId());
-            dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn());
-            dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId());
-            dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion());
-            dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken());
+        if (!activeMetadataBlocks.contains("dansDataVaultMetadata"))
+            throw new IllegalStateException("dansDataVaultMetadata must always be active");
 
-        }
+        dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId());
+        dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn());
+        dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId());
+        dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion());
+        dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken());
+
         return assembleDataverseDataset(termsOfAccess);
     }
 
@@ -447,7 +448,7 @@ public class DepositToDvDatasetMetadataMapper {
     }
 
     Stream<String> getDataSources(Document ddm) {
-        return XPathEvaluator.strings(ddm, "/ddm:DDM/ddm:dcmiMetadata/dc:source","/ddm:DDM/ddm:dcmiMetadata/dcterms:source");
+        return XPathEvaluator.strings(ddm, "/ddm:DDM/ddm:dcmiMetadata/dc:source", "/ddm:DDM/ddm:dcmiMetadata/dcterms:source");
     }
 
     Stream<String> getRightsHolders(Document ddm) {

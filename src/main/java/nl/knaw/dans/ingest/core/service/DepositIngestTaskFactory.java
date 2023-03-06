@@ -18,11 +18,13 @@ package nl.knaw.dans.ingest.core.service;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 
 import java.io.IOException;
@@ -37,15 +39,15 @@ public class DepositIngestTaskFactory {
     private final String depositorRole;
     private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
-
     private final IngestFlowConfig ingestFlowConfig;
     private final DataverseExtra dataverseExtra;
     private final DepositManager depositManager;
-
     private final boolean isMigration;
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
+    private final DatasetService datasetService;
     private final BlockedTargetService blockedTargetService;
+    private final DepositorAuthorizationValidator depositorAuthorizationValidator;
 
     public DepositIngestTaskFactory(
         boolean isMigration,
@@ -57,8 +59,9 @@ public class DepositIngestTaskFactory {
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler,
-        BlockedTargetService blockedTargetService
-    ) throws IOException, URISyntaxException {
+        DatasetService datasetService,
+        BlockedTargetService blockedTargetService,
+        DepositorAuthorizationValidator depositorAuthorizationValidator) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;
         this.dataverseClient = dataverseClient;
@@ -68,7 +71,9 @@ public class DepositIngestTaskFactory {
         this.depositManager = depositManager;
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
+        this.datasetService = datasetService;
         this.blockedTargetService = blockedTargetService;
+        this.depositorAuthorizationValidator = depositorAuthorizationValidator;
     }
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
@@ -109,38 +114,36 @@ public class DepositIngestTaskFactory {
             return new DepositMigrationTask(
                 depositToDvDatasetMetadataMapperFactory,
                 depositLocation,
-                dataverseClient,
                 depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),
                 ingestFlowConfig.getSupportedLicenses(),
                 dansBagValidator,
-                dataverseExtra.getPublishAwaitUnlockMaxRetries(),
-                dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir,
                 eventWriter,
                 depositManager,
-                blockedTargetService
+                datasetService,
+                blockedTargetService,
+                depositorAuthorizationValidator
             );
         }
         else {
             return new DepositIngestTask(
                 depositToDvDatasetMetadataMapperFactory,
                 depositLocation,
-                dataverseClient,
                 depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
                 ingestFlowConfig.getVariantToLicense(),
                 ingestFlowConfig.getSupportedLicenses(),
                 dansBagValidator,
-                dataverseExtra.getPublishAwaitUnlockMaxRetries(),
-                dataverseExtra.getPublishAwaitUnlockWaitTimeMs(),
                 outboxDir,
                 eventWriter,
                 depositManager,
-                blockedTargetService
+                datasetService,
+                blockedTargetService,
+                depositorAuthorizationValidator
             );
         }
 

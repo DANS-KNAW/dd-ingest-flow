@@ -71,11 +71,6 @@ public class Deposit {
         return String.format("%s:%s/%s", dataverseIdProtocol, dataverseIdAuthority, dataverseId);
     }
 
-    public void addOrUpdateBagInfoElement(String name, String value) {
-        bag.getMetadata().remove(name);
-        bag.getMetadata().add(name, value);
-    }
-
     public String getOtherDoiId() {
         // prevent "doi:null" values
         if (StringUtils.isBlank(doi)) {

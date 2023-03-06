@@ -31,6 +31,9 @@ import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
+import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
+import nl.knaw.dans.ingest.core.dataverse.DataverseDatasetServiceImpl;
 import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
@@ -51,6 +54,8 @@ import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.ingest.core.service.ZipFileHandler;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidatorImpl;
 import nl.knaw.dans.ingest.db.BlockedTargetDAO;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
 import nl.knaw.dans.ingest.health.DansBagValidatorHealthCheck;
@@ -129,9 +134,25 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getValidateDansBag().getBaseUrl(),
             configuration.getValidateDansBag().getPingUrl());
 
+        final DatasetService datasetService = new DataverseDatasetServiceImpl(
+            dataverseClient,
+            configuration.getDataverseExtra().getPublishAwaitUnlockWaitTimeMs(),
+            configuration.getDataverseExtra().getPublishAwaitUnlockMaxRetries()
+        );
+
         final BlockedTargetDAO blockedTargetDAO = new BlockedTargetDAO(hibernateBundle.getSessionFactory());
         final BlockedTargetService blockedTargetService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
             .create(BlockedTargetServiceImpl.class, BlockedTargetDAO.class, blockedTargetDAO);
+
+        // validate depositors
+        final DepositorAuthorizationValidator importValidator = buildDepositorAuthorizationValidator(
+            datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getImportConfig());
+
+        final DepositorAuthorizationValidator migrationValidator = buildDepositorAuthorizationValidator(
+            datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getMigration());
+
+        final DepositorAuthorizationValidator autoIngestValidator = buildDepositorAuthorizationValidator(
+            datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getAutoIngest());
 
         final DepositIngestTaskFactoryBuilder builder = new DepositIngestTaskFactoryBuilder(
             dataverseClient,
@@ -141,8 +162,8 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler,
-            blockedTargetService,
-            depositReader
+            datasetService,
+            blockedTargetService
         );
 
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
@@ -153,7 +174,11 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final ImportArea importArea = new ImportArea(
             importConfig.getInbox(),
             importConfig.getOutbox(),
-            builder.createTaskFactory(false, importConfig.getDepositorRole()),
+            builder.createTaskFactory(
+                false,
+                importConfig.getDepositorRole(),
+                importValidator
+            ),
             taskEventService,
             enqueuingService);
 
@@ -162,7 +187,11 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final ImportArea migrationArea = new ImportArea(
             migrationConfig.getInbox(),
             migrationConfig.getOutbox(),
-            builder.createTaskFactory(true, migrationConfig.getDepositorRole()),
+            builder.createTaskFactory(
+                true,
+                migrationConfig.getDepositorRole(),
+                migrationValidator
+            ),
             taskEventService,
             enqueuingService);
 
@@ -170,7 +199,11 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final AutoIngestArea autoIngestArea = new AutoIngestArea(
             autoIngestConfig.getInbox(),
             autoIngestConfig.getOutbox(),
-            builder.createTaskFactory(false, autoIngestConfig.getDepositorRole()),
+            builder.createTaskFactory(
+                false,
+                autoIngestConfig.getDepositorRole(),
+                autoIngestValidator
+            ),
             taskEventService,
             enqueuingService
         );
@@ -186,4 +219,26 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         environment.jersey().register(new CsvMessageBodyWriter());
     }
 
+    DepositorAuthorizationValidator buildDepositorAuthorizationValidator(DatasetService datasetService, IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {
+        var creator = getDatasetCreatorRole(ingestFlowConfig, ingestAreaConfig);
+        var updater = getDatasetUpdaterRole(ingestFlowConfig, ingestAreaConfig);
+
+        return new DepositorAuthorizationValidatorImpl(datasetService, creator, updater);
+    }
+
+    String getDatasetCreatorRole(IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {
+        if (ingestAreaConfig.getAuthorization() != null && ingestAreaConfig.getAuthorization().getDatasetCreator() != null) {
+            return ingestAreaConfig.getAuthorization().getDatasetCreator();
+        }
+
+        return ingestFlowConfig.getAuthorization().getDatasetCreator();
+    }
+
+    String getDatasetUpdaterRole(IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {
+        if (ingestAreaConfig.getAuthorization() != null && ingestAreaConfig.getAuthorization().getDatasetUpdater() != null) {
+            return ingestAreaConfig.getAuthorization().getDatasetUpdater();
+        }
+
+        return ingestFlowConfig.getAuthorization().getDatasetUpdater();
+    }
 }

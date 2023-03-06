@@ -18,6 +18,7 @@ package nl.knaw.dans.ingest.core.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.FileInfo;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
@@ -28,12 +29,9 @@ import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
-import nl.knaw.dans.lib.dataverse.model.dataset.Embargo;
 import nl.knaw.dans.lib.dataverse.model.file.DataFile;
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
 import java.io.FileInputStream;
@@ -41,7 +39,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,8 +47,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,34 +65,31 @@ public abstract class DatasetEditor {
     protected final Map<String, String> variantToLicense;
     protected final List<URI> supportedLicenses;
 
-    protected final int publishAwaitUnlockMillisecondsBetweenRetries;
-    protected final int publishAwaitUnlockMaxNumberOfRetries;
-
     protected final Pattern fileExclusionPattern;
     protected final ZipFileHandler zipFileHandler;
 
     protected final ObjectMapper objectMapper;
-    private final SimpleDateFormat dateAvailableFormat = new SimpleDateFormat("yyyy-MM-dd");
+    protected final DatasetService datasetService;
 
-    protected DatasetEditor(DataverseClient dataverseClient,
-        boolean isMigration,
+    protected DatasetEditor(boolean isMigration,
         Dataset dataset,
         Deposit deposit,
         Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
-        int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries, Pattern fileExclusionPattern, ZipFileHandler zipFileHandler, ObjectMapper objectMapper) {
-        this.dataverseClient = dataverseClient;
+        Pattern fileExclusionPattern,
+        ZipFileHandler zipFileHandler,
+        ObjectMapper objectMapper,
+        DatasetService datasetService) {
+        this.dataverseClient = datasetService._getClient();
         this.isMigration = isMigration;
         this.dataset = dataset;
         this.deposit = deposit;
         this.variantToLicense = variantToLicense;
         this.supportedLicenses = supportedLicenses;
-        this.publishAwaitUnlockMillisecondsBetweenRetries = publishAwaitUnlockMillisecondsBetweenRetries;
-        this.publishAwaitUnlockMaxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries;
         this.fileExclusionPattern = fileExclusionPattern;
         this.zipFileHandler = zipFileHandler;
         this.objectMapper = objectMapper;
+        this.datasetService = datasetService;
     }
 
     static Instant parseDate(String value) {
@@ -154,9 +146,11 @@ public abstract class DatasetEditor {
         var wrappedZip = zipFileHandler.wrapIfZipFile(fileInfo.getPath());
 
         var file = wrappedZip.orElse(fileInfo.getPath());
-        var metadata = objectMapper.writeValueAsString(fileInfo.getMetadata());
-        log.info("Adding file {} with metadata {}", file, metadata);
-        var result = dataset.addFileItem(Optional.of(file.toFile()), Optional.of(metadata));
+        if (log.isDebugEnabled()) {
+            var metadata = objectMapper.writeValueAsString(fileInfo.getMetadata());
+            log.debug("Adding file {} with metadata {}", file, metadata);
+        }
+        var result = dataset.addFile(file, fileInfo.getMetadata());
 
         if (wrappedZip.isPresent()) {
             try {
@@ -242,12 +236,7 @@ public abstract class DatasetEditor {
             log.debug("No files to embargo");
         }
         else {
-            var api = dataverseClient.dataset(persistentId);
-            var embargo = new Embargo(dateAvailableFormat.format(Date.from(dateAvailable)), "",
-                ArrayUtils.toPrimitive(fileIds.toArray(Integer[]::new)));
-
-            api.setEmbargo(embargo);
-            api.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
+            datasetService.setEmbargo(persistentId, dateAvailable, fileIds);
         }
     }
 

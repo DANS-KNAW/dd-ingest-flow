@@ -17,12 +17,14 @@ package nl.knaw.dans.ingest.core.service;
 
 import nl.knaw.dans.ingest.core.TaskEvent.EventType;
 import nl.knaw.dans.ingest.core.TaskEvent.Result;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.DepositState;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.validatedansbag.api.ValidateOk;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +48,8 @@ public class DepositIngestTaskTest {
     final DansBagValidator dansBagValidator = Mockito.mock(DansBagValidator.class);
     final EventWriter eventWriter = Mockito.mock(EventWriter.class);
     final DepositManager depositManager = Mockito.mock(DepositManager.class);
+    final DatasetService datasetService = Mockito.mock(DatasetService.class);
+    final DepositorAuthorizationValidator depositorAuthorizationValidator = Mockito.mock(DepositorAuthorizationValidator.class);
 
     @BeforeEach
     void setUp() {
@@ -57,6 +61,7 @@ public class DepositIngestTaskTest {
         Mockito.reset(eventWriter);
         Mockito.reset(depositManager);
         Mockito.reset(blockedTargetService);
+        Mockito.reset();
     }
 
     DepositIngestTask getDepositIngestTask(String doi, String depositId, String isVersionOf) throws Throwable {
@@ -90,19 +95,18 @@ public class DepositIngestTaskTest {
         return new DepositIngestTask(
             depositToDvDatasetMetadataMapperFactory,
             depositLocation,
-            dataverseClient,
-            "role",
+            "dummy",
             null,
             zipFileHandler,
             Map.of(),
             List.of(),
             dansBagValidator,
-            1000,
-            1000,
             Path.of("outbox"),
             eventWriter,
             depositManager,
-            blockedTargetService
+            datasetService,
+            blockedTargetService,
+            depositorAuthorizationValidator
         );
     }
 
@@ -125,6 +129,9 @@ public class DepositIngestTaskTest {
                 .when(spiedTask)
                 .createOrUpdateDataset(Mockito.anyBoolean());
 
+            Mockito.doNothing()
+                .when(spiedTask)
+                .validateDepositorRoles();
             Mockito.doReturn("doi:id")
                 .when(spiedTask).resolveDoi(Mockito.any());
 
@@ -155,6 +162,10 @@ public class DepositIngestTaskTest {
             .when(spiedTask)
             .createOrUpdateDataset(Mockito.anyBoolean());
 
+        Mockito.doNothing()
+            .when(spiedTask)
+            .validateDepositorRoles();
+
         Mockito.doReturn("doi:id")
             .when(spiedTask).resolveDoi(Mockito.any());
 
@@ -174,6 +185,10 @@ public class DepositIngestTaskTest {
         var spiedTask = Mockito.spy(task);
         Mockito.doThrow(RejectedDepositException.class)
             .when(spiedTask).validateDeposit();
+
+        Mockito.doNothing()
+            .when(spiedTask)
+            .validateDepositorRoles();
 
         Mockito.doNothing()
             .when(spiedTask)
@@ -203,6 +218,10 @@ public class DepositIngestTaskTest {
         Mockito.doNothing()
             .when(spiedTask)
             .createOrUpdateDataset(Mockito.anyBoolean());
+
+        Mockito.doNothing()
+            .when(spiedTask)
+            .validateDepositorRoles();
 
         Mockito.doNothing()
             .when(spiedTask)

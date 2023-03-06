@@ -114,7 +114,6 @@ public class SwordExamplesTest {
             .map(node -> toFileMeta(node, true))
             .collect(Collectors.toList());
 
-        files.stream().map(FileMeta::getDirectoryLabel);
         assertThat(files.stream().map(FileMeta::getLabel)) // FIL001
             .containsExactlyInAnyOrder("file1.txt", "file2.txt", "c_a_q_d_l_g_p_s_h_.txt");
         assertThat(files.stream().map(FileMeta::getDirectoryLabel))

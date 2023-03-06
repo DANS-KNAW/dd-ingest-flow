@@ -77,9 +77,9 @@ public class FileElement extends Base {
 
         var fm = new FileMeta();
         fm.setLabel(sanitizedFilename);
-        if (sanitizedDirLabel!=null)
+        if (sanitizedDirLabel!=null && !sanitizedDirLabel.isBlank())
             fm.setDirectoryLabel(sanitizedDirLabel);
-        if (description!=null)
+        if (description!=null && !description.isBlank())
             fm.setDescription(description);
         fm.setRestricted(restricted);
 

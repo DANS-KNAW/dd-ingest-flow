@@ -54,7 +54,7 @@ public class SwordExamplesTest {
         var ddm = parseSwordExampleXml("all-mappings/metadata/dataset.xml");
         var dastaset = mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, true, true);
         var fieldNames = getFieldNamesOfMetadataBlocks(dastaset);
-        assertThat(fieldNames.get("citation")).hasSameElementsAs(List.of(
+        assertThat(fieldNames.get("citation")).containsExactlyInAnyOrder(
             "title", // CIT001
             "alternativeTitle", // CIT002
             "otherId", // CIT002A-4
@@ -74,16 +74,16 @@ public class SwordExamplesTest {
             "dateOfDeposit", // CIT025A
             "dateOfCollection", // CIT026
             "series", // CIT027
-            "dataSources")); // CIT028
+            "dataSources"); // CIT028
         assertThat(fieldNames.get("dansRights")).hasSameElementsAs(List.of(
             "dansRightsHolder", // RIG000 + RIG001
             "dansPersonalDataPresent", // RIG002
             "dansMetadataLanguage")); // RIG003
-        assertThat(fieldNames.get("dansRelationMetadata")).hasSameElementsAs(List.of(
+        assertThat(fieldNames.get("dansRelationMetadata")).containsExactlyInAnyOrder(
             "dansAudience", // REL001
             "dansCollection", // REL002
-            "dansRelation")); // REL003
-        assertThat(fieldNames.get("dansArchaeologyMetadata")).hasSameElementsAs(List.of(
+            "dansRelation"); // REL003
+        assertThat(fieldNames.get("dansArchaeologyMetadata")).containsExactlyInAnyOrder(
             "dansArchisZaakId", // AR001
             "dansArchisNumber", // AR002
             "dansAbrRapportType", // AR003
@@ -91,20 +91,20 @@ public class SwordExamplesTest {
             "dansAbrVerwervingswijze", // AR005
             "dansAbrComplex", // AR006
             "dansAbrArtifact", // AR007
-            "dansAbrPeriod")); // AR008
-        assertThat(fieldNames.get("dansTemporalSpatial")).hasSameElementsAs(List.of(
+            "dansAbrPeriod"); // AR008
+        assertThat(fieldNames.get("dansTemporalSpatial")).containsExactlyInAnyOrder(
             "dansSpatialPoint", // TS002 + TS003
             "dansSpatialBox", // TS004 + TS005
             "dansTemporalCoverage", // TS001
             "dansSpatialCoverageControlled", // TS006
-            "dansSpatialCoverageText")); // TS007
-        assertThat(fieldNames.get("dansDataVaultMetadata")).hasSameElementsAs(List.of(
+            "dansSpatialCoverageText"); // TS007
+        assertThat(fieldNames.get("dansDataVaultMetadata")).containsExactlyInAnyOrder(
             // VLT001-2 dansDataversePid TODO not by mapping?
             "dansBagId", // VLT003
             "dansNbn", // VLT004
             "dansOtherId", // VLT005
             "dansOtherIdVersion", // VLT006
-            "dansSwordToken")); // VLT007
+            "dansSwordToken"); // VLT007
         // TODO terms / restricted files // TRMnnn
         assertThat(dastaset.getDatasetVersion().getTermsOfAccess())
             .isEqualTo("Restricted files accessible under the following conditions: ...");
@@ -131,7 +131,6 @@ public class SwordExamplesTest {
 
         var ddm = parseSwordExampleXml("audiences/metadata/dataset.xml");
         var result = mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, true, true);
-        var fieldNames = getFieldNamesOfMetadataBlocks(result);
         // only checking what adds to assertions of all_mappings
         assertThat(result.getDatasetVersion().getTermsOfAccess())
             .isEqualTo("N/a"); // same for embargoed, audiences, restricted-files-with-access-request ...

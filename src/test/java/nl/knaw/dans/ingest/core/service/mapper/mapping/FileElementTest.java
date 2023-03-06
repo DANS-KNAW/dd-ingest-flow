@@ -36,6 +36,7 @@ class FileElementTest extends BaseTest {
         var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
 
         assertEquals("leeg.txt", result.getLabel());
+        System.out.println("toFileMetadata_should_include_metadata_from_child_elements getDirectoryLabel: " + result.getDirectoryLabel());
         assertNull(result.getDirectoryLabel());
         assertEquals("description: \"Empty file\"; time_period: \"Classical\"; hardware: \"Hardware\"", result.getDescription());
         assertEquals(true, result.getRestricted());

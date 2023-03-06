@@ -75,6 +75,8 @@ public class FileElement extends Base {
         var kv = getKeyValuePairs(node, filename, originalFilePath);
 
         var description = getDescription(kv);
+        if (description != null && description.isBlank())
+            description = null;
 
         System.out.println("sanitizedDirLabel: "+sanitizedDirLabel);
         var fm = new FileMeta();

@@ -170,7 +170,7 @@ public class FileElement extends Base {
     }
 
     static String replaceForbiddenCharactersInPath(String dirPath) {
-        if (dirPath == null) {
+        if (dirPath == null || dirPath.isBlank()) {
             return null;
         }
         return directoryLabelForbidden.matcher(dirPath).replaceAll("_");

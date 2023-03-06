@@ -60,7 +60,6 @@ public class FileElement extends Base {
         var dirPath = Optional.ofNullable(pathInDataset.getParent()).map(Path::toString).orElse(null);
         // FIL002
         var sanitizedDirLabel = replaceForbiddenCharactersInPath(dirPath);
-        System.out.println("sanitizedDirLabel: "+sanitizedDirLabel);
 
         // FIL005
         var restricted = getChildNode(node, "files:accessibleToRights")
@@ -75,10 +74,7 @@ public class FileElement extends Base {
         var kv = getKeyValuePairs(node, filename, originalFilePath);
 
         var description = getDescription(kv);
-        if (description != null && description.isBlank())
-            description = null;
 
-        System.out.println("sanitizedDirLabel: "+sanitizedDirLabel);
         var fm = new FileMeta();
         fm.setLabel(sanitizedFilename);
         fm.setDirectoryLabel(sanitizedDirLabel);
@@ -174,9 +170,7 @@ public class FileElement extends Base {
     }
 
     static String replaceForbiddenCharactersInPath(String dirPath) {
-        System.out.println("replaceForbiddenCharactersInPath: " + dirPath);
-        if (dirPath == null || dirPath.isBlank()) {
-            System.out.println("replaceForbiddenCharactersInPath: returning null");
+        if (dirPath == null) {
             return null;
         }
         return directoryLabelForbidden.matcher(dirPath).replaceAll("_");

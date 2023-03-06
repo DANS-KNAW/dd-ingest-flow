@@ -19,6 +19,7 @@ import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
+import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -113,15 +114,16 @@ public class SwordExamplesTest {
             .map(node -> toFileMeta(node, true))
             .collect(Collectors.toList());
 
-        assertThat(files).extracting("label") // FIL001
+        files.stream().map(FileMeta::getDirectoryLabel);
+        assertThat(files.stream().map(FileMeta::getLabel)) // FIL001
             .containsExactlyInAnyOrder("file1.txt", "file2.txt", "c_a_q_d_l_g_p_s_h_.txt");
-        assertThat(files).extracting("directoryLabel")
+        assertThat(files.stream().map(FileMeta::getDirectoryLabel))
             .containsExactlyInAnyOrder(null, "subdir", "subdir__"); // FIL002
-        assertThat(files).extracting("description") // FIL003 + FIL004
+        assertThat(files.stream().map(FileMeta::getDescription)) // FIL003 + FIL004
             .containsExactlyInAnyOrder(null,
                 "original_filepath: \"subdir_υποφάκελο/c:a*q?d\"l<g>p|s;h#.txt\"; description: \"A file with a problematic name\"",
                 "A file with a simple description");
-        assertThat(files).extracting("restrict") // FIL005
+        assertThat(files.stream().map(FileMeta::getRestrict)) // FIL005
             .containsExactlyInAnyOrder(true, true, true);
     }
 

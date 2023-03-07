@@ -26,11 +26,11 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RELATION
 public class RelationFieldBuilder extends FieldBuilder {
 
     public void addAudiences(Stream<String> nodes) {
-        addMultiplePrimitivesString(AUDIENCE, nodes);
+        addMultiplePrimitiveString(AUDIENCE, nodes);
     }
 
     public void addCollections(Stream<String> values) {
-        addMultiplePrimitivesString(COLLECTION, values);
+        addMultiplePrimitiveString(COLLECTION, values);
     }
 
     public void addRelations(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {

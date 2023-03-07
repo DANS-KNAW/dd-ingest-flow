@@ -28,7 +28,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TEMPORAL
 public class TemporalSpatialFieldBuilder extends FieldBuilder {
 
     public void addTemporalCoverage(Stream<String> nodes) {
-        addMultiplePrimitivesString(TEMPORAL_COVERAGE, nodes);
+        addMultiplePrimitiveString(TEMPORAL_COVERAGE, nodes);
     }
 
     public void addSpatialPoint(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
@@ -44,7 +44,7 @@ public class TemporalSpatialFieldBuilder extends FieldBuilder {
     }
 
     public void addSpatialCoverageUncontrolled(Stream<String> nodes) {
-        addMultiplePrimitivesString(SPATIAL_COVERAGE_UNCONTROLLED, nodes);
+        addMultiplePrimitiveString(SPATIAL_COVERAGE_UNCONTROLLED, nodes);
     }
 
 }

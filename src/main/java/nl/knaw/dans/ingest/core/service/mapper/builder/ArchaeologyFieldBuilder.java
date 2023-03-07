@@ -31,7 +31,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ARCHIS_Z
 public class ArchaeologyFieldBuilder extends FieldBuilder {
 
     public void addArchisZaakId(Stream<String> nodes) {
-        addMultiplePrimitivesString(ARCHIS_ZAAK_ID, nodes);
+        addMultiplePrimitiveString(ARCHIS_ZAAK_ID, nodes);
     }
 
     public void addArchisNumber(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
@@ -39,27 +39,27 @@ public class ArchaeologyFieldBuilder extends FieldBuilder {
     }
 
     public void addRapportType(Stream<String> nodes) {
-        addMultiplePrimitivesString(ABR_RAPPORT_TYPE, nodes);
+        addMultiplePrimitiveString(ABR_RAPPORT_TYPE, nodes);
     }
 
     public void addRapportNummer(Stream<String> nodes) {
-        addMultiplePrimitivesString(ABR_RAPPORT_NUMMER, nodes);
+        addMultiplePrimitiveString(ABR_RAPPORT_NUMMER, nodes);
     }
 
     public void addVerwervingswijze(Stream<String> nodes) {
-        addMultiplePrimitivesString(ABR_VERWERVINGSWIJZE, nodes);
+        addMultiplePrimitiveString(ABR_VERWERVINGSWIJZE, nodes);
     }
 
     public void addComplex(Stream<String> nodes) {
-        addMultiplePrimitivesString(ABR_COMPLEX, nodes);
+        addMultiplePrimitiveString(ABR_COMPLEX, nodes);
     }
 
     public void addArtifact(Stream<String> nodes) {
-        addMultiplePrimitivesString(ABR_ARTIFACT, nodes);
+        addMultiplePrimitiveString(ABR_ARTIFACT, nodes);
     }
 
     public void addPeriod(Stream<String> nodes) {
-        addMultiplePrimitivesString(ABR_PERIOD, nodes);
+        addMultiplePrimitiveString(ABR_PERIOD, nodes);
     }
 
 }

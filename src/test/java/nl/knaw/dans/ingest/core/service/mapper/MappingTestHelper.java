@@ -58,8 +58,8 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-class MappingTestHelper {
-    static final AuthenticatedUser mockedContact = new AuthenticatedUser();
+public class MappingTestHelper {
+    public static final AuthenticatedUser mockedContact = new AuthenticatedUser();
 
     {
         mockedContact.setDisplayName("D. O'Seven");
@@ -67,7 +67,7 @@ class MappingTestHelper {
         mockedContact.setAffiliation("DANS");
     }
 
-    static final VaultMetadata mockedVaultMetadata = new VaultMetadata(
+    public static final VaultMetadata mockedVaultMetadata = new VaultMetadata(
         "doi:10.17026/AR/6L7NBB",
         "urn:uuid:ced0be49-f863-4477-9473-23010526abf3",
         "urn:nbn:nl:ui:13-c7c5a4b2-539e-4b0c-831d-fe31eb197950",
@@ -92,11 +92,11 @@ class MappingTestHelper {
         return config;
     }
 
-    static Document readDocumentFromString(String xml) throws ParserConfigurationException, IOException, SAXException {
+    public static Document readDocumentFromString(String xml) throws ParserConfigurationException, IOException, SAXException {
         return new XmlReaderImpl().readXmlString(xml);
     }
 
-    static DepositToDvDatasetMetadataMapper mapper() {
+    public static DepositToDvDatasetMetadataMapper mapper() {
 
         return new DepositToDvDatasetMetadataMapper(
             true,
@@ -106,16 +106,16 @@ class MappingTestHelper {
             config.getSpatialCoverageCountryTerms());
     }
 
-    static Dataset mapDdmToDataset(Document ddm, boolean filesThatAreAccessibleToNonePresentInDeposit, boolean filesThatAreRestrictedRequestPresentInDeposit) {
+    public static Dataset mapDdmToDataset(Document ddm, boolean filesThatAreAccessibleToNonePresentInDeposit, boolean filesThatAreRestrictedRequestPresentInDeposit) {
         return mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, filesThatAreAccessibleToNonePresentInDeposit, filesThatAreRestrictedRequestPresentInDeposit);
     }
 
-    static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
+    public static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
         + "         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"
         + "         xmlns:dc='http://purl.org/dc/elements/1.1/'\n"
         + "         xmlns:dct='http://purl.org/dc/terms/'\n";
 
-    static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {
+    public static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {
         return readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>\n"
             + "    <ddm:profile>\n"
@@ -127,7 +127,7 @@ class MappingTestHelper {
             + "</ddm:DDM>\n");
     }
 
-    static String minimalDdmProfile() {
+    public static String minimalDdmProfile() {
         return ""
             + "    <ddm:profile>\n"
             + "        <dc:title>Title of the dataset</dc:title>\n"
@@ -135,27 +135,27 @@ class MappingTestHelper {
             + "    </ddm:profile>\n";
     }
 
-    static String dcmi(String content) {
+    public static String dcmi(String content) {
         return "<ddm:dcmiMetadata>\n"
             + "<dct:rightsHolder>Mr. Rights</dct:rightsHolder>\n"
             + content
             + "</ddm:dcmiMetadata>\n";
     }
 
-    static String toPrettyJsonString(Dataset result) throws JsonProcessingException {
+    public static String toPrettyJsonString(Dataset result) throws JsonProcessingException {
         return new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
             .writeValueAsString(result);
     }
 
-    static String toCompactJsonString(Dataset result) throws JsonProcessingException {
+    public static String toCompactJsonString(Dataset result) throws JsonProcessingException {
         return new ObjectMapper()
             .writer()
             .writeValueAsString(result);
     }
 
-    static List<String> getControlledMultiValueField(String block, String fieldId, Dataset result) {
+    public static List<String> getControlledMultiValueField(String block, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
@@ -163,7 +163,7 @@ class MappingTestHelper {
             .findFirst().orElse(null);
     }
 
-    static List<Map<String, SingleValueField>> getCompoundMultiValueField(String block, String fieldId, Dataset result) {
+    public static List<Map<String, SingleValueField>> getCompoundMultiValueField(String block, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
@@ -171,7 +171,7 @@ class MappingTestHelper {
             .findFirst().orElse(null);
     }
 
-    static String getControlledSingleValueField(String block, String fieldId, Dataset result) {
+    public static String getControlledSingleValueField(String block, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
@@ -180,7 +180,7 @@ class MappingTestHelper {
     }
 
 
-    static List<String> getPrimitiveMultipleValueField(String blockId, String fieldId, Dataset result) {
+    public static List<String> getPrimitiveMultipleValueField(String blockId, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(blockId).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
@@ -188,7 +188,7 @@ class MappingTestHelper {
             .findFirst().orElse(null);
     }
 
-    static String getPrimitiveSingleValueField(String blockId, String fieldId, Dataset result) {
+    public static String getPrimitiveSingleValueField(String blockId, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(blockId).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))

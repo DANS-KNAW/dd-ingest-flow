@@ -32,11 +32,10 @@ public class DansArchaeologyMetadataTest {
     void AR003_AR004_abr_report_type_and_number() throws Exception {
 
         var doc = readDocumentFromString(""
-            + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>"
+            + "<ddm:DDM " + rootAttributes+ ">"
             + minimalDdmProfile()
             + "    <ddm:dcmiMetadata>"
             + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
-            + "        <!-- AR003 and AR004 -->"
             + "        <ddm:reportNumber"
             + "                subjectScheme='ABR Rapporten'"
             + "                schemeURI='https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e'"
@@ -61,7 +60,7 @@ public class DansArchaeologyMetadataTest {
     void AR005_aquisition_method() throws Exception {
 
         var doc = readDocumentFromString(""
-            + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>"
+            + "<ddm:DDM " + rootAttributes+ ">"
             + minimalDdmProfile()
             + "    <ddm:dcmiMetadata>"
             + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
@@ -83,7 +82,7 @@ public class DansArchaeologyMetadataTest {
     void AR006_abr_complex() throws Exception {
 
         var doc = readDocumentFromString(""
-            + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>"
+            + "<ddm:DDM " + rootAttributes+ ">"
             + minimalDdmProfile()
             + "    <ddm:dcmiMetadata>"
             + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
@@ -105,7 +104,7 @@ public class DansArchaeologyMetadataTest {
     void AR007_abr_artifact() throws Exception {
 
         var doc = readDocumentFromString(""
-            + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>"
+            + "<ddm:DDM " + rootAttributes+ ">"
             + minimalDdmProfile()
             + "    <ddm:dcmiMetadata>"
             + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
@@ -128,7 +127,7 @@ public class DansArchaeologyMetadataTest {
     void AR008_abr_period() throws Exception {
 
         var doc = readDocumentFromString(""
-            + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>"
+            + "<ddm:DDM " + rootAttributes+ ">"
             + minimalDdmProfile()
             + "    <ddm:dcmiMetadata>"
             + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"

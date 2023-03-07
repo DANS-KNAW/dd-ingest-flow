@@ -30,33 +30,24 @@ import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
+import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.SingleValueField;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class MappingTestHelper {
     public static final AuthenticatedUser mockedContact = new AuthenticatedUser();
@@ -194,5 +185,14 @@ public class MappingTestHelper {
             .filter(f -> f.getTypeName().equals(fieldId))
             .map(f -> (((PrimitiveSingleValueField)f).getValue()))
             .findFirst().orElse(null);
+    }
+
+    public static Map<String, List<String>> getFieldNamesOfMetadataBlocks(Dataset result) {
+        var metadataBlocks = result.getDatasetVersion().getMetadataBlocks();
+        Map<String, List<String>> fields = new HashMap<>();
+        for (String blockName : metadataBlocks.keySet())
+            fields.put(blockName, metadataBlocks.get(blockName).getFields()
+                .stream().map(MetadataField::getTypeName).collect(Collectors.toList()));
+        return fields;
     }
 }

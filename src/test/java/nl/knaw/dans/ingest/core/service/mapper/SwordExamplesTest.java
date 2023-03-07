@@ -17,8 +17,6 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
-import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
@@ -27,11 +25,10 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getFieldNamesOfMetadataBlocks;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapper;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedContact;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedVaultMetadata;
@@ -134,14 +131,5 @@ public class SwordExamplesTest {
         // only checking what adds to assertions of all_mappings
         assertThat(result.getDatasetVersion().getTermsOfAccess())
             .isEqualTo("N/a"); // same for embargoed, audiences, restricted-files-with-access-request ...
-    }
-
-    private Map<String, List<String>> getFieldNamesOfMetadataBlocks(Dataset result) {
-        var metadataBlocks = result.getDatasetVersion().getMetadataBlocks();
-        Map<String, List<String>> fields = new HashMap<>();
-        for (String blockName : metadataBlocks.keySet())
-            fields.put(blockName, metadataBlocks.get(blockName).getFields()
-                .stream().map(MetadataField::getTypeName).collect(Collectors.toList()));
-        return fields;
     }
 }

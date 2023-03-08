@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
@@ -31,14 +32,17 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 class MappingTestHelper {
+
+    static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
+        + "         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"
+        + "         xmlns:dc='http://purl.org/dc/elements/1.1/'\n"
+        + "         xmlns:dct='http://purl.org/dc/terms/'\n";
 
     static Document readDocumentFromString(String xml) throws ParserConfigurationException, IOException, SAXException {
         return new XmlReaderImpl().readXmlString(xml);
@@ -56,13 +60,8 @@ class MappingTestHelper {
         iso2ToDataverseLanguage.put("ger", "German");
         return new DepositToDvDatasetMetadataMapper(
             true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage, List.of("Netherlands", "United Kingdom", "Belgium", "Germany")
-        ).toDataverseDataset(ddm, null, null, null, vaultMetadata, filesThatAreAccessibleToNonePresentInDeposit, filesThatAreRestrictedRequestPresentInDeposit);
+        ).toDataverseDataset(new Deposit(), ddm, null, null, null, vaultMetadata, filesThatAreAccessibleToNonePresentInDeposit, filesThatAreRestrictedRequestPresentInDeposit);
     }
-
-    static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
-        + "         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"
-        + "         xmlns:dc='http://purl.org/dc/elements/1.1/'\n"
-        + "         xmlns:dct='http://purl.org/dc/terms/'\n";
 
     static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {
         return readDocumentFromString(""
@@ -108,7 +107,7 @@ class MappingTestHelper {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(t -> ((ControlledMultiValueField)t).getValue())
+            .map(t -> ((ControlledMultiValueField) t).getValue())
             .findFirst().orElse(null);
     }
 
@@ -116,7 +115,7 @@ class MappingTestHelper {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(t -> ((CompoundMultiValueField)t).getValue())
+            .map(t -> ((CompoundMultiValueField) t).getValue())
             .findFirst().orElse(null);
     }
 
@@ -124,16 +123,15 @@ class MappingTestHelper {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(t -> ((ControlledSingleValueField)t).getValue())
+            .map(t -> ((ControlledSingleValueField) t).getValue())
             .findFirst().orElse(null);
     }
-
 
     static List<String> getPrimitiveMultipleValueField(String blockId, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(blockId).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(f -> (((PrimitiveMultiValueField)f).getValue()))
+            .map(f -> (((PrimitiveMultiValueField) f).getValue()))
             .findFirst().orElse(null);
     }
 
@@ -141,7 +139,7 @@ class MappingTestHelper {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(blockId).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(f -> (((PrimitiveSingleValueField)f).getValue()))
+            .map(f -> (((PrimitiveSingleValueField) f).getValue()))
             .findFirst().orElse(null);
     }
 }

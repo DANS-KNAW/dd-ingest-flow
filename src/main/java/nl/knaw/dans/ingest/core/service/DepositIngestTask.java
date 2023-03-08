@@ -410,6 +410,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
         var mapper = datasetMetadataMapperFactory.createMapper(false); // TODO: WHY IS THIS ALWAYS FALSE?
         return mapper.toDataverseDataset(
+            deposit,
             deposit.getDdm(),
             deposit.getOtherDoiId(),
             date.orElse(null),

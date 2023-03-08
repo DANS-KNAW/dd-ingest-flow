@@ -31,6 +31,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public class DepositReaderImpl implements DepositReader {
@@ -99,6 +100,7 @@ public class DepositReaderImpl implements DepositReader {
         deposit.setDataverseOtherId(config.getString("dataverse.other-id", ""));
         deposit.setDataverseOtherIdVersion(config.getString("dataverse.other-id-version", ""));
         deposit.setDataverseSwordToken(config.getString("dataverse.sword-token", ""));
+        deposit.setHasOrganizationalIdentifier(getFirstValue(bag.getMetadata().get("Has-Organizational-Identifier")));
 
         var isVersionOf = bag.getMetadata().get("Is-Version-Of");
 
@@ -113,6 +115,16 @@ public class DepositReaderImpl implements DepositReader {
         }
 
         return deposit;
+    }
+
+    private String getFirstValue(List<String> value) {
+        if (value == null) {
+            return null;
+        }
+        return value.stream()
+            .filter(StringUtils::isNotBlank)
+            .findFirst()
+            .orElse(null);
     }
 
 }

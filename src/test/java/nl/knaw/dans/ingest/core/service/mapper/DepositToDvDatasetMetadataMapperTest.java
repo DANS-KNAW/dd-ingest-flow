@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.service.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
@@ -39,7 +40,6 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DepositToDvDatasetMetadataMapperTest {
 
@@ -81,7 +81,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, false);
+        var result = mapper.toDataverseDataset(new Deposit(), doc, null, null, null, vaultMetadata, false, false);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
@@ -95,7 +95,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "otherIdVersion", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, false);
+        var result = mapper.toDataverseDataset(new Deposit(), doc, null, null, null, vaultMetadata, false, false);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
@@ -111,7 +111,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", null, "otherIdVersion", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, false);
+        var result = mapper.toDataverseDataset(new Deposit(), doc, null, null, null, vaultMetadata, false, false);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()

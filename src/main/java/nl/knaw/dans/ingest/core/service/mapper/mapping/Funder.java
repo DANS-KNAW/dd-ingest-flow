@@ -34,11 +34,12 @@ public class Funder {
         var details = parseFunderDetails(value);
         // create a string like 'awardNumber (awardTitle)' but also check for empty values
         var grantNumberValue = Stream.of(
-                details.getAwardNumber(),
-                details.getAwardTitle() != null ? String.format("(%s)", details.getAwardTitle()) : null
+                details.getFundingProgramme(),
+                details.getAwardNumber()
             )
             .filter(StringUtils::isNotBlank)
-            .collect(Collectors.joining(" "));
+            .collect(Collectors.joining(" "))
+            .trim();
 
         builder.addSubfield(GRANT_NUMBER_AGENCY, details.getFunderName());
         builder.addSubfield(GRANT_NUMBER_VALUE, grantNumberValue);

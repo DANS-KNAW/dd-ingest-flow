@@ -63,6 +63,6 @@ class FunderTest extends BaseTest {
         assertThat(((CompoundMultiValueField) field).getValue())
             .extracting(GRANT_NUMBER_VALUE)
             .extracting("value")
-            .containsOnly("Award number (Award title)");
+            .containsOnly("Funding programme Award number");
     }
 }

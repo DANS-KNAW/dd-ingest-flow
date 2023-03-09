@@ -17,6 +17,9 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import org.junit.jupiter.api.Test;
 
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ARCHIS_NUMBER_ID;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ARCHIS_NUMBER_TYPE;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveMultipleValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
@@ -26,7 +29,42 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class DansArchaeologyMetadataTest {
 
-    // AR001 + AR002 see IdentifierTest
+    @Test
+    void AR001_archis_zaak_id() throws Exception {
+
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>"
+            + minimalDdmProfile()
+            + "    <ddm:dcmiMetadata>"
+            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + "        <dct:identifier xsi:type='id-type:ARCHIS-ZAAK-IDENTIFICATIE'>123</dct:identifier>"
+            + "    </ddm:dcmiMetadata>"
+            + "</ddm:DDM>");
+        var result = mapDdmToDataset(doc, true, true);
+
+        assertThat(getPrimitiveMultipleValueField("dansArchaeologyMetadata", "dansArchisZaakId", result))
+            .containsOnly("123");
+    }
+
+    @Test
+    void AR002_archis_number() throws Exception {
+
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>"
+            + minimalDdmProfile()
+            + "    <ddm:dcmiMetadata>"
+            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + "        <dct:identifier xsi:type='id-type:ARCHIS-MONUMENT'>456</dct:identifier>"
+            + "    </ddm:dcmiMetadata>"
+            + "</ddm:DDM>");
+        var result = mapDdmToDataset(doc, true, true);
+
+        var archisNr = getCompoundMultiValueField("dansArchaeologyMetadata", "dansArchisNumber", result);
+        assertThat(archisNr).extracting(ARCHIS_NUMBER_TYPE).extracting("value")
+            .containsOnly("monument");
+        assertThat(archisNr).extracting(ARCHIS_NUMBER_ID).extracting("value")
+            .containsOnly("456");
+    }
 
     @Test
     void AR003_AR004_abr_report_type_and_number() throws Exception {

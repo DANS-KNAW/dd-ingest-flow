@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
+
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import org.junit.jupiter.api.Test;
 
@@ -29,11 +30,6 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICAT
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_NUMBER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_ID_TYPE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION_URL;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundMultiValueField;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveMultipleValueField;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -263,29 +259,29 @@ class IdentifierTest extends BaseTest {
     }
 
     @Test
-    void archis_identifiers_integrate_with_mapper_and_builder() throws Exception {
+    void test_to_archis_number_value() throws Exception {
+        var doc = readDocumentFromString(
+            "<dct:identifier \n"
+                + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + "    xmlns:dct=\"http://purl.org/dc/terms/\"\n"
+                + "    xsi:type=\"ARCHIS-MONUMENT\">\n"
+                + "    \n"
+                + "    123\n"
+                + "</dct:identifier>");
 
-        var doc = readDocumentFromString(""
-            + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
-            + "        <dct:identifier xsi:type='id-type:ARCHIS-ZAAK-IDENTIFICATIE'>123</dct:identifier>"
-            + "        <dct:identifier xsi:type='id-type:ARCHIS-MONUMENT'>456</dct:identifier>"
-            + "    </ddm:dcmiMetadata>"
-            + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var builder = new CompoundFieldBuilder("", true);
+        Identifier.toArchisNumberValue.build(builder, doc.getDocumentElement());
+        var field = (CompoundMultiValueField) builder.build();
 
-        // AR001
-        assertThat(getPrimitiveMultipleValueField("dansArchaeologyMetadata", "dansArchisZaakId", result))
-            .containsOnly("123");
-
-        // AR002
-        var archisNr = getCompoundMultiValueField("dansArchaeologyMetadata", "dansArchisNumber", result);
-        assertThat(archisNr).extracting(ARCHIS_NUMBER_TYPE).extracting("value")
+        assertThat(field.getValue())
+            .extracting(ARCHIS_NUMBER_TYPE)
+            .extracting("value")
             .containsOnly("monument");
-        assertThat(archisNr).extracting(ARCHIS_NUMBER_ID).extracting("value")
-            .containsOnly("456");
+
+        assertThat(field.getValue())
+            .extracting(ARCHIS_NUMBER_ID)
+            .extracting("value")
+            .containsOnly("123");
     }
 
     @Test

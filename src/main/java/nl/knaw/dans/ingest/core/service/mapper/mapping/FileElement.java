@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class FileElement extends Base {
     private final static Pattern filenameForbidden = Pattern.compile("[:*?\"<>|;#]");
-    private final static Pattern directoryLabelForbidden = Pattern.compile("[^_\\-.\\\\/ 0-9a-zA-Z]+");
+    private final static Pattern directoryLabelForbidden = Pattern.compile("[^_\\-.\\\\/ 0-9a-zA-Z]");
     private final static Map<String, Boolean> accessibilityToRestrict = Map.of(
         "KNOWN", true,
         "NONE", true,

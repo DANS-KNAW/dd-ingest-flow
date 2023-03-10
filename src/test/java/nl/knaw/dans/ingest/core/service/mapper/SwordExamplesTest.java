@@ -25,7 +25,6 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getFieldNamesOfMetadataBlocks;
@@ -72,10 +71,10 @@ public class SwordExamplesTest {
             "dateOfCollection", // CIT026
             "series", // CIT027
             "dataSources"); // CIT028
-        assertThat(fieldNames.get("dansRights")).hasSameElementsAs(List.of(
+        assertThat(fieldNames.get("dansRights")).containsExactlyInAnyOrder(
             "dansRightsHolder", // RIG000 + RIG001
             "dansPersonalDataPresent", // RIG002
-            "dansMetadataLanguage")); // RIG003
+            "dansMetadataLanguage"); // RIG003
         assertThat(fieldNames.get("dansRelationMetadata")).containsExactlyInAnyOrder(
             "dansAudience", // REL001
             "dansCollection", // REL002

@@ -17,9 +17,10 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import org.junit.jupiter.api.Test;
 
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getControlledMultiValueField;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveMultipleValueField;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
@@ -34,16 +35,13 @@ public class DansTemporalSpatialMetadataTest {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dct:temporal>Het Romeinse Rijk</dct:temporal>"
-            + "        <dct:temporal>De Oudheid</dct:temporal>"
-            + "    </ddm:dcmiMetadata>"
+            + "        <dct:temporal>De Oudheid</dct:temporal>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
 
-        assertThat(getPrimitiveMultipleValueField("dansTemporalSpatial", "dansTemporalCoverage", result))
+        assertThat(getPrimitiveMultiValueField("dansTemporalSpatial", "dansTemporalCoverage", result))
             .containsOnly("Het Romeinse Rijk", "De Oudheid");
     }
 
@@ -52,15 +50,12 @@ public class DansTemporalSpatialMetadataTest {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial srsName='http://www.opengis.net/def/crs/EPSG/0/28992'>"
             + "            <Point xmlns='http://www.opengis.net/gml'>"
             + "                <pos>126466 529006</pos>"
             + "            </Point>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
@@ -77,15 +72,12 @@ public class DansTemporalSpatialMetadataTest {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial srsName='XXX'>"
             + "            <Point xmlns='http://www.opengis.net/gml'>"
             + "                <pos>126466 529006</pos>"
             + "            </Point>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
@@ -102,15 +94,12 @@ public class DansTemporalSpatialMetadataTest {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <Point xmlns='http://www.opengis.net/gml'>"
             + "                <pos>126466 529006</pos>"
             + "            </Point>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
@@ -127,15 +116,12 @@ public class DansTemporalSpatialMetadataTest {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <Point xmlns='http://www.opengis.net/gml'>"
             + "                <pos>126466</pos>"
             + "            </Point>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
         thrown.isInstanceOf(ArrayIndexOutOfBoundsException.class);
@@ -145,14 +131,11 @@ public class DansTemporalSpatialMetadataTest {
     void point_without_pos_is_ignored() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <Point xmlns='http://www.opengis.net/gml'>"
             + "            </Point>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
@@ -163,12 +146,7 @@ public class DansTemporalSpatialMetadataTest {
     void spatial_without_anything_is_ignored() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
-            + "        <dcx-gml:spatial>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + minimalDdmProfile() + dcmi("<dcx-gml:spatial></dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
@@ -180,15 +158,12 @@ public class DansTemporalSpatialMetadataTest {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <Point xmlns='http://www.opengis.net/gml'>"
             + "                <pos>52.078663 4.288788</pos>"
             + "            </Point>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
@@ -205,9 +180,7 @@ public class DansTemporalSpatialMetadataTest {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
             + "                <Envelope srsName='http://www.opengis.net/def/crs/EPSG/0/28992'>"
@@ -215,8 +188,7 @@ public class DansTemporalSpatialMetadataTest {
             + "                    <upperCorner>140000 628000</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
@@ -237,9 +209,7 @@ public class DansTemporalSpatialMetadataTest {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
             + "                <Envelope srsName='http://www.opengis.net/def/crs/EPSG/0/4326'>"
@@ -247,8 +217,7 @@ public class DansTemporalSpatialMetadataTest {
             + "                    <upperCorner>53.23074335194507 6.563118076315912</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
@@ -269,9 +238,7 @@ public class DansTemporalSpatialMetadataTest {
         // TODO https://drivenbydata.atlassian.net/browse/DD-1305
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
             + "                <Envelope srsName='XXX'>"
@@ -279,8 +246,7 @@ public class DansTemporalSpatialMetadataTest {
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
@@ -301,9 +267,7 @@ public class DansTemporalSpatialMetadataTest {
         // TODO not explicit in https://drivenbydata.atlassian.net/browse/DD-1305
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
             + "                <Envelope>"
@@ -311,8 +275,7 @@ public class DansTemporalSpatialMetadataTest {
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
@@ -332,9 +295,7 @@ public class DansTemporalSpatialMetadataTest {
     void box_without_single_number_in_upper_corner_cause_an_exception() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
             + "                <Envelope>"
@@ -342,8 +303,7 @@ public class DansTemporalSpatialMetadataTest {
             + "                    <upperCorner>3</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
         thrown.isInstanceOf(ArrayIndexOutOfBoundsException.class);
@@ -353,9 +313,7 @@ public class DansTemporalSpatialMetadataTest {
     void box_without_single_number_in_lower_corner_cause_an_exception() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
             + "                <Envelope>"
@@ -363,8 +321,7 @@ public class DansTemporalSpatialMetadataTest {
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
         thrown.isInstanceOf(ArrayIndexOutOfBoundsException.class);
@@ -374,17 +331,14 @@ public class DansTemporalSpatialMetadataTest {
     void box_without_lower_corner_causes_an_exception() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
             + "                <Envelope srsName='XXX'>"
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
         thrown.isInstanceOf(IllegalArgumentException.class);
@@ -395,17 +349,14 @@ public class DansTemporalSpatialMetadataTest {
     void box_without_upper_corner_causes_an_exception() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
             + "                <Envelope srsName='XXX'>"
             + "                    <lowerCorner>1 2</lowerCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
         thrown.isInstanceOf(IllegalArgumentException.class);
@@ -417,14 +368,11 @@ public class DansTemporalSpatialMetadataTest {
         // TODO ignoring would be consistent with POINT without POS
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
             + "            </boundedBy>"
-            + "        </dcx-gml:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
         thrown.isInstanceOf(IllegalArgumentException.class);
@@ -436,12 +384,9 @@ public class DansTemporalSpatialMetadataTest {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dct:spatial>South Africa</dct:spatial>"
-            + "        <dct:spatial>Japan</dct:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        <dct:spatial>Japan</dct:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
         var box = getControlledMultiValueField("dansTemporalSpatial", "dansSpatialCoverageControlled", result);
@@ -449,20 +394,17 @@ public class DansTemporalSpatialMetadataTest {
     }
 
     @Test
-    void TS007_spatial_coverage_text() throws Exception {
+    void TS007_spatial_coverage_trims_text() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile()
-            + "    <ddm:dcmiMetadata>"
-            + "        <dct:rightsHolder>M.A.N. Datory</dct:rightsHolder>"
+            + minimalDdmProfile() + dcmi(""
             + "        <dct:spatial>"
             + "             Roman Empire"
-            + "        </dct:spatial>"
-            + "    </ddm:dcmiMetadata>"
+            + "        </dct:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
-        assertThat(getPrimitiveMultipleValueField("dansTemporalSpatial", "dansSpatialCoverageText", result))
+        assertThat(getPrimitiveMultiValueField("dansTemporalSpatial", "dansSpatialCoverageText", result))
             .containsOnly("Roman Empire");
     }
 }

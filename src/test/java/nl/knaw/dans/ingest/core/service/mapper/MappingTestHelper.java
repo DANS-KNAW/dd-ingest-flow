@@ -150,7 +150,7 @@ public class MappingTestHelper {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(t -> ((ControlledMultiValueField)t).getValue())
+            .map(t -> ((ControlledMultiValueField) t).getValue())
             .findFirst().orElse(null);
     }
 
@@ -158,7 +158,7 @@ public class MappingTestHelper {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(t -> ((CompoundMultiValueField)t).getValue())
+            .map(t -> ((CompoundMultiValueField) t).getValue())
             .findFirst().orElse(null);
     }
 
@@ -166,16 +166,15 @@ public class MappingTestHelper {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(t -> ((ControlledSingleValueField)t).getValue())
+            .map(t -> ((ControlledSingleValueField) t).getValue())
             .findFirst().orElse(null);
     }
 
-
-    public static List<String> getPrimitiveMultipleValueField(String blockId, String fieldId, Dataset result) {
+    public static List<String> getPrimitiveMultiValueField(String blockId, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(blockId).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(f -> (((PrimitiveMultiValueField)f).getValue()))
+            .map(f -> (((PrimitiveMultiValueField) f).getValue()))
             .findFirst().orElse(null);
     }
 
@@ -183,7 +182,7 @@ public class MappingTestHelper {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(blockId).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(f -> (((PrimitiveSingleValueField)f).getValue()))
+            .map(f -> (((PrimitiveSingleValueField) f).getValue()))
             .findFirst().orElse(null);
     }
 

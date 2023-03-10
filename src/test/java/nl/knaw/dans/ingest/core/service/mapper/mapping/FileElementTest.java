@@ -147,10 +147,9 @@ class FileElementTest extends BaseTest {
         - hyphen
          space (but not tab)
         */
-        // note that there are 7 invalid characters between 'test' and '.txt'
-        var filename = "dir()\t\t ^^^";
+        var filename = "dir()\t\t ^^^/xyz/\\a.b-c";
         var result = FileElement.replaceForbiddenCharactersInPath(filename);
 
-        assertEquals("dir____ ___", result);
+        assertEquals("dir____ ___/xyz/\\a.b-c", result);
     }
 }

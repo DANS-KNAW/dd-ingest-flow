@@ -25,7 +25,6 @@ import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
 import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.validatedansbag.api.ValidateCommand;
@@ -49,7 +48,6 @@ public class DepositMigrationTask extends DepositIngestTask {
         String depositorRole,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
-        Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
         DansBagValidator dansBagValidator,
         Path outboxDir,
@@ -60,7 +58,7 @@ public class DepositMigrationTask extends DepositIngestTask {
         DepositorAuthorizationValidator depositorAuthorizationValidator
     ) {
         super(
-            datasetMetadataMapperFactory, depositLocation, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses,
+            datasetMetadataMapperFactory, depositLocation, depositorRole, fileExclusionPattern, zipFileHandler, supportedLicenses,
             dansBagValidator,
             outboxDir, eventWriter, depositManager, datasetService, blockedTargetService, depositorAuthorizationValidator);
     }

@@ -49,10 +49,10 @@ public class DatasetUpdater extends DatasetEditor {
     private final Map<String, MetadataBlock> metadataBlocks;
 
     protected DatasetUpdater(boolean isMigration, Dataset dataset,
-        Deposit deposit, Map<String, String> variantToLicense, List<URI> supportedLicenses,
+        Deposit deposit, List<URI> supportedLicenses,
         Pattern fileExclusionPattern, ZipFileHandler zipFileHandler,
         ObjectMapper objectMapper, Map<String, MetadataBlock> metadataBlocks, DatasetService datasetService) {
-        super(isMigration, dataset, deposit, variantToLicense, supportedLicenses,
+        super(isMigration, dataset, deposit, supportedLicenses,
             fileExclusionPattern,
             zipFileHandler, objectMapper, datasetService);
         this.metadataBlocks = metadataBlocks;

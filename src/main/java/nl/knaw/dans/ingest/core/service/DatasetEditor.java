@@ -50,7 +50,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -62,7 +61,6 @@ public abstract class DatasetEditor {
     protected final boolean isMigration;
     protected final Dataset dataset;
     protected final Deposit deposit;
-    protected final Map<String, String> variantToLicense;
     protected final List<URI> supportedLicenses;
 
     protected final Pattern fileExclusionPattern;
@@ -74,7 +72,6 @@ public abstract class DatasetEditor {
     protected DatasetEditor(boolean isMigration,
         Dataset dataset,
         Deposit deposit,
-        Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
@@ -84,7 +81,6 @@ public abstract class DatasetEditor {
         this.isMigration = isMigration;
         this.dataset = dataset;
         this.deposit = deposit;
-        this.variantToLicense = variantToLicense;
         this.supportedLicenses = supportedLicenses;
         this.fileExclusionPattern = fileExclusionPattern;
         this.zipFileHandler = zipFileHandler;
@@ -169,7 +165,7 @@ public abstract class DatasetEditor {
         return XPathEvaluator.nodes(node, "/ddm:DDM/ddm:dcmiMetadata/dcterms:license")
             .filter(License::isLicenseUri)
             .findFirst()
-            .map(n -> License.getLicenseUri(supportedLicenses, variantToLicense, n))
+            .map(n -> License.getLicenseUri(supportedLicenses, n))
             .map(URI::toASCIIString)
             .orElseThrow(() -> new RejectedDepositException(deposit, "no license specified"));
     }

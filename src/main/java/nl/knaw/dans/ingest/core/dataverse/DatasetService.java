@@ -22,6 +22,7 @@ import nl.knaw.dans.lib.dataverse.model.search.DatasetResultItem;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -50,4 +51,6 @@ public interface DatasetService {
     DataverseClient _getClient();
 
     List<DatasetResultItem> searchDatasets(String key, String value) throws IOException, DataverseException;
+
+    List<URI> getLicenses() throws IOException, DataverseException;
 }

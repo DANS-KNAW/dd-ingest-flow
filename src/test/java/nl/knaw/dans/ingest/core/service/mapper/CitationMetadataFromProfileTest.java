@@ -42,7 +42,7 @@ public class CitationMetadataFromProfileTest {
     void CIT001_should_map_title() throws ParserConfigurationException, IOException, SAXException {
         var doc = ddmWithCustomProfileContent("");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getPrimitiveSingleValueField("citation", "title", result))
             .isEqualTo("Title of the dataset");
     }
@@ -53,7 +53,7 @@ public class CitationMetadataFromProfileTest {
             + "<dc:creator>J. Bond</dc:creator>\n"
             + "<dc:creator>D. O'Seven</dc:creator>\n");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getCompoundMultiValueField("citation", AUTHOR, result))
             .extracting(AUTHOR_NAME).extracting("value")
             .hasSameElementsAs(List.of("J. Bond", "D. O'Seven"));
@@ -73,7 +73,7 @@ public class CitationMetadataFromProfileTest {
             + "    </dcx-dai:author>\n"
             + "</dcx-dai:creatorDetails>\n");
         // TODO affiliation, ORCID, ISNI, DAI in AuthorTest
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getCompoundMultiValueField("citation", AUTHOR, result))
             .extracting(AUTHOR_NAME).extracting("value")
             .hasSameElementsAs(List.of("Bond", "O'Seven"));
@@ -93,7 +93,7 @@ public class CitationMetadataFromProfileTest {
             + "    </dcx-dai:organization>\n"
             + "</dcx-dai:creatorDetails>\n");
         // TODO affiliation, ISNI, VIAF in AuthorTest
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getCompoundMultiValueField("citation", AUTHOR, result))
             .extracting(AUTHOR_NAME).extracting("value")
             .hasSameElementsAs(List.of("DANS", "KNAW"));
@@ -106,7 +106,7 @@ public class CitationMetadataFromProfileTest {
             + "<dc:description>dolor sit amet</dc:description>\n"
         );
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getCompoundMultiValueField("citation", DESCRIPTION, result))
             .extracting(DESCRIPTION_VALUE).extracting("value")
             .hasSameElementsAs(List.of("<p>Lorem ipsum.</p>", "<p>dolor sit amet</p>"));
@@ -127,7 +127,7 @@ public class CitationMetadataFromProfileTest {
                 + dcmi("")
                 + "</ddm:DDM>\n");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getControlledMultiValueField("citation", "subject", result))
             .hasSameElementsAs(List.of("Astronomy and Astrophysics", "Law", "Mathematical Sciences"));
     }
@@ -136,7 +136,7 @@ public class CitationMetadataFromProfileTest {
     void CIT019_should_map_creation_date() throws ParserConfigurationException, IOException, SAXException {
         var doc = ddmWithCustomProfileContent("<ddm:created>2012-12</ddm:created>");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getPrimitiveSingleValueField("citation", "productionDate", result))
             .isEqualTo("2012-12-01");
     }
@@ -145,7 +145,7 @@ public class CitationMetadataFromProfileTest {
     void CIT025_map_date_available() throws ParserConfigurationException, IOException, SAXException {
         var doc = ddmWithCustomProfileContent("<ddm:available>2014-12</ddm:available>");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getPrimitiveSingleValueField("citation", "distributionDate", result))
             .isEqualTo("2014-12-01");
     }

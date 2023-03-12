@@ -48,7 +48,7 @@ class MappingTestHelper {
         return new XmlReaderImpl().readXmlString(xml);
     }
 
-    static Dataset mapDdmToDataset(Document ddm, boolean filesThatAreAccessibleToNonePresentInDeposit, boolean filesThatAreRestrictedRequestPresentInDeposit) {
+    static Dataset mapDdmToDataset(Document ddm, boolean restrictedFilesPresent) {
         final Set<String> activeMetadataBlocks = Set.of("citation", "dansRights", "dansRelationalMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata");
         final VaultMetadata vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
         final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
@@ -60,7 +60,7 @@ class MappingTestHelper {
         iso2ToDataverseLanguage.put("ger", "German");
         return new DepositToDvDatasetMetadataMapper(
             true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage, List.of("Netherlands", "United Kingdom", "Belgium", "Germany")
-        ).toDataverseDataset(new Deposit(), ddm, null, null, null, vaultMetadata, filesThatAreAccessibleToNonePresentInDeposit, filesThatAreRestrictedRequestPresentInDeposit);
+        ).toDataverseDataset(ddm, null, null, null, vaultMetadata, restrictedFilesPresent);
     }
 
     static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {

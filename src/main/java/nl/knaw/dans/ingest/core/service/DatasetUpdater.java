@@ -25,8 +25,9 @@ import nl.knaw.dans.lib.dataverse.DatasetApi;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
+import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -46,16 +47,13 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class DatasetUpdater extends DatasetEditor {
-    private final Map<String, MetadataBlock> metadataBlocks;
-
     protected DatasetUpdater(boolean isMigration, Dataset dataset,
         Deposit deposit, Map<String, String> variantToLicense, List<URI> supportedLicenses,
         Pattern fileExclusionPattern, ZipFileHandler zipFileHandler,
-        ObjectMapper objectMapper, Map<String, MetadataBlock> metadataBlocks, DatasetService datasetService) {
+        ObjectMapper objectMapper, DatasetService datasetService) {
         super(isMigration, dataset, deposit, variantToLicense, supportedLicenses,
             fileExclusionPattern,
             zipFileHandler, objectMapper, datasetService);
-        this.metadataBlocks = metadataBlocks;
     }
 
     @Override
@@ -80,7 +78,20 @@ public class DatasetUpdater extends DatasetEditor {
                     throw new CannotUpdateDraftDatasetException(deposit);
                 }
 
-                api.updateMetadata(metadataBlocks);
+                var latestVersion = api.getLatestVersion().getData().getLatestVersion();
+                var datasetVersion = dataset.getDatasetVersion();
+                var fileAccessRequest = deposit.allowAccessRequests() && api.getLatestVersion().getData().getLatestVersion().getFileAccessRequest();
+                // Possibly disable file access request (never enable if it was not already).
+                datasetVersion.setFileAccessRequest(fileAccessRequest);
+
+                // Copy the terms of access from the latest version (not automatically inherited, alas!) if no new terms were provided.
+                if (StringUtils.isBlank(datasetVersion.getTermsOfAccess())) {
+                    datasetVersion.setTermsOfAccess(StringUtils.isNotBlank(latestVersion.getTermsOfAccess()) ?
+                        latestVersion.getTermsOfAccess() :
+                        // if fileAccessRequest ends up false, Dataverse requires termsOfAccess to be filled in.
+                        (fileAccessRequest ? "" : "N/a"));
+                }
+                api.updateMetadata(datasetVersion);
                 api.awaitUnlock();
 
                 var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.getDdm())));
@@ -185,16 +196,11 @@ public class DatasetUpdater extends DatasetEditor {
 
                 embargoFiles(doi, dateAvailable, fileIdsToEmbargo);
 
-                /*
-                 * Cannot enable requests if they were disallowed because of closed files in a previous version. However, disabling is possible because the update may add a closed file.
-                 */
-                configureEnableAccessRequests(doi, false);
-
                 return doi;
             }
             catch (Exception e) {
                 log.error("Error updating dataset, deleting draft", e);
-                deleteDraftIfExists(doi);
+                //                deleteDraftIfExists(doi);
                 throw e;
             }
         }
@@ -378,7 +384,7 @@ public class DatasetUpdater extends DatasetEditor {
             }
         }
 
-        // check if any of them have a checksum that is not SHA-1
+        // check if any of them have a checksum that is not SHA-1restrictedFilesPresent
         for (var fileMeta : pathToFileInfoInLatestVersion.values()) {
             var checksumType = fileMeta.getDataFile().getChecksum().getType();
             log.trace("Filemeta checksum type for file {}: {}", fileMeta.getLabel(), checksumType);

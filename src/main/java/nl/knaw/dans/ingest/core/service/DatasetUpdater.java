@@ -200,7 +200,7 @@ public class DatasetUpdater extends DatasetEditor {
             }
             catch (Exception e) {
                 log.error("Error updating dataset, deleting draft", e);
-                //                deleteDraftIfExists(doi);
+                deleteDraftIfExists(doi);
                 throw e;
             }
         }

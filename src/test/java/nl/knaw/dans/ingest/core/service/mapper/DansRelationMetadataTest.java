@@ -41,7 +41,7 @@ public class DansRelationMetadataTest {
             + "  </ddm:profile>"
             + dcmi("")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         // more values in CIT013 in CitationMetadataFromProfileTest
         assertThat(getPrimitiveMultiValueField("dansRelationMetadata", "dansAudience", result))
             .containsExactlyInAnyOrder("https://www.narcis.nl/classification/D24000");
@@ -58,7 +58,7 @@ public class DansRelationMetadataTest {
             + "      schemeURI='https://vocabularies.dans.knaw.nl/collections'"
             + "  >COOL</ddm:inCollection>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         assertThat(getPrimitiveMultiValueField("dansRelationMetadata", "dansCollection", result))
             .containsExactlyInAnyOrder("https://vocabularies.dans.knaw.nl/collections/ssh/eeea099b-8c82-4f16-9c50-e67f3a9f24c2");
     }
@@ -69,7 +69,7 @@ public class DansRelationMetadataTest {
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("<ddm:hasFormat>barbapapa</ddm:hasFormat>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var field = getCompoundMultiValueField("dansRelationMetadata", "dansRelation", result);
         assertThat(field).extracting(RELATION_TYPE).extracting("value").containsOnly("has format");
         assertThat(field).extracting(RELATION_URI).extracting("value").containsOnly("");
@@ -82,7 +82,7 @@ public class DansRelationMetadataTest {
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("<ddm:relation href='https://example.com/relation'>rabarbara</ddm:relation>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var field = getCompoundMultiValueField("dansRelationMetadata", "dansRelation", result);
         assertThat(field).extracting(RELATION_TYPE).extracting("value").containsOnly("relation");
         assertThat(field).extracting(RELATION_URI).extracting("value").containsOnly("https://example.com/relation");
@@ -95,7 +95,7 @@ public class DansRelationMetadataTest {
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("<ddm:relation scheme='DOI'>http://doi.org/10.1111/sode.12120</ddm:relation>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var field = getCompoundMultiValueField("dansRelationMetadata", "dansRelation", result);
         assertThat(field).extracting(RELATION_TYPE).extracting("value").containsOnly("relation");
         assertThat(field).extracting(RELATION_URI).extracting("value").containsOnly("");
@@ -121,7 +121,7 @@ public class DansRelationMetadataTest {
             + "  <ddm:isRequiredBy>x</ddm:isRequiredBy>"
             + "  <ddm:isVersionOf>x</ddm:isVersionOf>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         assertThat(getCompoundMultiValueField("dansRelationMetadata", "dansRelation", result))
             .extracting(RELATION_TYPE).extracting("value")
             .containsExactlyInAnyOrder("relation",

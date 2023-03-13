@@ -39,7 +39,7 @@ public class DansTemporalSpatialMetadataTest {
             + "        <dct:temporal>Het Romeinse Rijk</dct:temporal>"
             + "        <dct:temporal>De Oudheid</dct:temporal>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
 
         assertThat(getPrimitiveMultiValueField("dansTemporalSpatial", "dansTemporalCoverage", result))
             .containsOnly("Het Romeinse Rijk", "De Oudheid");
@@ -57,7 +57,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </Point>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
         assertThat(point).extracting("dansSpatialPointX").extracting("value")
             .containsOnly("126466");
@@ -79,7 +79,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </Point>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
         assertThat(point).extracting("dansSpatialPointX").extracting("value")
             .containsOnly("529006");
@@ -101,7 +101,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </Point>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
         assertThat(point).extracting("dansSpatialPointX").extracting("value")
             .containsOnly("529006");
@@ -123,7 +123,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </Point>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
+        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
         thrown.isInstanceOf(ArrayIndexOutOfBoundsException.class);
     }
 
@@ -137,7 +137,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </Point>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
         assertThat(point).isNull();
     }
@@ -148,7 +148,7 @@ public class DansTemporalSpatialMetadataTest {
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi("<dcx-gml:spatial></dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
         assertThat(point).isNull();
     }
@@ -165,7 +165,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </Point>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
         assertThat(point).extracting("dansSpatialPointX").extracting("value")
             .containsOnly("4.288788");
@@ -190,7 +190,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
         assertThat(box).extracting("dansSpatialBoxNorth").extracting("value")
             .containsOnly("628000");
@@ -219,7 +219,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
         assertThat(box).extracting("dansSpatialBoxNorth").extracting("value")
             .containsOnly("53.23074335194507");
@@ -248,7 +248,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
         assertThat(box).extracting("dansSpatialBoxNorth").extracting("value")
             .containsOnly("3");
@@ -277,7 +277,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
         assertThat(box).extracting("dansSpatialBoxNorth").extracting("value")
             .containsOnly("3");
@@ -305,7 +305,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
+        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
         thrown.isInstanceOf(ArrayIndexOutOfBoundsException.class);
     }
 
@@ -323,7 +323,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
+        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
         thrown.isInstanceOf(ArrayIndexOutOfBoundsException.class);
     }
 
@@ -340,7 +340,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
+        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
         thrown.isInstanceOf(IllegalArgumentException.class);
         thrown.hasMessage("Missing gml:lowerCorner node in gml:Envelope");
     }
@@ -358,7 +358,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
+        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
         thrown.isInstanceOf(IllegalArgumentException.class);
         thrown.hasMessage("Missing gml:upperCorner node in gml:Envelope");
     }
@@ -374,7 +374,7 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true, true));
+        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
         thrown.isInstanceOf(IllegalArgumentException.class);
         thrown.hasMessage("Missing gml:Envelope node");
     }
@@ -388,7 +388,7 @@ public class DansTemporalSpatialMetadataTest {
             + "        <dct:spatial>South Africa</dct:spatial>"
             + "        <dct:spatial>Japan</dct:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var box = getControlledMultiValueField("dansTemporalSpatial", "dansSpatialCoverageControlled", result);
         assertThat(box).containsOnly("South Africa", "Japan");
     }
@@ -403,7 +403,7 @@ public class DansTemporalSpatialMetadataTest {
             + "             Roman Empire"
             + "        </dct:spatial>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         assertThat(getPrimitiveMultiValueField("dansTemporalSpatial", "dansSpatialCoverageText", result))
             .containsOnly("Roman Empire");
     }

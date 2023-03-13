@@ -40,7 +40,7 @@ public class CitationMetadataFromDcmiTest {
             + "        <dct:alternative>alt title 1</dct:alternative>\n"
             + "        <dct:alternative>alt title 2</dct:alternative>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var s = toPrettyJsonString(result);
 
         // CIT002 first of dcmi title/alternative
@@ -59,7 +59,7 @@ public class CitationMetadataFromDcmiTest {
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         var field = getCompoundMultiValueField("citation", "otherId", result);
         assertThat(field).extracting("otherIdAgency").extracting("value")
             .containsExactlyInAnyOrder("otherId");
@@ -73,7 +73,7 @@ public class CitationMetadataFromDcmiTest {
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true, true);
+        var result = mapDdmToDataset(doc, true);
         assertThat(getCompoundSingleValueField("citation", "series", result))
             .isNull();
     }

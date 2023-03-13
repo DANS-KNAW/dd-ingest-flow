@@ -28,9 +28,7 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getFieldNamesOfMetadataBlocks;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapper;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedContact;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedVaultMetadata;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
 import static nl.knaw.dans.ingest.core.service.mapper.mapping.FileElement.toFileMeta;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -48,7 +46,7 @@ public class SwordExamplesTest {
     public void all_mappings_produces_most_documented_sub_fields() throws Exception {
 
         var ddm = parseSwordExampleXml("all-mappings/metadata/dataset.xml");
-        var dastaset = mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, true, true);
+        var dastaset = mapDdmToDataset(ddm, true);
         var fieldNames = getFieldNamesOfMetadataBlocks(dastaset);
         assertThat(fieldNames.get("citation")).containsExactlyInAnyOrder(
             "title", // CIT001
@@ -126,9 +124,9 @@ public class SwordExamplesTest {
     public void audiences() throws Exception {
 
         var ddm = parseSwordExampleXml("audiences/metadata/dataset.xml");
-        var result = mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, true, true);
+        var result = mapDdmToDataset(ddm, true);
         // only checking what adds to assertions of all_mappings
         assertThat(result.getDatasetVersion().getTermsOfAccess())
-            .isEqualTo("N/a"); // same for embargoed, audiences, restricted-files-with-access-request ...
+            .isEqualTo("");
     }
 }

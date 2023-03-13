@@ -15,11 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper;
 
-import nl.knaw.dans.lib.dataverse.model.dataset.SingleValueField;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
 
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundMultiValueField;
@@ -28,7 +24,6 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmTo
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toPrettyJsonString;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CitationMetadataFromDcmiTest {
@@ -44,7 +39,6 @@ public class CitationMetadataFromDcmiTest {
             + "        <dct:alternative>alt title 2</dct:alternative>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
-        var s = toPrettyJsonString(result);
         assertThat(getCompoundMultiValueField("citation", "dsDescription", result))
             .extracting("dsDescriptionValue").extracting("value")
             .containsExactlyInAnyOrder("<p>title 2</p>", "<p>alt title 1</p>", "<p>alt title 2</p>");
@@ -71,9 +65,7 @@ public class CitationMetadataFromDcmiTest {
             + minimalDdmProfile() + dcmi("")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
-        var s = toPrettyJsonString(result);
         assertThat(getCompoundSingleValueField("citation", "series", result))
-            .extracting("seriesInformation").extracting("value")
-            .isEqualTo("<p></p>");
+            .isNull();
     }
 }

@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>dd-ingest-flow</artifactId>
-    <version>0.30.1-SNAPSHOT</version>
+    <version>0.34.1-SNAPSHOT</version>
 
     <name>DD Ingest Flow</name>
     <url>https://github.com/DANS-KNAW/dd-ingest-flow</url>
@@ -55,6 +55,7 @@
         <dependency>
             <groupId>nl.knaw.dans</groupId>
             <artifactId>dans-dataverse-client-lib</artifactId>
+            <version>0.18.0</version>
         </dependency>
         <dependency>
             <groupId>io.dropwizard</groupId>

@@ -43,12 +43,17 @@ ingestFlow:
       datasetCreator: swordcreator
       datasetUpdater: swordupdater
 
+  # Default roles required for account in depositor.userId to add and update datasets via the ingest-flow. Note that these roles
+  # are not always the same as the ones required when working in the user interface! These settings can be overridden in the
+  # ingest area configurations above (import, migration, autoIngest).
   authorization:
     # Required role on the dataverse for the depositor.userId to create a dataset
-    datasetCreator: datasetcreator
+    # If the implicit group :authenticated-users has this role, this will also suffice.
+    # Note that explicit-groups are currently not supported
+    datasetCreator: dsContributor
     # Required role on the dataset for the depositor.userId to create a new version
     # of dataset
-    datasetUpdater: curator
+    datasetUpdater: contributorplus
 
   #
   # Filtering. Files with a path matching the pattern will not be added to the dataset. Renaming/moving files is not affected.

@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class DataverseDatasetServiceImpl implements DatasetService {
+    public static final String AUTHENTICATED_USERS = ":authenticated-users";
     private final DataverseClient dataverseClient;
     private final int publishAwaitUnlockMillisecondsBetweenRetries;
     private final int publishAwaitUnlockMaxNumberOfRetries;
@@ -146,7 +147,9 @@ public class DataverseDatasetServiceImpl implements DatasetService {
         return dataverseClient.dataset(datasetId).listRoleAssignments()
             .getData()
             .stream()
-            .filter(r -> r.getAssignee().replaceFirst("@", "").equals(userId))
+            .filter(r -> r.getAssignee().replaceFirst("@", "").equals(userId) ||
+                r.getAssignee().equals(AUTHENTICATED_USERS))
+            // TODO: also check if assignee is an explicit group that contains userId as member
             .map(RoleAssignmentReadOnly::get_roleAlias)
             .collect(Collectors.toList());
     }
@@ -157,7 +160,10 @@ public class DataverseDatasetServiceImpl implements DatasetService {
             .listRoleAssignments()
             .getData()
             .stream()
-            .filter(r -> r.getAssignee().replaceFirst("@", "").equals(userId))
+            .filter(r -> r.getAssignee().replaceFirst("@", "").equals(userId) ||
+                // TODO: also check if assignee is an explicit group that contains userId as member
+                r.getAssignee().equals(AUTHENTICATED_USERS)
+            )
             .map(RoleAssignmentReadOnly::get_roleAlias)
             .collect(Collectors.toList());
     }

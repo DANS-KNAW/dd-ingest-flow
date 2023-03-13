@@ -19,12 +19,14 @@ import gov.loc.repository.bagit.domain.Bag;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -85,6 +87,43 @@ public class Deposit {
         else {
             return result;
         }
+    }
+
+    /**
+     * Are access requests allowed according to this deposit. Note that if this is an update-deposit, the result from this method should be combined with the current setting. If the dataset has access
+     * requests disabled this overrules a <code>true</code> value returned from this method.
+     *
+     * @return whether this deposit allows access requests
+     */
+    public boolean allowAccessRequests() {
+        var accessRightsNode = XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:profile/ddm:accessRights")
+            .findFirst()
+            .orElseThrow();
+
+        var isNoAccessDataset = "NO_ACCESS".equals(accessRightsNode.getTextContent().trim());
+        var accessibleToNoneFilesPresent = XPathEvaluator
+            .strings(filesXml, "/files:files/files:file/files:accessibleToRights")
+            .map(String::trim)
+            .anyMatch("NONE"::equals);
+
+        return !(isNoAccessDataset || accessibleToNoneFilesPresent);
+    }
+
+    public boolean restrictedFilesPresent() {
+        var numberOfFiles = XPathEvaluator
+            .strings(filesXml, "/files:files/files:file").count();
+        var explicitAccessibleToValues = XPathEvaluator
+            .strings(filesXml, "/files:files/files:file/files:accessibleToRights")
+            .map(String::trim).collect(Collectors.toList());
+        var explicitlyRestrictedFilesPresent = explicitAccessibleToValues.stream()
+            .anyMatch(a -> !"ANONYMOUS".equals(a));
+        var accessRights = XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:profile/ddm:accessRights")
+            .findFirst()
+            .orElseThrow()
+            .getTextContent().trim();
+        var implicitFilesAreRestricted = !"OPEN_ACCESS".equals(accessRights);
+        var implicitFilesPresent = numberOfFiles > explicitAccessibleToValues.size();
+        return explicitlyRestrictedFilesPresent || (implicitFilesPresent && implicitFilesAreRestricted);
     }
 
     public String getDepositId() {

@@ -26,6 +26,7 @@ import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.RoleAssignment;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -83,6 +84,15 @@ public class DatasetCreator extends DatasetEditor {
     private void modifyDataset(String persistentId) throws IOException, DataverseException {
         var api = dataverseClient.dataset(persistentId);
 
+        // This will set fileAccessRequest and termsOfAccess
+        var version = dataset.getDatasetVersion();
+        version.setFileAccessRequest(deposit.allowAccessRequests());
+        if (!deposit.allowAccessRequests() && StringUtils.isBlank(version.getTermsOfAccess())) {
+            version.setTermsOfAccess("N/a");
+        }
+        api.updateMetadata(version);
+        api.awaitUnlock();
+
         // license stuff
         var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.getDdm())));
         log.info("Setting license to {}", license);
@@ -97,9 +107,6 @@ public class DatasetCreator extends DatasetEditor {
         log.debug("Database ID's: {}", databaseIds);
         // update individual files metadata
         updateFileMetadata(databaseIds);
-        api.awaitUnlock();
-
-        configureEnableAccessRequests(persistentId, true);
         api.awaitUnlock();
 
         api.assignRole(getRoleAssignment());

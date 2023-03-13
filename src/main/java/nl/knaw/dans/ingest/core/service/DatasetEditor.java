@@ -27,6 +27,7 @@ import nl.knaw.dans.ingest.core.service.mapper.mapping.FileElement;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.License;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
+import nl.knaw.dans.lib.dataverse.DataverseResponse;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.file.DataFile;
@@ -47,6 +48,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -245,27 +247,5 @@ public abstract class DatasetEditor {
             .map(DatasetEditor::parseDate)
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Deposit without a ddm:available element"));
-    }
-
-    void configureEnableAccessRequests(String persistentId, boolean canEnable) throws IOException, DataverseException {
-        var api = dataverseClient.accessRequests(persistentId);
-
-        var ddm = deposit.getDdm();
-        var files = deposit.getFilesXml();
-
-        var accessRights = XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:profile/ddm:accessRights")
-            .findFirst()
-            .orElseThrow();
-
-        var enable = AccessRights.isEnableRequests(accessRights, files);
-
-        log.trace("AccessRequests enable {} can {}", enable, canEnable);
-
-        if (!enable) {
-            api.disable();
-        }
-        else if (canEnable) {
-            api.enable();
-        }
     }
 }

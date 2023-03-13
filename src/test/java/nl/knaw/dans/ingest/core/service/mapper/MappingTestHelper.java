@@ -88,7 +88,13 @@ public class MappingTestHelper {
         return new XmlReaderImpl().readXmlString(xml);
     }
 
-    public static DepositToDvDatasetMetadataMapper mapper() {
+    static Dataset mapDdmToDataset(Document ddm, boolean filesThatAreAccessibleToNonePresentInDeposit, boolean filesThatAreRestrictedRequestPresentInDeposit) {
+        final Set<String> activeMetadataBlocks = Set.of("citation", "dansRights", "dansRelationalMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata");
+        final VaultMetadata vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
+        final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
+        final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
+        iso1ToDataverseLanguage.put("nl", "Dutch");
+        iso1ToDataverseLanguage.put("de", "German");
 
         return new DepositToDvDatasetMetadataMapper(
             true,
@@ -99,7 +105,7 @@ public class MappingTestHelper {
     }
 
     public static Dataset mapDdmToDataset(Document ddm, boolean filesThatAreAccessibleToNonePresentInDeposit, boolean filesThatAreRestrictedRequestPresentInDeposit) {
-        return mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, filesThatAreAccessibleToNonePresentInDeposit, filesThatAreRestrictedRequestPresentInDeposit);
+        return mapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent);
     }
 
     public static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"

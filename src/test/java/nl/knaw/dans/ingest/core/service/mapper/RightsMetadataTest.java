@@ -27,7 +27,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_H
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getControlledMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getControlledSingleValueField;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveMultipleValueField;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
@@ -67,7 +67,7 @@ class RightsMetadataTest {
     void RIG000A_should_map_dai_authors() {
 
         var result = mapDdmToDataset(ddmWithOrganizations, false);
-        assertThat(getPrimitiveMultipleValueField("dansRights", "dansRightsHolder", result))
+        assertThat(getPrimitiveMultiValueField("dansRights", "dansRightsHolder", result))
             .containsOnly("Some org", "Some other org");
     }
 
@@ -106,7 +106,7 @@ class RightsMetadataTest {
     void RIG000B_should_map_organizations() {
 
         var result = mapDdmToDataset(ddmWithAuthors, false);
-        assertThat(getPrimitiveMultipleValueField("dansRights", "dansRightsHolder", result))
+        assertThat(getPrimitiveMultiValueField("dansRights", "dansRightsHolder", result))
             .containsOnly("Example Org", "Another Org");
     }
 
@@ -130,7 +130,7 @@ class RightsMetadataTest {
             + "</ddm:DDM>\n");
 
         var result = mapDdmToDataset(doc, false);
-        assertThat(getPrimitiveMultipleValueField("dansRights", RIGHTS_HOLDER, result))
+        assertThat(getPrimitiveMultiValueField("dansRights", RIGHTS_HOLDER, result))
             .containsOnly("James Bond", "Double O'Seven");
     }
 

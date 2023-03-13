@@ -15,15 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.ingest.core.domain.VaultMetadata;
-import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
-import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundSingleValueField;
-import nl.knaw.dans.lib.dataverse.model.dataset.ControlledMultiValueField;
-import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
-import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -43,7 +35,6 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmTo
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toCompactJsonString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toPrettyJsonString;
 import static org.assertj.core.api.Assertions.assertThat;
 

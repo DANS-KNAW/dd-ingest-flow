@@ -143,13 +143,13 @@ public class FileElement extends Base {
             }
         }
 
-        getChildNodes(node, "keyvaluepair")
+        getChildNodes(node, "*[local-name() = 'keyvaluepair']")
             .forEach(n -> {
-                var key = getChildNode(n, "key")
+                var key = getChildNode(n, "*[local-name() = 'key']")
                     .map(Node::getTextContent)
                     .orElse(null);
 
-                var value = getChildNode(n, "value")
+                var value = getChildNode(n, "*[local-name() = 'value']")
                     .map(Node::getTextContent)
                     .orElse(null);
 

@@ -20,7 +20,6 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.util.List;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
@@ -56,7 +55,7 @@ public class CitationMetadataFromProfileTest {
         var result = mapDdmToDataset(doc, false);
         assertThat(getCompoundMultiValueField("citation", AUTHOR, result))
             .extracting(AUTHOR_NAME).extracting("value")
-            .hasSameElementsAs(List.of("J. Bond", "D. O'Seven"));
+            .containsExactlyInAnyOrder("J. Bond", "D. O'Seven");
     }
 
     @Test
@@ -76,7 +75,7 @@ public class CitationMetadataFromProfileTest {
         var result = mapDdmToDataset(doc, false);
         assertThat(getCompoundMultiValueField("citation", AUTHOR, result))
             .extracting(AUTHOR_NAME).extracting("value")
-            .hasSameElementsAs(List.of("Bond", "O'Seven"));
+            .containsExactlyInAnyOrder("Bond", "O'Seven");
     }
 
     @Test
@@ -96,7 +95,7 @@ public class CitationMetadataFromProfileTest {
         var result = mapDdmToDataset(doc, false);
         assertThat(getCompoundMultiValueField("citation", AUTHOR, result))
             .extracting(AUTHOR_NAME).extracting("value")
-            .hasSameElementsAs(List.of("DANS", "KNAW"));
+            .containsExactlyInAnyOrder("DANS", "KNAW");
     }
 
     @Test
@@ -109,27 +108,27 @@ public class CitationMetadataFromProfileTest {
         var result = mapDdmToDataset(doc, false);
         assertThat(getCompoundMultiValueField("citation", DESCRIPTION, result))
             .extracting(DESCRIPTION_VALUE).extracting("value")
-            .hasSameElementsAs(List.of("<p>Lorem ipsum.</p>", "<p>dolor sit amet</p>"));
+            .containsExactlyInAnyOrder("<p>Lorem ipsum.</p>", "<p>dolor sit amet</p>");
     }
 
     @Test
     void CIT013_should_map_audience() throws ParserConfigurationException, IOException, SAXException {
         var doc = readDocumentFromString(""
-                + "<ddm:DDM " + rootAttributes + ">\n"
-                + "    <ddm:profile>\n"
-                + "        <dc:title>Title of the dataset</dc:title>\n"
-                + "        <ddm:audience>D19200</ddm:audience>"
-                + "        <ddm:audience>D11200</ddm:audience>"
-                + "        <ddm:audience>D88200</ddm:audience>"
-                + "        <ddm:audience>D40200</ddm:audience>"
-                + "        <ddm:audience>D17200</ddm:audience>"
-                + "    </ddm:profile>\n"
-                + dcmi("")
-                + "</ddm:DDM>\n");
+            + "<ddm:DDM " + rootAttributes + ">\n"
+            + "    <ddm:profile>\n"
+            + "        <dc:title>Title of the dataset</dc:title>\n"
+            + "        <ddm:audience>D19200</ddm:audience>"
+            + "        <ddm:audience>D11200</ddm:audience>"
+            + "        <ddm:audience>D88200</ddm:audience>"
+            + "        <ddm:audience>D40200</ddm:audience>"
+            + "        <ddm:audience>D17200</ddm:audience>"
+            + "    </ddm:profile>\n"
+            + dcmi("")
+            + "</ddm:DDM>\n");
 
         var result = mapDdmToDataset(doc, false);
         assertThat(getControlledMultiValueField("citation", "subject", result))
-            .hasSameElementsAs(List.of("Astronomy and Astrophysics", "Law", "Mathematical Sciences"));
+            .containsExactlyInAnyOrder("Astronomy and Astrophysics", "Law", "Mathematical Sciences");
     }
 
     @Test

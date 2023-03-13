@@ -15,15 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.ingest.core.domain.VaultMetadata;
-import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
-import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundSingleValueField;
-import nl.knaw.dans.lib.dataverse.model.dataset.ControlledMultiValueField;
-import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
-import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -43,7 +35,6 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmTo
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toCompactJsonString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toPrettyJsonString;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -57,7 +48,7 @@ class MappingIntegrationTest {
             + dcmi("<ddm:description descriptionType=\"Other\">Author from description other</ddm:description>\n")
             + "</ddm:DDM>\n");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         var field = getCompoundMultiValueField("citation", "contributor", result);
         var expected = "Author from description other";
         assertThat(field).extracting(CONTRIBUTOR_NAME).extracting("value")
@@ -82,7 +73,7 @@ class MappingIntegrationTest {
             + dcmi(dcmiContent)
             + "</ddm:DDM>\n");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         var str = toPrettyJsonString(result);
         assertThat(str).containsOnlyOnce("not known description type");
         assertThat(str).containsOnlyOnce("technical description");
@@ -104,7 +95,7 @@ class MappingIntegrationTest {
                 + "    </ddm:dcmiMetadata>\n"
                 + "</ddm:DDM>\n");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
 
         var field = (CompoundSingleValueField) result.getDatasetVersion().getMetadataBlocks()
             .get("citation").getFields().stream()
@@ -123,7 +114,7 @@ class MappingIntegrationTest {
             + dcmi("<dct:provenance>copied xml to csv</dct:provenance>\n")
             + "</ddm:DDM>\n");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         var str = toPrettyJsonString(result);
 
         assertThat(str).containsOnlyOnce("copied xml to csv");
@@ -148,7 +139,7 @@ class MappingIntegrationTest {
             + dcmi("")
             + "</ddm:DDM>");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getControlledMultiValueField("citation", SUBJECT, result))
             .isEqualTo(List.of("Astronomy and Astrophysics", "Law", "Mathematical Sciences"));
     }
@@ -165,7 +156,7 @@ class MappingIntegrationTest {
             + dcmi("")
             + "</ddm:DDM>");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         assertThat(getControlledMultiValueField("citation", SUBJECT, result))
             .isEqualTo(List.of("Other"));
     }
@@ -182,7 +173,7 @@ class MappingIntegrationTest {
             + dcmi("<dct:accessRights>Some story</dct:accessRights>\n")
             + "</ddm:DDM>\n");
 
-        var result = mapDdmToDataset(doc, false, false);
+        var result = mapDdmToDataset(doc, false);
         var str = toPrettyJsonString(result);
 
         assertThat(str).containsOnlyOnce("<p>Some story</p>");
@@ -190,18 +181,6 @@ class MappingIntegrationTest {
         var field = getCompoundMultiValueField("citation", DESCRIPTION, result);
         assertThat(field).extracting(DESCRIPTION_VALUE).extracting("value")
             .containsOnly("<p>Some story</p>", "<p>Lorem ipsum.</p>");
-        assertThat(result.getDatasetVersion().getTermsOfAccess()).isEqualTo("N/a");
-    }
-
-    @Test
-    void DD_1216_DctAccesRights_maps_to_termsofaccess() throws Exception {
-        var doc = readDocumentFromString(""
-            + "<ddm:DDM " + rootAttributes + ">\n"
-            + minimalDdmProfile()
-            + dcmi("<dct:accessRights>Some story</dct:accessRights>\n")
-            + "</ddm:DDM>\n");
-
-        var result = mapDdmToDataset(doc, true, true);
-        assertThat(result.getDatasetVersion().getTermsOfAccess()).isEqualTo("Some story");
+        assertThat(result.getDatasetVersion().getTermsOfAccess()).isEqualTo("");
     }
 }

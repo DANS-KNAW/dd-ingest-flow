@@ -17,34 +17,78 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.configuration.ConfigurationException;
+import io.dropwizard.configuration.YamlConfigurationFactory;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.jersey.validation.Validators;
+import nl.knaw.dans.ingest.DdIngestFlowConfiguration;
+import nl.knaw.dans.ingest.IngestFlowConfigReader;
+import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
+import nl.knaw.dans.lib.dataverse.model.dataset.CompoundSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
+import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.SingleValueField;
+import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-class MappingTestHelper {
+public class MappingTestHelper {
+    public static final AuthenticatedUser mockedContact = new AuthenticatedUser();
 
-    static Document readDocumentFromString(String xml) throws ParserConfigurationException, IOException, SAXException {
+    {
+        mockedContact.setDisplayName("D. O'Seven");
+        mockedContact.setEmail("J.Bond@does.not.exist.dans.knaw.nl");
+        mockedContact.setAffiliation("DANS");
+    }
+
+    public static final VaultMetadata mockedVaultMetadata = new VaultMetadata(
+        "doi:10.17026/AR/6L7NBB",
+        "urn:uuid:ced0be49-f863-4477-9473-23010526abf3",
+        "urn:nbn:nl:ui:13-c7c5a4b2-539e-4b0c-831d-fe31eb197950",
+        "otherId:something",
+        "1.0",
+        "swordToken");
+
+    private static final IngestFlowConfig config = getIngestFlowConfig();
+
+    private static IngestFlowConfig getIngestFlowConfig() {
+        IngestFlowConfig config;
+        try {
+            config = new YamlConfigurationFactory<>(DdIngestFlowConfiguration.class, Validators.newValidator(), Jackson.newObjectMapper(), "dw")
+                .build(FileInputStream::new, "src/test/resources/debug-etc/config.yml")
+                .getIngestFlow();
+            config.setMappingDefsDir(Paths.get("src/test/resources/debug-etc"));
+            IngestFlowConfigReader.readIngestFlowConfiguration(config);
+        }
+        catch (IOException | ConfigurationException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        return config;
+    }
+
+    public static Document readDocumentFromString(String xml) throws ParserConfigurationException, IOException, SAXException {
         return new XmlReaderImpl().readXmlString(xml);
     }
 
-    static Dataset mapDdmToDataset(Document ddm, boolean filesThatAreAccessibleToNonePresentInDeposit, boolean filesThatAreRestrictedRequestPresentInDeposit) {
+    static Dataset mapDdmToDataset(Document ddm, boolean restrictedFilesPresent) {
         final Set<String> activeMetadataBlocks = Set.of("citation", "dansRights", "dansRelationalMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata");
         final VaultMetadata vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
         final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
@@ -52,19 +96,21 @@ class MappingTestHelper {
         iso1ToDataverseLanguage.put("nl", "Dutch");
         iso1ToDataverseLanguage.put("de", "German");
 
-        iso2ToDataverseLanguage.put("dut", "Dutch");
-        iso2ToDataverseLanguage.put("ger", "German");
         return new DepositToDvDatasetMetadataMapper(
-            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage, List.of("Netherlands", "United Kingdom", "Belgium", "Germany")
-        ).toDataverseDataset(ddm, null, null, null, vaultMetadata, filesThatAreAccessibleToNonePresentInDeposit, filesThatAreRestrictedRequestPresentInDeposit);
+            true,
+            Set.of("citation", "dansRights", "dansRelationMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata"),
+            config.getIso1ToDataverseLanguage(),
+            config.getIso2ToDataverseLanguage(),
+            config.getSpatialCoverageCountryTerms()
+        ).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent);
     }
 
-    static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
+    public static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
         + "         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"
         + "         xmlns:dc='http://purl.org/dc/elements/1.1/'\n"
         + "         xmlns:dct='http://purl.org/dc/terms/'\n";
 
-    static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {
+    public static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {
         return readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>\n"
             + "    <ddm:profile>\n"
@@ -76,7 +122,7 @@ class MappingTestHelper {
             + "</ddm:DDM>\n");
     }
 
-    static String minimalDdmProfile() {
+    public static String minimalDdmProfile() {
         return ""
             + "    <ddm:profile>\n"
             + "        <dc:title>Title of the dataset</dc:title>\n"
@@ -84,64 +130,80 @@ class MappingTestHelper {
             + "    </ddm:profile>\n";
     }
 
-    static String dcmi(String content) {
+    public static String dcmi(String content) {
         return "<ddm:dcmiMetadata>\n"
             + "<dct:rightsHolder>Mr. Rights</dct:rightsHolder>\n"
             + content
             + "</ddm:dcmiMetadata>\n";
     }
 
-    static String toPrettyJsonString(Dataset result) throws JsonProcessingException {
+    public static String toPrettyJsonString(Dataset result) throws JsonProcessingException {
         return new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
             .writeValueAsString(result);
     }
 
-    static String toCompactJsonString(Dataset result) throws JsonProcessingException {
+    public static String toCompactJsonString(Dataset result) throws JsonProcessingException {
         return new ObjectMapper()
             .writer()
             .writeValueAsString(result);
     }
 
-    static List<String> getControlledMultiValueField(String block, String fieldId, Dataset result) {
+    public static List<String> getControlledMultiValueField(String block, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(t -> ((ControlledMultiValueField)t).getValue())
+            .map(t -> ((ControlledMultiValueField) t).getValue())
             .findFirst().orElse(null);
     }
 
-    static List<Map<String, SingleValueField>> getCompoundMultiValueField(String block, String fieldId, Dataset result) {
+    public static List<Map<String, SingleValueField>> getCompoundMultiValueField(String block, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(t -> ((CompoundMultiValueField)t).getValue())
+            .map(t -> ((CompoundMultiValueField) t).getValue())
             .findFirst().orElse(null);
     }
 
-    static String getControlledSingleValueField(String block, String fieldId, Dataset result) {
+    public static Map<String, SingleValueField> getCompoundSingleValueField(String block, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(t -> ((ControlledSingleValueField)t).getValue())
+            .map(t -> ((CompoundSingleValueField) t).getValue())
             .findFirst().orElse(null);
     }
 
+    public static String getControlledSingleValueField(String block, String fieldId, Dataset result) {
+        return result.getDatasetVersion().getMetadataBlocks()
+            .get(block).getFields().stream()
+            .filter(f -> f.getTypeName().equals(fieldId))
+            .map(t -> ((ControlledSingleValueField) t).getValue())
+            .findFirst().orElse(null);
+    }
 
-    static List<String> getPrimitiveMultipleValueField(String blockId, String fieldId, Dataset result) {
+    public static List<String> getPrimitiveMultiValueField(String blockId, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(blockId).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(f -> (((PrimitiveMultiValueField)f).getValue()))
+            .map(f -> (((PrimitiveMultiValueField) f).getValue()))
             .findFirst().orElse(null);
     }
 
-    static String getPrimitiveSingleValueField(String blockId, String fieldId, Dataset result) {
+    public static String getPrimitiveSingleValueField(String blockId, String fieldId, Dataset result) {
         return result.getDatasetVersion().getMetadataBlocks()
             .get(blockId).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
-            .map(f -> (((PrimitiveSingleValueField)f).getValue()))
+            .map(f -> (((PrimitiveSingleValueField) f).getValue()))
             .findFirst().orElse(null);
+    }
+
+    public static Map<String, List<String>> getFieldNamesOfMetadataBlocks(Dataset result) {
+        var metadataBlocks = result.getDatasetVersion().getMetadataBlocks();
+        Map<String, List<String>> fields = new HashMap<>();
+        for (String blockName : metadataBlocks.keySet())
+            fields.put(blockName, metadataBlocks.get(blockName).getFields()
+                .stream().map(MetadataField::getTypeName).collect(Collectors.toList()));
+        return fields;
     }
 }

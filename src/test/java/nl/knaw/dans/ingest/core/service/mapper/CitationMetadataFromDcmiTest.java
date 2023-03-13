@@ -20,16 +20,18 @@ import org.junit.jupiter.api.Test;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundSingleValueField;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveSingleValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toPrettyJsonString;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CitationMetadataFromDcmiTest {
 
     @Test
-    public void CIT002 () throws Exception { // TODO missing title 1
+    public void CIT002_CIT010 () throws Exception { // TODO missing title 1
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi(""
@@ -39,6 +41,13 @@ public class CitationMetadataFromDcmiTest {
             + "        <dct:alternative>alt title 2</dct:alternative>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true, true);
+        var s = toPrettyJsonString(result);
+
+        // CIT002
+        assertThat(getPrimitiveSingleValueField("citation", "alternativeTitle", result))
+            .isEqualTo("title 1");
+
+        // CIT010
         assertThat(getCompoundMultiValueField("citation", "dsDescription", result))
             .extracting("dsDescriptionValue").extracting("value")
             .containsExactlyInAnyOrder("<p>title 2</p>", "<p>alt title 1</p>", "<p>alt title 2</p>");

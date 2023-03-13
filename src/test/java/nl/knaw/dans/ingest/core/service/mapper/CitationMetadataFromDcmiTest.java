@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CitationMetadataFromDcmiTest {
 
     @Test
-    public void CIT002_CIT010 () throws Exception { // TODO missing title 1
+    public void CIT002_CIT010_first_title_alternatives_and_the_rest () throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi(""
@@ -43,11 +43,11 @@ public class CitationMetadataFromDcmiTest {
         var result = mapDdmToDataset(doc, true, true);
         var s = toPrettyJsonString(result);
 
-        // CIT002
+        // CIT002 first of dcmi title/alternative
         assertThat(getPrimitiveSingleValueField("citation", "alternativeTitle", result))
             .isEqualTo("title 1");
 
-        // CIT010
+        // CIT010 rest of dcmi title/alternative
         assertThat(getCompoundMultiValueField("citation", "dsDescription", result))
             .extracting("dsDescriptionValue").extracting("value")
             .containsExactlyInAnyOrder("<p>title 2</p>", "<p>alt title 1</p>", "<p>alt title 2</p>");

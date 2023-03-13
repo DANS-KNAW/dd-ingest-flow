@@ -27,6 +27,7 @@ import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
+import nl.knaw.dans.lib.dataverse.model.dataset.CompoundSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledMultiValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.ControlledSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
@@ -159,6 +160,14 @@ public class MappingTestHelper {
             .get(block).getFields().stream()
             .filter(f -> f.getTypeName().equals(fieldId))
             .map(t -> ((CompoundMultiValueField) t).getValue())
+            .findFirst().orElse(null);
+    }
+
+    public static Map<String, SingleValueField> getCompoundSingleValueField(String block, String fieldId, Dataset result) {
+        return result.getDatasetVersion().getMetadataBlocks()
+            .get(block).getFields().stream()
+            .filter(f -> f.getTypeName().equals(fieldId))
+            .map(t -> ((CompoundSingleValueField) t).getValue())
             .findFirst().orElse(null);
     }
 

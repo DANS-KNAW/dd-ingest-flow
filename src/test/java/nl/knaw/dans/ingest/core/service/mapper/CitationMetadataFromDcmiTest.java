@@ -69,6 +69,7 @@ public class CitationMetadataFromDcmiTest {
 
     @Test
     public void CIT027_without_series_info_in_dcmi () throws Exception {  // TODO should not produce <p></p>
+        // see also DD_1292_multiple_series_informations_to_single_compound_field in MappingIntegrationMap
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("")

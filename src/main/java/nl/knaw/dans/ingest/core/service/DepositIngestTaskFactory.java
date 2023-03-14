@@ -16,7 +16,6 @@
 package nl.knaw.dans.ingest.core.service;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
@@ -25,7 +24,7 @@ import nl.knaw.dans.ingest.core.domain.OutboxSubDir;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
+import nl.knaw.dans.lib.dataverse.DataverseException;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -37,10 +36,8 @@ import java.util.regex.Pattern;
 public class DepositIngestTaskFactory {
 
     private final String depositorRole;
-    private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
     private final IngestFlowConfig ingestFlowConfig;
-    private final DataverseExtra dataverseExtra;
     private final DepositManager depositManager;
     private final boolean isMigration;
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
@@ -52,10 +49,8 @@ public class DepositIngestTaskFactory {
     public DepositIngestTaskFactory(
         boolean isMigration,
         String depositorRole,
-        DataverseClient dataverseClient,
         DansBagValidator dansBagValidator,
         IngestFlowConfig ingestFlowConfig,
-        DataverseExtra dataverseExtra,
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler,
@@ -64,10 +59,8 @@ public class DepositIngestTaskFactory {
         DepositorAuthorizationValidator depositorAuthorizationValidator) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;
-        this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
         this.ingestFlowConfig = ingestFlowConfig;
-        this.dataverseExtra = dataverseExtra;
         this.depositManager = depositManager;
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
@@ -80,6 +73,11 @@ public class DepositIngestTaskFactory {
         try {
             var depositLocation = depositManager.readDepositLocation(depositDir);
             return createDepositIngestTask(depositLocation, outboxDir, eventWriter);
+        }
+        catch (DataverseException e) {
+            log.error("Unexpected dataverse error while preparing data for deposit at path {}, moving deposit", depositDir);
+            moveDepositToOutbox(depositDir, outboxDir);
+            throw new InvalidDepositException(e.getMessage(), e);
         }
         catch (InvalidDepositException | IOException e) {
             // the reading of the deposit failed, so we cannot update its internal state. All we can do is move it
@@ -104,10 +102,13 @@ public class DepositIngestTaskFactory {
         depositManager.moveDeposit(depositDir, target);
     }
 
-    private DepositIngestTask createDepositIngestTask(DepositLocation depositLocation, Path outboxDir, EventWriter eventWriter) {
+    private DepositIngestTask createDepositIngestTask(DepositLocation depositLocation, Path outboxDir, EventWriter eventWriter) throws IOException, DataverseException {
         var fileExclusionPattern = Optional.ofNullable(ingestFlowConfig.getFileExclusionPattern())
             .map(Pattern::compile)
             .orElse(null);
+
+        var licenses = datasetService.getLicenses();
+        log.debug("Licenses retrieved: {}", licenses);
 
         log.info("Creating deposit ingest task, isMigration={}, role={}, outboxDir={}", isMigration, depositorRole, outboxDir);
         if (isMigration) {
@@ -117,8 +118,7 @@ public class DepositIngestTaskFactory {
                 depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
-                ingestFlowConfig.getVariantToLicense(),
-                ingestFlowConfig.getSupportedLicenses(),
+                licenses,
                 dansBagValidator,
                 outboxDir,
                 eventWriter,
@@ -135,8 +135,7 @@ public class DepositIngestTaskFactory {
                 depositorRole,
                 fileExclusionPattern,
                 zipFileHandler,
-                ingestFlowConfig.getVariantToLicense(),
-                ingestFlowConfig.getSupportedLicenses(),
+                licenses,
                 dansBagValidator,
                 outboxDir,
                 eventWriter,

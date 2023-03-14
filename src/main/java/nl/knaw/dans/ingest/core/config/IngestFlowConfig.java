@@ -20,7 +20,6 @@ import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -69,8 +68,6 @@ public class IngestFlowConfig {
     private Map<String, String> iso1ToDataverseLanguage;
     private Map<String, String> iso2ToDataverseLanguage;
     private Map<String, String> reportIdToTerm;
-    private Map<String, String> variantToLicense;
-    private List<URI> supportedLicenses;
     private List<String> spatialCoverageCountryTerms;
 
     public IngestAreaConfig getImportConfig() {
@@ -167,22 +164,6 @@ public class IngestFlowConfig {
 
     public void setReportIdToTerm(Map<String, String> reportIdToTerm) {
         this.reportIdToTerm = reportIdToTerm;
-    }
-
-    public Map<String, String> getVariantToLicense() {
-        return variantToLicense;
-    }
-
-    public void setVariantToLicense(Map<String, String> variantToLicense) {
-        this.variantToLicense = variantToLicense;
-    }
-
-    public List<URI> getSupportedLicenses() {
-        return supportedLicenses;
-    }
-
-    public void setSupportedLicenses(List<URI> supportedLicenses) {
-        this.supportedLicenses = supportedLicenses;
     }
 
     public List<String> getSpatialCoverageCountryTerms() {

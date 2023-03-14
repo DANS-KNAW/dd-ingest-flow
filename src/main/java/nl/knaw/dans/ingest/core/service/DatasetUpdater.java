@@ -25,7 +25,6 @@ import nl.knaw.dans.lib.dataverse.DatasetApi;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
-import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 import org.apache.commons.lang3.StringUtils;
 
@@ -48,10 +47,10 @@ import java.util.stream.Stream;
 @Slf4j
 public class DatasetUpdater extends DatasetEditor {
     protected DatasetUpdater(boolean isMigration, Dataset dataset,
-        Deposit deposit, Map<String, String> variantToLicense, List<URI> supportedLicenses,
+        Deposit deposit, List<URI> supportedLicenses,
         Pattern fileExclusionPattern, ZipFileHandler zipFileHandler,
         ObjectMapper objectMapper, DatasetService datasetService) {
-        super(isMigration, dataset, deposit, variantToLicense, supportedLicenses,
+        super(isMigration, dataset, deposit, supportedLicenses,
             fileExclusionPattern,
             zipFileHandler, objectMapper, datasetService);
     }

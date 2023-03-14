@@ -22,7 +22,6 @@ import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.FileInfo;
 import nl.knaw.dans.ingest.core.exception.FailedDepositException;
 import nl.knaw.dans.lib.dataverse.DataverseApi;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.RoleAssignment;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
@@ -45,7 +44,6 @@ public class DatasetCreator extends DatasetEditor {
         Dataset dataset,
         Deposit deposit,
         ObjectMapper objectMapper,
-        Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
@@ -56,7 +54,6 @@ public class DatasetCreator extends DatasetEditor {
             isMigration,
             dataset,
             deposit,
-            variantToLicense,
             supportedLicenses,
             fileExclusionPattern,
             zipFileHandler, objectMapper, datasetService);

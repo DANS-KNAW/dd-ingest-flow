@@ -179,6 +179,7 @@ public class DatasetUpdater extends DatasetEditor {
                 var fileAdditions = addFiles(doi, filesToAdd).entrySet().stream()
                     .map(e -> Map.entry(e.getKey(), e.getValue().getMetadata()))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                api.awaitUnlock();
 
                 // TODO: check that only updating the file metadata works (from scala code)
                 updateFileMetadata(fileReplacements, fileMovements, fileAdditions);

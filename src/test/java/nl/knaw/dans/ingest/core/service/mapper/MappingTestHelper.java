@@ -104,7 +104,7 @@ public class MappingTestHelper {
             config.getIso1ToDataverseLanguage(),
             config.getIso2ToDataverseLanguage(),
             config.getSpatialCoverageCountryTerms()
-        ).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent);
+        ).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent, null);
     }
 
     public static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {

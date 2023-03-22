@@ -16,7 +16,6 @@
 package nl.knaw.dans.ingest.core.service.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;

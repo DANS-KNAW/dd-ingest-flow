@@ -15,22 +15,18 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
 public class DepositIngestTaskFactoryBuilder {
-    private final DataverseClient dataverseClient;
     private final DansBagValidator dansBagValidator;
     private final IngestFlowConfig ingestFlowConfig;
-    private final DataverseExtra dataverseExtra;
     private final DepositManager depositManager;
     private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
@@ -38,19 +34,15 @@ public class DepositIngestTaskFactoryBuilder {
     private final BlockedTargetService blockedTargetService;
 
     public DepositIngestTaskFactoryBuilder(
-        DataverseClient dataverseClient,
         DansBagValidator dansBagValidator,
         IngestFlowConfig ingestFlowConfig,
-        DataverseExtra dataverseExtra,
         DepositManager depositManager,
         DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
         ZipFileHandler zipFileHandler,
         DatasetService datasetService,
         BlockedTargetService blockedTargetService) {
-        this.dataverseClient = dataverseClient;
         this.dansBagValidator = dansBagValidator;
         this.ingestFlowConfig = ingestFlowConfig;
-        this.dataverseExtra = dataverseExtra;
         this.depositManager = depositManager;
         this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
         this.zipFileHandler = zipFileHandler;
@@ -63,10 +55,8 @@ public class DepositIngestTaskFactoryBuilder {
         return new DepositIngestTaskFactory(
             isMigration,
             depositorRole,
-            dataverseClient,
             dansBagValidator,
             ingestFlowConfig,
-            dataverseExtra,
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler,

@@ -27,6 +27,8 @@ import java.nio.file.Path;
 @AllArgsConstructor
 public class FileInfo {
     private Path path;
+    private Path physicalPath;
     private String checksum;
     private FileMeta metadata;
+
 }

@@ -26,6 +26,8 @@ import org.w3c.dom.Document;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Data
@@ -64,6 +66,8 @@ public class Deposit {
     private Document filesXml;
     private Document amd;
     private Bag bag;
+
+    private List<DepositFile> files;
 
     public VaultMetadata getVaultMetadata() {
         return new VaultMetadata(getDataversePid(), getDataverseBagId(), getDataverseNbn(), getDataverseOtherId(), getOtherIdVersion(), getDataverseSwordToken());

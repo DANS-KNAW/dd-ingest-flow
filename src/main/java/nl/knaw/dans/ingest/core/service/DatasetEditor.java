@@ -120,12 +120,13 @@ public abstract class DatasetEditor {
             var id = addFile(persistentId, fileInfo);
             result.put(id, fileInfo);
         }
+
         if (!isMigration) {
             var path = zipFileHandler.zipOriginalMetadata(deposit.getDdmPath(), deposit.getFilesXmlPath());
             var checksum = DigestUtils.sha1Hex(new FileInputStream(path.toFile()));
             var fileMeta = new FileMeta();
             fileMeta.setLabel("original-metadata.zip");
-            var fileInfo = new FileInfo(path, checksum, fileMeta);
+            var fileInfo = new FileInfo(path, null, checksum, fileMeta);
             var id = addFile(persistentId, fileInfo);
             result.put(id, fileInfo);
             try {

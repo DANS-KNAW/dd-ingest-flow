@@ -24,11 +24,14 @@ import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -186,6 +189,7 @@ public class FileElement extends Base {
         return filenameForbidden.matcher(filename).replaceAll("_");
     }
 
+
     public static Map<Path, FileInfo> pathToFileInfo(Deposit deposit) {
         // FIL006
         var defaultRestrict = XPathEvaluator.nodes(deposit.getDdm(), "/ddm:DDM/ddm:profile/ddm:accessRights")
@@ -205,7 +209,10 @@ public class FileElement extends Base {
             var sha1 = filePathToSha1.get(path);
             var absolutePath = deposit.getBagDir().resolve(path);
 
-            result.put(path, new FileInfo(absolutePath, sha1, toFileMeta(node, defaultRestrict)));
+            // TODO check if original-filepaths.txt exists, and if so, set physicalPath to that value instead of the absolute path
+            var physicalPath = absolutePath;
+
+            result.put(path, new FileInfo(absolutePath, physicalPath, sha1, toFileMeta(node, defaultRestrict)));
         });
 
         return result;

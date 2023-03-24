@@ -37,15 +37,13 @@ public class AccessRights extends Base {
     }
 
     public static boolean isEnableRequests(Node accessRightsNode, Node filesNode) {
-        var accessibleToRights = XPathEvaluator.strings(filesNode, "//files:file/ddm:accessibleToRights")
-            .collect(Collectors.toList());
-
-        var numberOfFiles = XPathEvaluator.strings(filesNode, "//files:file").count();
-
-        var isImplicit = numberOfFiles > accessibleToRights.size() && "NO_ACCESS".equals(accessRightsNode.getTextContent().trim());
-        var isExplicit = accessibleToRights.stream()
+        // TRM003, TRM004
+        var isNoAccessDataset = "NO_ACCESS".equals(accessRightsNode.getTextContent().trim());
+        var accessibleToNoneFilesPresent = XPathEvaluator
+            .strings(filesNode, "/files:files/files:file/files:accessibleToRights")
+            .map(String::trim)
             .anyMatch("NONE"::equals);
 
-        return !isImplicit && !isExplicit;
+        return !(isNoAccessDataset || accessibleToNoneFilesPresent);
     }
 }

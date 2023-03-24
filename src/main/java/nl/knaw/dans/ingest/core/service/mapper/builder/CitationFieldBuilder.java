@@ -15,10 +15,12 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper.builder;
 
+import nl.knaw.dans.ingest.core.service.mapper.mapping.Description;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import org.w3c.dom.Node;
 
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ALTERNATIVE_TITLE;
@@ -34,9 +36,11 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBU
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.GRANT_NUMBER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.KEYWORD;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.NOTES_TEXT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PRODUCTION_DATE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PUBLICATION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SERIES;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
 
@@ -44,6 +48,15 @@ public class CitationFieldBuilder extends FieldBuilder {
 
     public void addTitle(Stream<String> nodes) {
         addSingleString(TITLE, nodes);
+    }
+
+    public void addSeries(Stream<Node> stream) {
+        var items = stream.collect(Collectors.toList());
+        if (!items.isEmpty()) {
+            var builder = getCompoundBuilder(SERIES, false);
+            Description.toSeries(builder, items.stream());
+            builder.build();
+        }
     }
 
     public void addOtherIds(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
@@ -67,7 +80,11 @@ public class CitationFieldBuilder extends FieldBuilder {
     }
 
     public void addSubject(Stream<String> stream, Function<String, String> mapper) {
-        addMultipleControlledFields(SUBJECT, stream.map(mapper));
+        var values = stream.map(mapper)
+            .collect(Collectors.toSet());
+        if (values.size()>1)
+            values.remove("Other");
+        addMultipleControlledFields(SUBJECT, values.stream().sorted());
     }
 
     public void addKeywords(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
@@ -102,12 +119,16 @@ public class CitationFieldBuilder extends FieldBuilder {
         addSingleString(DISTRIBUTION_DATE, stream);
     }
 
-    public void addDateOfCollections(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
+    public void addDatesOfCollection(Stream<Node> stream, CompoundFieldGenerator<Node> generator) {
         addMultiple(DATE_OF_COLLECTION, stream, generator);
     }
 
     public void addDataSources(Stream<String> dataSources) {
-        addSingleString(DATA_SOURCES, dataSources);
+        addMultiplePrimitiveString(DATA_SOURCES, dataSources);
+    }
+
+    public void addNotesText(Stream<Node> stream) {
+        addSingleString(NOTES_TEXT, stream.map(Node::getTextContent));
     }
 
     public void addDatasetContact(Stream<AuthenticatedUser> data, CompoundFieldGenerator<AuthenticatedUser> generator) {

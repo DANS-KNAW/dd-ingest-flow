@@ -85,7 +85,7 @@ public abstract class FieldBuilder {
         data
             .filter(Objects::nonNull)
             .filter(StringUtils::isNotBlank)
-            .findFirst().ifPresent(value -> setPrimitiveField(name, value)); //getCompoundBuilder(name, false).addSubfield(name, value));
+            .findFirst().ifPresent(value -> setPrimitiveField(name, value));
 
     }
 
@@ -102,8 +102,9 @@ public abstract class FieldBuilder {
         setControlledField(name, data);
     }
 
-    public void addMultiplePrimitivesString(String name, Stream<String> data) {
-        var values = data.collect(Collectors.toList());
+    public void addMultiplePrimitiveString(String name, Stream<String> data) {
+        var values = data.collect(Collectors.toList()).stream()
+            .map(s -> s == null ? null : s.trim()).collect(Collectors.toList());
         setPrimitiveFields(name, values);
     }
 

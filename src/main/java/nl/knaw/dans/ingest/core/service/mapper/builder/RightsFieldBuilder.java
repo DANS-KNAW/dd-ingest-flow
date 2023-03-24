@@ -25,7 +25,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_H
 public class RightsFieldBuilder extends FieldBuilder {
 
     public void addRightsHolders(Stream<String> nodes) {
-        addMultiplePrimitivesString(RIGHTS_HOLDER, nodes);
+        addMultiplePrimitiveString(RIGHTS_HOLDER, nodes);
     }
 
     public void addPersonalDataPresent(Stream<String> values) {

@@ -83,13 +83,13 @@ class AccessRightsTest extends BaseTest {
             + "<files xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" \n"
             + "        xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\">\n"
             + "    <file filepath=\"data/leeg.txt\">\n"
-            + "        <ddm:accessibleToRights>ANONYMOUS</ddm:accessibleToRights>\n"
+            + "        <accessibleToRights>ANONYMOUS</accessibleToRights>\n"
             + "    </file>\n"
             + "    <file filepath=\"data/sub/leeg2.txt\">\n"
-            + "        <ddm:accessibleToRights>NONE</ddm:accessibleToRights>\n"
+            + "        <accessibleToRights>NONE</accessibleToRights>\n"
             + "    </file>\n"
             + "    <file filepath=\"data/sub/sub/vacio.txt\">\n"
-            + "        <ddm:accessibleToRights>NONE</ddm:accessibleToRights>\n"
+            + "        <accessibleToRights>NONE</accessibleToRights>\n"
             + "    </file>\n"
             + "</files>");
 
@@ -109,7 +109,7 @@ class AccessRightsTest extends BaseTest {
             + "    <file filepath=\"data/leeg.txt\">\n"
             + "    </file>\n"
             + "    <file filepath=\"data/sub/leeg2.txt\">\n"
-            + "        <ddm:accessibleToRights>ANONYMOUS</ddm:accessibleToRights>\n"
+            + "        <accessibleToRights>ANONYMOUS</accessibleToRights>\n"
             + "    </file>\n"
             + "</files>");
 
@@ -117,7 +117,7 @@ class AccessRightsTest extends BaseTest {
     }
 
     @Test
-    void isEnableRequests_should_be_true_if_all_files_explicitly_permission_request() throws Exception {
+    void isEnableRequests_should_be_false_if_accessRights_NO_ACCESS() throws Exception {
         var doc = readDocumentFromString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ddm:accessRights xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\">\n"
             + "  NO_ACCESS"
@@ -127,14 +127,14 @@ class AccessRightsTest extends BaseTest {
             + "<files xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" \n"
             + "        xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\">\n"
             + "    <file filepath=\"data/leeg.txt\">\n"
-            + "        <ddm:accessibleToRights>RESTRICTED_REQUEST</ddm:accessibleToRights>\n"
+            + "        <accessibleToRights>RESTRICTED_REQUEST</accessibleToRights>\n"
             + "    </file>\n"
             + "    <file filepath=\"data/sub/leeg2.txt\">\n"
-            + "        <ddm:accessibleToRights>RESTRICTED_REQUEST</ddm:accessibleToRights>\n"
+            + "        <accessibleToRights>RESTRICTED_REQUEST</accessibleToRights>\n"
             + "    </file>\n"
             + "</files>");
 
-        assertTrue(AccessRights.isEnableRequests(doc.getDocumentElement(), files));
+        assertFalse(AccessRights.isEnableRequests(doc.getDocumentElement(), files));
     }
 
     @Test
@@ -148,10 +148,10 @@ class AccessRightsTest extends BaseTest {
             + "<files xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" \n"
             + "        xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\">\n"
             + "    <file filepath=\"data/leeg.txt\">\n"
-            + "        <ddm:accessibleToRights>RESTRICTED_REQUEST</ddm:accessibleToRights>\n"
+            + "        <accessibleToRights>RESTRICTED_REQUEST</accessibleToRights>\n"
             + "    </file>\n"
             + "    <file filepath=\"data/sub/leeg2.txt\">\n"
-            + "        <ddm:accessibleToRights>RESTRICTED_REQUEST</ddm:accessibleToRights>\n"
+            + "        <accessibleToRights>RESTRICTED_REQUEST</accessibleToRights>\n"
             + "    </file>\n"
             + "    <file filepath=\"data/sub/leeg3.txt\">\n"
             + "    </file>\n"

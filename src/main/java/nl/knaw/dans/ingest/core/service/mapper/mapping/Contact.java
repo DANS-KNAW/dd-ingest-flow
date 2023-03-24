@@ -25,7 +25,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATASET_
 
 public class Contact {
 
-    public static CompoundFieldGenerator<AuthenticatedUser> toOtherIdValue = (builder, value) -> {
+    public static CompoundFieldGenerator<AuthenticatedUser> toContactValue = (builder, value) -> {
         builder.addSubfield(DATASET_CONTACT_NAME, value.getDisplayName());
         builder.addSubfield(DATASET_CONTACT_EMAIL, value.getEmail());
 

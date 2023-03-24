@@ -16,10 +16,9 @@
 package nl.knaw.dans.ingest.core.service.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.ingest.core.service.VaultMetadata;
+import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
-import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapper;
 import nl.knaw.dans.ingest.core.service.mapper.builder.ArchaeologyFieldBuilder;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +38,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DepositToDvDatasetMetadataMapperTest {
 
@@ -47,6 +48,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     private final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
     private final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
+    private final List<String> spatialCoverageCountryTerms = List.of("Netherlands", "United Kingdom", "Belgium", "Germany");
 
     Document readDocument(String name) throws ParserConfigurationException, IOException, SAXException {
         return xmlReader.readXmlFile(Path.of(
@@ -60,8 +62,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     DepositToDvDatasetMetadataMapper getMapper() {
         return new DepositToDvDatasetMetadataMapper(
-            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage
-        );
+            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage, spatialCoverageCountryTerms);
     }
 
     @BeforeEach
@@ -80,11 +81,43 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, null, vaultMetadata);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
             .writeValueAsString(result);
+    }
+
+    @Test
+    void toDataverseDataset_should_include_otherId() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset-simple.xml");
+
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "otherIdVersion", "swordToken");
+
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false);
+        var str = new ObjectMapper()
+            .writer()
+            .withDefaultPrettyPrinter()
+            .writeValueAsString(result);
+
+        assertThat(str).contains("doi:a/b");
+    }
+
+    @Test
+    void toDataverseDataset_should_not_include_otherId_if_null_is_passed() throws Exception {
+        var mapper = getMapper();
+        var doc = readDocument("dataset-simple.xml");
+
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", null, "otherIdVersion", "swordToken");
+
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false);
+        var str = new ObjectMapper()
+            .writer()
+            .withDefaultPrettyPrinter()
+            .writeValueAsString(result);
+
+        assertFalse(str.contains("doi:"));
     }
 
     @Test
@@ -103,7 +136,7 @@ class DepositToDvDatasetMetadataMapperTest {
     @Test
     void processMetadataBlock_should_deduplicate_items_for_PrimitiveFieldBuilder() throws Exception {
         var fields = new HashMap<String, MetadataBlock>();
-        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), Map.of(), Map.of());
+        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), Map.of(), Map.of(), spatialCoverageCountryTerms);
         var builder = new ArchaeologyFieldBuilder();
         builder.addArchisZaakId(Stream.of(
             "TEST",
@@ -123,7 +156,7 @@ class DepositToDvDatasetMetadataMapperTest {
     @Test
     void processMetadataBlock_should_deduplicate_items_for_CompoundFieldBuilder() throws Exception {
         var fields = new HashMap<String, MetadataBlock>();
-        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), Map.of(), Map.of());
+        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), Map.of(), Map.of(), spatialCoverageCountryTerms);
         var builder = new ArchaeologyFieldBuilder();
         builder.addArchisZaakId(Stream.of(
             "TEST",

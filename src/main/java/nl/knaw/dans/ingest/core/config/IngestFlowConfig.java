@@ -56,6 +56,10 @@ public class IngestFlowConfig {
     private String depositorRole;
 
     @Valid
+    @NotNull
+    private DatasetAuthorizationConfig authorization;
+
+    @Valid
     private boolean deduplicate;
 
     @NotNull
@@ -67,6 +71,7 @@ public class IngestFlowConfig {
     private Map<String, String> reportIdToTerm;
     private Map<String, String> variantToLicense;
     private List<URI> supportedLicenses;
+    private List<String> spatialCoverageCountryTerms;
 
     public IngestAreaConfig getImportConfig() {
         return importConfig;
@@ -178,5 +183,21 @@ public class IngestFlowConfig {
 
     public void setSupportedLicenses(List<URI> supportedLicenses) {
         this.supportedLicenses = supportedLicenses;
+    }
+
+    public List<String> getSpatialCoverageCountryTerms() {
+        return spatialCoverageCountryTerms;
+    }
+
+    public void setSpatialCoverageCountryTerms(List<String> spatialCoverageCountryTerms) {
+        this.spatialCoverageCountryTerms = spatialCoverageCountryTerms;
+    }
+
+    public DatasetAuthorizationConfig getAuthorization() {
+        return authorization;
+    }
+
+    public void setAuthorization(DatasetAuthorizationConfig authorization) {
+        this.authorization = authorization;
     }
 }

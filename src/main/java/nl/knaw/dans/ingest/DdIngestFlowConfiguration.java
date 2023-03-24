@@ -16,51 +16,49 @@
 
 package nl.knaw.dans.ingest;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
-import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.db.DataSourceFactory;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.config.ValidateDansBagConfig;
 import nl.knaw.dans.lib.util.DataverseClientFactory;
+import org.apache.commons.lang3.StringUtils;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public class DdIngestFlowConfiguration extends Configuration {
 
+    @NotNull
     private IngestFlowConfig ingestFlow;
 
+    @NotNull
     private DataverseClientFactory dataverse;
 
+    @NotNull
     private DataverseExtra dataverseExtra;
 
+    @NotNull
     private ValidateDansBagConfig validateDansBag;
+
+    @NotNull
     private DataSourceFactory taskEventDatabase;
 
-    @Valid
-    @NotNull
-    private JerseyClientConfiguration dansBagValidatorClient = new JerseyClientConfiguration();
-
-    @JsonProperty("dansBagValidatorClient")
-    public JerseyClientConfiguration getDansBagValidatorClient() {
-        return dansBagValidatorClient;
-    }
-
-    @JsonProperty("dansBagValidatorClient")
-    public void setDansBagValidatorClient(JerseyClientConfiguration jerseyClient) {
-        this.dansBagValidatorClient = jerseyClient;
-    }
-
     public IngestFlowConfig getIngestFlow() {
+        if (StringUtils.isBlank(ingestFlow.getAutoIngest().getDepositorRole())) {
+            ingestFlow.getAutoIngest().setDepositorRole(ingestFlow.getDepositorRole());
+        }
+        if (StringUtils.isBlank(ingestFlow.getImportConfig().getDepositorRole())) {
+            ingestFlow.getImportConfig().setDepositorRole(ingestFlow.getDepositorRole());
+        }
+        if (StringUtils.isBlank(ingestFlow.getMigration().getDepositorRole())) {
+            ingestFlow.getMigration().setDepositorRole(ingestFlow.getDepositorRole());
+        }
         return ingestFlow;
     }
 
     public void setIngestFlow(IngestFlowConfig ingestFlow) {
         this.ingestFlow = ingestFlow;
     }
-
 
     public DataverseClientFactory getDataverse() {
         return dataverse;

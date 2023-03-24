@@ -55,6 +55,7 @@ public class License extends Base {
     }
 
     public static URI getLicenseUri(List<URI> supportedLicenses, Map<String, String> variantToLicense, Node licenseNode) {
+        // TRM001
         var licenseText = Optional.ofNullable(licenseNode)
             .map(Node::getTextContent)
             .map(String::trim)

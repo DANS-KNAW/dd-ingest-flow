@@ -23,6 +23,16 @@ ingestFlow:
   autoIngest:
     inbox: data/auto-ingest/inbox
     outbox: data/auto-ingest/outbox
+    authorization:
+      datasetCreator: swordcreator
+      datasetUpdater: swordupdater
+
+  authorization:
+    # Required role on the dataverse for the depositor.userId to create a dataset
+    datasetCreator: datasetcreator
+    # Required role on the dataset for the depositor.userId to create a new version
+    # of dataset
+    datasetUpdater: curator
 
   #
   # Filtering. Files with a path matching the pattern will not be added to the dataset. Renaming/moving files is not affected.
@@ -58,6 +68,11 @@ dataverse:
   #  connectionTimeoutMs: 10000
   #  readTimeoutMs: 30000
 
+dataverseExtra:
+  publishAwaitUnlockMaxRetries: 900
+  publishAwaitUnlockWaitTimeMs: 3000
+
+
 taskEventDatabase:
   driverClass: org.hsqldb.jdbcDriver
   url: jdbc:hsqldb:hsql://localhost:9001/dd-ingest-flow
@@ -73,18 +88,17 @@ validateDansBag:
   pingUrl: 'http://localhost:20331/ping'
   connectionTimeoutMs: 10000
   readTimeoutMs: 30000
-
-dansBagValidatorClient:
-  timeout: 30000ms
-  connectionTimeout: 10000ms
-  chunkedEncodingEnabled: false
-  timeToLive: 1h
-  cookiesEnabled: false
-  maxConnections: 128
-  maxConnectionsPerRoute: 128
-  keepAlive: 0ms
-  retries: 0
-  userAgent: dd-ingest-flow
+  httpClient:
+    timeout: 30000ms
+    connectionTimeout: 10000ms
+    chunkedEncodingEnabled: false
+    timeToLive: 1h
+    cookiesEnabled: false
+    maxConnections: 128
+    maxConnectionsPerRoute: 128
+    keepAlive: 0ms
+    retries: 0
+    userAgent: dd-ingest-flow
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
 #

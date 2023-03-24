@@ -21,6 +21,7 @@ import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlockSummary;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,11 +31,14 @@ public class DepositToDvDatasetMetadataMapperFactory {
 
     private final Map<String, String> iso1ToDataverseLanguage;
     private final Map<String, String> iso2ToDataverseLanguage;
+    private final List<String> spatialCoverageCountryTerms;
     private final DataverseClient dataverseClient;
 
-    public DepositToDvDatasetMetadataMapperFactory(Map<String, String> iso1ToDataverseLanguage, Map<String, String> iso2ToDataverseLanguage, DataverseClient dataverseClient) {
+    public DepositToDvDatasetMetadataMapperFactory(Map<String, String> iso1ToDataverseLanguage, Map<String, String> iso2ToDataverseLanguage,
+        List<String> spatialCoverageCountryTerms, DataverseClient dataverseClient) {
         this.iso1ToDataverseLanguage = iso1ToDataverseLanguage;
         this.iso2ToDataverseLanguage = iso2ToDataverseLanguage;
+        this.spatialCoverageCountryTerms = spatialCoverageCountryTerms;
         this.dataverseClient = dataverseClient;
     }
 
@@ -43,7 +47,8 @@ public class DepositToDvDatasetMetadataMapperFactory {
             deduplicate,
             getActiveMetadataBlocks(),
             iso1ToDataverseLanguage,
-            iso2ToDataverseLanguage
+            iso2ToDataverseLanguage,
+            spatialCoverageCountryTerms
         );
     }
 

@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import nl.knaw.dans.ingest.core.service.mapper.builder.CompoundFieldGenerator;
+import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
@@ -23,8 +24,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION_VALUE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SERIES_INFORMATION;
 
 public class Description extends Base {
 
@@ -48,6 +51,11 @@ public class Description extends Base {
 
         builder.addSubfield(DESCRIPTION_VALUE, String.format("%s: %s", prefix, value.getTextContent()));
     };
+    static public void toSeries (CompoundFieldBuilder builder, Stream<Node> stream) {
+        var collected = stream.map(Node::getTextContent).collect(Collectors.joining("\n\n"));
+        var text = newlineToHtml(collected);
+        builder.addSubfield(SERIES_INFORMATION, text);
+    };
 
     private static String newlineToHtml(String value) {
         var newline = "\r\n|\n|\r";
@@ -67,9 +75,12 @@ public class Description extends Base {
     }
 
     public static boolean isNotMapped(Node node) {
-        var descr = getAttribute(node, "descriptionType");
-        // TODO add series when implemented
-        return descr.isEmpty() || !List.of("Other").contains(descr.get().getTextContent());
+        var descriptionType = getAttribute(node, "descriptionType");
+        return descriptionType.isEmpty() || !List.of("Other", "SeriesInformation").contains(descriptionType.get().getTextContent());
+    }
+
+    public static boolean isSeriesInformation(Node node) {
+        return hasAttributeValue(node, "descriptionType", "SeriesInformation") && isNotBlank(node);
     }
 
     public static boolean hasDescriptionTypeOther(Node node) {

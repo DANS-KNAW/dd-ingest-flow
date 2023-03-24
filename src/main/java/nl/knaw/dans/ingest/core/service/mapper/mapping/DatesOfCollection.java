@@ -29,7 +29,7 @@ public class DatesOfCollection extends Base {
 
     private static final Pattern DATES_OF_COLLECTION_PATTERN = Pattern.compile("^(.*)/(.*)$");
 
-    public static CompoundFieldGenerator<Node> toDistributorValueObject = (builder, node) -> {
+    public static CompoundFieldGenerator<Node> toDateOfCollectionValue = (builder, node) -> {
         var matches = DATES_OF_COLLECTION_PATTERN.matcher(node.getTextContent().trim());
 
         if (matches.matches()) {
@@ -38,7 +38,7 @@ public class DatesOfCollection extends Base {
         }
     };
 
-    public static boolean isValidDistributorDate(Node node) {
+    public static boolean isValidDatesOfCollectionPattern(Node node) {
         var text = node.getTextContent().trim();
         var matcher = DATES_OF_COLLECTION_PATTERN.matcher(text.trim());
 

@@ -15,10 +15,10 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
-import gov.loc.repository.bagit.hash.StandardSupportedAlgorithms;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.Deposit;
-import nl.knaw.dans.ingest.core.service.FileInfo;
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.FileInfo;
+import nl.knaw.dans.ingest.core.service.ManifestHelper;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 import org.apache.commons.lang3.StringUtils;
@@ -54,12 +54,18 @@ public class FileElement extends Base {
         }
 
         var pathInDataset = Path.of(filepathAttribute.substring("data/".length()));
+        // FIL001
         var filename = pathInDataset.getFileName().toString();
         var sanitizedFilename = replaceForbiddenCharactersInFilename(filename);
-        var dirPath = Optional.ofNullable(pathInDataset.getParent()).map(Path::toString).orElse(null);
+        var dirPath = Optional.ofNullable(pathInDataset.getParent()).map(Path::toString)
+            // Work-around for DD-1308
+            // PLEASE, DO NOT TRIM!!! No kidding, providing a space will remove the directoryLabel if it exists.
+            .orElse(" ");
+        // FIL002
         var sanitizedDirLabel = replaceForbiddenCharactersInPath(dirPath);
 
-        var restricted = getChildNode(node, "dcterms:accessibleToRights")
+        // FIL005
+        var restricted = getChildNode(node, "files:accessibleToRights")
             .map(Node::getTextContent)
             .map(accessibilityToRestrict::get)
             .orElse(defaultRestrict);
@@ -84,6 +90,7 @@ public class FileElement extends Base {
     static String getDescription(Map<String, List<String>> kv) {
         if (!kv.isEmpty()) {
             if (kv.keySet().size() == 1 && kv.containsKey("description")) {
+                // FIL004
                 return kv.get("description").stream().findFirst().orElse(null);
             }
             else {
@@ -102,6 +109,7 @@ public class FileElement extends Base {
             .collect(Collectors.joining("; "));
     }
 
+    // FIL002AB, FIL003
     static Map<String, List<String>> getKeyValuePairs(Node node, String filename, String originalFilePath) {
         var fixedKeys = List.of(
             "hardware",
@@ -135,13 +143,13 @@ public class FileElement extends Base {
             }
         }
 
-        getChildNodes(node, "keyvaluepair")
+        getChildNodes(node, "*[local-name() = 'keyvaluepair']")
             .forEach(n -> {
-                var key = getChildNode(n, "key")
+                var key = getChildNode(n, "*[local-name() = 'key']")
                     .map(Node::getTextContent)
                     .orElse(null);
 
-                var value = getChildNode(n, "value")
+                var value = getChildNode(n, "*[local-name() = 'value']")
                     .map(Node::getTextContent)
                     .orElse(null);
 
@@ -179,15 +187,16 @@ public class FileElement extends Base {
     }
 
     public static Map<Path, FileInfo> pathToFileInfo(Deposit deposit) {
+        // FIL006
         var defaultRestrict = XPathEvaluator.nodes(deposit.getDdm(), "/ddm:DDM/ddm:profile/ddm:accessRights")
             .map(AccessRights::toDefaultRestrict)
             .findFirst()
             .orElse(true);
 
-        var filePathToSha1 = getFilePathToSha1(deposit);
+        var filePathToSha1 = ManifestHelper.getFilePathToSha1(deposit.getBag());
         var result = new HashMap<Path, FileInfo>();
 
-        XPathEvaluator.nodes(deposit.getFilesXml(), "//files:file").forEach(node -> {
+        XPathEvaluator.nodes(deposit.getFilesXml(), "/files:files/files:file").forEach(node -> {
             var path = getAttribute(node, "filepath")
                 .map(Node::getTextContent)
                 .map(Path::of)
@@ -198,21 +207,6 @@ public class FileElement extends Base {
 
             result.put(path, new FileInfo(absolutePath, sha1, toFileMeta(node, defaultRestrict)));
         });
-
-        return result;
-    }
-
-    static Map<Path, String> getFilePathToSha1(Deposit deposit) {
-        var result = new HashMap<Path, String>();
-        var bag = deposit.getBag();
-        var manifest = bag.getPayLoadManifests().stream()
-            .filter(item -> item.getAlgorithm().equals(StandardSupportedAlgorithms.SHA1))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Deposit bag does not have SHA-1 payload manifest"));
-
-        for (var entry : manifest.getFileToChecksumMap().entrySet()) {
-            result.put(deposit.getBagDir().relativize(entry.getKey()), entry.getValue());
-        }
 
         return result;
     }

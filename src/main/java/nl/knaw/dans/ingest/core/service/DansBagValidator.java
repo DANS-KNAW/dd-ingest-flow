@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
+import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import nl.knaw.dans.validatedansbag.api.ValidateCommand.PackageTypeEnum;
 import nl.knaw.dans.validatedansbag.api.ValidateOk;
 

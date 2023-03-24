@@ -46,8 +46,8 @@ public class Subject extends Base {
     };
     public static CompoundFieldGenerator<Node> toAatKeywordValue = (builder, value) -> {
         builder.addSubfield(KEYWORD_VALUE, removeMatchPrefix(value.getTextContent().trim()));
-        builder.addSubfield(KEYWORD_VOCABULARY, SCHEME_PAN);
-        builder.addSubfield(KEYWORD_VOCABULARY_URI, SCHEME_URI_PAN);
+        builder.addSubfield(KEYWORD_VOCABULARY, SCHEME_AAT);
+        builder.addSubfield(KEYWORD_VOCABULARY_URI, SCHEME_URI_AAT);
     };
 
     static String removeMatchPrefix(String input) {

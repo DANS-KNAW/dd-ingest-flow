@@ -27,4 +27,5 @@ mkdir -p $TEMPDIR/import/inbox
 mkdir -p $TEMPDIR/import/outbox
 mkdir -p $TEMPDIR/auto-ingest/inbox
 mkdir -p $TEMPDIR/auto-ingest/outbox
+mkdir -p $TEMPDIR/tmp
 echo "OK"

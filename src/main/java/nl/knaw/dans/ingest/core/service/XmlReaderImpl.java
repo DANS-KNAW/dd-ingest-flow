@@ -91,7 +91,7 @@ public class XmlReaderImpl implements XmlReader {
             .parse(new InputSource(new StringReader(str)));
     }
 
-    private DocumentBuilderFactory getFactory() throws ParserConfigurationException {
+    public DocumentBuilderFactory getFactory() throws ParserConfigurationException {
         var factory = DocumentBuilderFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);

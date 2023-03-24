@@ -47,7 +47,7 @@ public class ImportsResource {
         log.info("Received command = {}", start);
         String batchName;
         try {
-            batchName = importArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue(), false);
+            batchName = importArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
         }
         catch (IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());

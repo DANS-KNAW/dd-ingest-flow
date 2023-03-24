@@ -17,16 +17,10 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import org.w3c.dom.Node;
 
+import java.util.List;
 import java.util.Set;
 
 public class SpatialCoverage extends Base {
-
-    private static final Set<String> controlledValues = Set.of(
-        "Netherlands",
-        "United Kingdom",
-        "Belgium",
-        "Germany"
-    );
 
     public static boolean hasNoChildElement(Node node) {
         return !hasChildElement(node);
@@ -47,13 +41,13 @@ public class SpatialCoverage extends Base {
         return false;
     }
 
-    public static String toControlledSpatialValue(Node node) {
+    public static String toControlledSpatialValue(Node node, List<String> spatialCoverageCountryTerms) {
         var text = node.getTextContent().trim();
-        return controlledValues.contains(text) ? text : null;
+        return spatialCoverageCountryTerms.contains(text) ? text : null;
     }
 
-    public static String toUncontrolledSpatialValue(Node node) {
+    public static String toUncontrolledSpatialValue(Node node, List<String> spatialCoverageCountryTerms) {
         var text = node.getTextContent().trim();
-        return controlledValues.contains(text) ? null : text;
+        return spatialCoverageCountryTerms.contains(text) ? null : text;
     }
 }

@@ -17,11 +17,14 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
+
+import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import org.junit.jupiter.api.Test;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT_SCHEME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT_X;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT_Y;
+import static nl.knaw.dans.ingest.core.service.XmlNamespaces.NAMESPACE_OPEN_GIS;
 import static nl.knaw.dans.ingest.core.service.mapper.mapping.Spatial.RD_SCHEME;
 import static nl.knaw.dans.ingest.core.service.mapper.mapping.Spatial.RD_SRS_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,14 +35,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SpatialPointTest extends BaseTest {
     @Test
     void toEasyTsmSpatialPointValueObject_should_create_correct_spatial_point_details_in_Json_object() throws Exception {
-        var doc = readDocumentFromString(
-            "      <spatial>\n"
-                + "        <Point>52.08113 4.34510</Point>\n"
-                + "      </spatial>");
+        var doc = readDocumentFromString(String.format(
+            "     <spatial xmlns=\"%s\">\n"
+                + "       <Point>\n"
+                + "          <pos>52.08113 4.34510</pos>\n"
+                + "       </Point>\n"
+                + "   </spatial>", NAMESPACE_OPEN_GIS));
 
-        var builder = new CompoundFieldBuilder("", false);
+        var builder = new CompoundFieldBuilder("", true);
         SpatialPoint.toEasyTsmSpatialPointValueObject.build(builder, doc.getDocumentElement());
-        var result = builder.build();
+        var result = (CompoundMultiValueField) builder.build();
 
         assertThat(result.getValue())
             .extracting(SPATIAL_POINT_SCHEME)
@@ -60,13 +65,15 @@ class SpatialPointTest extends BaseTest {
     @Test
     void toEasyTsmSpatialPointValueObject_should_give_RD_in_m_as_spatial_point_scheme_and_coordinates_as_integers() throws Exception {
         var doc = readDocumentFromString(String.format(
-            "      <spatial srsName=\"%s\">\n"
-                + "        <Point>469470 209942</Point>\n"
-                + "      </spatial>", RD_SRS_NAME));
+            "      <spatial xmlns=\"%s\" srsName=\"%s\">\n"
+                + "        <Point>"
+                + "            <pos>469470 209942</pos>"
+                + "        </Point>\n"
+                + "</spatial>", NAMESPACE_OPEN_GIS, RD_SRS_NAME));
 
-        var builder = new CompoundFieldBuilder("", false);
+        var builder = new CompoundFieldBuilder("", true);
         SpatialPoint.toEasyTsmSpatialPointValueObject.build(builder, doc.getDocumentElement());
-        var result = builder.build();
+        var result = (CompoundMultiValueField) builder.build();
 
         assertThat(result.getValue())
             .extracting(SPATIAL_POINT_SCHEME)
@@ -87,9 +94,9 @@ class SpatialPointTest extends BaseTest {
     @Test
     void toEasyTsmSpatialPointValueObject_should_throw_exception_when_spatial_point_coordinates_are_given_incorrectly() throws Exception {
         var doc = readDocumentFromString(String.format(
-            "      <spatial srsName=\"%s\">\n"
-                + "        <Point>52.08113, 4.34510</Point>\n"
-                + "      </spatial>", RD_SRS_NAME));
+            "      <spatial xmlns=\"%s\" srsName=\"%s\">\n"
+                + "        <Point><pos>52.08113, 4.34510</pos></Point>\n"
+                + "      </spatial>", NAMESPACE_OPEN_GIS, RD_SRS_NAME));
 
         var builder = new CompoundFieldBuilder("", false);
         var e = assertThrows(RuntimeException.class, () ->

@@ -16,6 +16,8 @@
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
+
+import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import org.junit.jupiter.api.Test;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_IDENTIFIER;
@@ -37,9 +39,9 @@ class DcxDaiOrganizationTest extends BaseTest {
             + "    <dcx-dai:role xml:lang=\"en\">DataCurator</dcx-dai:role>\n"
             + "</dcx-dai:organization>\n");
 
-        var builder = new CompoundFieldBuilder("", false);
+        var builder = new CompoundFieldBuilder("", true);
         DcxDaiOrganization.toContributorValueObject.build(builder, doc.getDocumentElement());
-        var field = builder.build();
+        var field = (CompoundMultiValueField) builder.build();
 
         assertThat(field.getValue()).extracting(CONTRIBUTOR_NAME).extracting("value")
             .containsOnly("Anti-Vampire League");
@@ -54,9 +56,9 @@ class DcxDaiOrganizationTest extends BaseTest {
             + "    <dcx-dai:role xml:lang=\"en\">ContactPerson</dcx-dai:role>\n"
             + "</dcx-dai:organization>\n");
 
-        var builder = new CompoundFieldBuilder("", false);
+        var builder = new CompoundFieldBuilder("", true);
         DcxDaiOrganization.toContributorValueObject.build(builder, doc.getDocumentElement());
-        var field = builder.build();
+        var field = (CompoundMultiValueField) builder.build();
 
         assertThat(field.getValue()).extracting(CONTRIBUTOR_TYPE).extracting("value")
             .containsOnly("Other");
@@ -68,9 +70,9 @@ class DcxDaiOrganizationTest extends BaseTest {
             + "    <dcx-dai:name xml:lang=\"en\">Anti-Vampire League</dcx-dai:name>\n"
             + "</dcx-dai:organization>\n");
 
-        var builder = new CompoundFieldBuilder("", false);
+        var builder = new CompoundFieldBuilder("", true);
         DcxDaiOrganization.toAuthorValueObject.build(builder, doc.getDocumentElement());
-        var field = builder.build();
+        var field = (CompoundMultiValueField) builder.build();
 
         assertThat(field.getValue()).extracting(AUTHOR_NAME).extracting("value")
             .containsOnly("Anti-Vampire League");
@@ -83,9 +85,9 @@ class DcxDaiOrganizationTest extends BaseTest {
             + "    <dcx-dai:ISNI>http://isni.org/isni/0000000121032683</dcx-dai:ISNI>"
             + "</dcx-dai:organization>\n");
 
-        var builder = new CompoundFieldBuilder("", false);
+        var builder = new CompoundFieldBuilder("", true);
         DcxDaiOrganization.toAuthorValueObject.build(builder, doc.getDocumentElement());
-        var field = builder.build();
+        var field = (CompoundMultiValueField) builder.build();
 
         assertThat(field.getValue()).extracting(AUTHOR_NAME).extracting("value")
             .containsOnly("Anti-Vampire League");
@@ -102,9 +104,9 @@ class DcxDaiOrganizationTest extends BaseTest {
             + "    <dcx-dai:VIAF>http://viaf.org/viaf/141399695</dcx-dai:VIAF>"
             + "</dcx-dai:organization>\n");
 
-        var builder = new CompoundFieldBuilder("", false);
+        var builder = new CompoundFieldBuilder("", true);
         DcxDaiOrganization.toAuthorValueObject.build(builder, doc.getDocumentElement());
-        var field = builder.build();
+        var field = (CompoundMultiValueField) builder.build();
 
         assertThat(field.getValue()).extracting(AUTHOR_NAME).extracting("value")
             .containsOnly("Anti-Vampire League");
@@ -124,9 +126,9 @@ class DcxDaiOrganizationTest extends BaseTest {
 
         assertTrue(DcxDaiOrganization.isFunder(doc.getDocumentElement()));
 
-        var builder = new CompoundFieldBuilder("", false);
+        var builder = new CompoundFieldBuilder("", true);
         DcxDaiOrganization.toGrantNumberValueObject.build(builder, doc.getDocumentElement());
-        var field = builder.build();
+        var field = (CompoundMultiValueField) builder.build();
 
         assertThat(field.getValue()).extracting(GRANT_NUMBER_VALUE).extracting("value")
             .containsOnly("");

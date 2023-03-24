@@ -78,12 +78,13 @@ public class UnboundedDepositsImportTaskIterator extends AbstractDepositsImportT
             initialized = true;
 
             // find all deposits
-            var initialDeposits = getAllDepositPathsFromInbox();
+            var initialTasks = createDepositIngestTasks(getAllDepositPathsFromInbox());
 
-            for (var path : initialDeposits) {
-                log.trace("onStart initial deposit found: {}", path);
+            for (var task : initialTasks) {
+                var path = task.getDepositPath();
+                log.debug("onStart initial deposit found: {}", path);
                 initialPathsRead.add(path);
-                addTaskForDeposit(path);
+                addTask(task);
             }
 
             log.trace("onStart finished");

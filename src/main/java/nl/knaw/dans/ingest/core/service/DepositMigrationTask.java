@@ -16,15 +16,20 @@
 package nl.knaw.dans.ingest.core.service;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.validatedansbag.api.ValidateCommand;
-import nl.knaw.dans.ingest.core.service.exception.RejectedDepositException;
+import nl.knaw.dans.ingest.core.dataverse.DatasetService;
+import nl.knaw.dans.ingest.core.deposit.DepositManager;
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.DepositLocation;
+import nl.knaw.dans.ingest.core.domain.VaultMetadata;
+import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
+import nl.knaw.dans.validatedansbag.api.ValidateCommand;
 import org.apache.commons.lang3.StringUtils;
-import org.w3c.dom.Document;
 
 import java.io.IOException;
 import java.net.URI;
@@ -40,29 +45,28 @@ import java.util.stream.Collectors;
 public class DepositMigrationTask extends DepositIngestTask {
     public DepositMigrationTask(
         DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
-        Deposit deposit,
-        DataverseClient dataverseClient,
+        DepositLocation depositLocation,
         String depositorRole,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
         Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
         DansBagValidator dansBagValidator,
-        int publishAwaitUnlockMillisecondsBetweenRetries,
-        int publishAwaitUnlockMaxNumberOfRetries,
         Path outboxDir,
         EventWriter eventWriter,
-        DepositManager depositManager
+        DepositManager depositManager,
+        DatasetService datasetService,
+        BlockedTargetService blockedTargetService,
+        DepositorAuthorizationValidator depositorAuthorizationValidator
     ) {
         super(
-            datasetMetadataMapperFactory, deposit, dataverseClient, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses, dansBagValidator,
-            publishAwaitUnlockMillisecondsBetweenRetries, publishAwaitUnlockMaxNumberOfRetries, outboxDir, eventWriter, depositManager);
+            datasetMetadataMapperFactory, depositLocation, depositorRole, fileExclusionPattern, zipFileHandler, variantToLicense, supportedLicenses,
+            dansBagValidator,
+            outboxDir, eventWriter, depositManager, datasetService, blockedTargetService, depositorAuthorizationValidator);
     }
 
     @Override
     void checkDepositType() {
-        var deposit = getDeposit();
-
         if (StringUtils.isEmpty(deposit.getDoi())) {
             throw new IllegalArgumentException("Deposit for migrated dataset MUST have deposit property identifier.doi set");
         }
@@ -100,23 +104,14 @@ public class DepositMigrationTask extends DepositIngestTask {
     }
 
     @Override
-    void checkPersonalDataPresent(Document document) {
-        if (document == null) {
-            throw new RejectedDepositException(getDeposit(), "Migration deposit MUST have an agreements.xml");
-        }
-    }
-
-    @Override
     Optional<String> getDateOfDeposit() {
-        return Optional.ofNullable(getDeposit().getAmd())
+        return Optional.ofNullable(deposit.getAmd())
             .map(Amd::toDateOfDeposit)
             .flatMap(i -> i);
     }
 
     @Override
     void publishDataset(String persistentId) throws IOException, DataverseException {
-
-        var deposit = getDeposit();
         var amd = deposit.getAmd();
 
         if (amd == null) {
@@ -129,13 +124,7 @@ public class DepositMigrationTask extends DepositIngestTask {
             throw new IllegalArgumentException(String.format("no publication date found in AMD for %s", persistentId));
         }
 
-        var dataset = dataverseClient.dataset(persistentId);
-
-        var datePublishJsonLd = String.format("{\"http://schema.org/datePublished\": \"%s\"}", date.get());
-
-        dataset.releaseMigrated(datePublishJsonLd, true);
-        dataset.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
-
+        datasetService.releaseMigrated(persistentId, date.get());
     }
 
     @Override
@@ -144,24 +133,24 @@ public class DepositMigrationTask extends DepositIngestTask {
     }
 
     void validateDeposit() {
-        var deposit = getDeposit();
+        var result = dansBagValidator.validateBag(
+            deposit.getBagDir(), ValidateCommand.PackageTypeEnum.MIGRATION, 1);
 
-        if (dansBagValidator != null) {
-            var result = dansBagValidator.validateBag(
-                deposit.getBagDir(), ValidateCommand.PackageTypeEnum.MIGRATION, 1);
+        if (!result.getIsCompliant()) {
+            var violations = result.getRuleViolations().stream()
+                .map(r -> String.format("- [%s] %s", r.getRule(), r.getViolation()))
+                .collect(Collectors.joining("\n"));
 
-            if (!result.getIsCompliant()) {
-                var violations = result.getRuleViolations().stream()
-                    .map(r -> String.format("- [%s] %s", r.getRule(), r.getViolation()))
-                    .collect(Collectors.joining("\n"));
-
-                throw new RejectedDepositException(deposit, String.format(
-                    "Bag was not valid according to Profile Version %s. Violations: %s",
-                    result.getProfileVersion(), violations)
-                );
-            }
+            throw new RejectedDepositException(deposit, String.format(
+                "Bag was not valid according to Profile Version %s. Violations: %s",
+                result.getProfileVersion(), violations)
+            );
         }
     }
 
+    @Override
+    String resolveDoi(Deposit deposit) throws IOException, DataverseException {
+        return getDoi("dansBagId", deposit.getIsVersionOf());
+    }
 }
 

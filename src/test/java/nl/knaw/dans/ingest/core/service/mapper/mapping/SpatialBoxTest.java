@@ -16,6 +16,8 @@
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
+
+import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import org.junit.jupiter.api.Test;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX;
@@ -42,7 +44,7 @@ class SpatialBoxTest extends BaseTest {
 
         var builder = new CompoundFieldBuilder(SPATIAL_BOX, true);
         SpatialBox.toEasyTsmSpatialBoxValueObject.build(builder, doc.getDocumentElement());
-        var value = builder.build().getValue();
+        var value = ((CompoundMultiValueField) builder.build()).getValue();
 
         assertThat(value)
             .extracting(x -> x.get(SPATIAL_BOX_SCHEME))
@@ -83,7 +85,7 @@ class SpatialBoxTest extends BaseTest {
         var builder = new CompoundFieldBuilder(SPATIAL_BOX, true);
         SpatialBox.toEasyTsmSpatialBoxValueObject.build(builder, doc.getDocumentElement());
 
-        assertThat(builder.build().getValue())
+        assertThat(((CompoundMultiValueField)builder.build()).getValue())
             .extracting(x -> x.get(SPATIAL_BOX_SCHEME))
             .extracting("value")
             .containsOnly("RD (in m.)");

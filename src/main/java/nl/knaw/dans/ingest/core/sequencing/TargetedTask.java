@@ -17,9 +17,13 @@ package nl.knaw.dans.ingest.core.sequencing;
 
 import nl.knaw.dans.ingest.core.TaskEvent;
 
+import java.nio.file.Path;
+
 public interface TargetedTask extends Runnable {
 
     String getTarget();
+
+    Path getDepositPath();
 
     void writeEvent(TaskEvent.EventType eventType, TaskEvent.Result result, String message);
 }

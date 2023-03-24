@@ -39,6 +39,18 @@ public class ZipFileHandler {
         "application/fits-gzipped"
     );
 
+    public Path zipOriginalMetadata(Path... xml) throws IOException {
+
+        var tempFilePath = tempDir.resolve(String.format("original-metadata-%s.zip", UUID.randomUUID()));
+
+        try (var zip = new ZipFile(tempFilePath.toFile())) {
+            for(var path: xml){
+                zip.addFile(path.toFile(), zipWithoutCompressing());
+            }
+        }
+        return tempFilePath;
+    }
+
     public ZipFileHandler(Path tempDir) {
         this.tempDir = tempDir;
     }
@@ -57,14 +69,17 @@ public class ZipFileHandler {
 
         var tempFile = tempDir.resolve(randomName);
 
-        var params = new ZipParameters();
-        params.setCompressionMethod(CompressionMethod.STORE);
-
         try (var zip = new ZipFile(tempFile.toFile())) {
-            zip.addFile(path.toFile());
+            zip.addFile(path.toFile(), zipWithoutCompressing());
         }
 
         return Optional.of(tempFile);
+    }
+
+    private ZipParameters zipWithoutCompressing() {
+        var params = new ZipParameters();
+        params.setCompressionMethod(CompressionMethod.STORE);
+        return params;
     }
 
     boolean needsToBeWrapped(Path path) throws IOException {
@@ -73,15 +88,14 @@ public class ZipFileHandler {
             .map(x -> x.endsWith(".zip"))
             .orElse(false);
 
-        var isDetected = needToBeZipWrapped.contains(getMimeType(path));
+        log.trace("Checking if path {} needs to be wrapped: endsWithZip={}", path, endsWithZip);
 
-        log.trace("Checking if path {} needs to be wrapped: endsWithZip={}, isDetected={}",
-            path, endsWithZip, isDetected);
-
-        return endsWithZip || isDetected;
+        return endsWithZip || needToBeZipWrapped.contains(getMimeType(path));
     }
 
     String getMimeType(Path path) throws IOException {
-        return tika.detect(path);
+        String result = tika.detect(path);
+        log.trace("MimeType of path {} is {}", path, result);
+        return result;
     }
 }

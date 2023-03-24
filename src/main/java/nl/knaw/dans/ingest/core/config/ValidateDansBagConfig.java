@@ -15,6 +15,10 @@
  */
 package nl.knaw.dans.ingest.core.config;
 
+import io.dropwizard.client.JerseyClientConfiguration;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.net.URI;
 
 public class ValidateDansBagConfig {
@@ -23,6 +27,18 @@ public class ValidateDansBagConfig {
     private URI pingUrl;
 
     private int connectionTimeoutMs;
+    @Valid
+    @NotNull
+    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
+
+    public JerseyClientConfiguration getHttpClient() {
+        return httpClient;
+    }
+
+    public void setHttpClient(JerseyClientConfiguration jerseyClient) {
+        this.httpClient = jerseyClient;
+    }
+
     private int readTimeoutMs;
 
     public URI getBaseUrl() {

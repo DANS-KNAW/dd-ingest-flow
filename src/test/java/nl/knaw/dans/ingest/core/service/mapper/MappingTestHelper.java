@@ -52,13 +52,6 @@ import java.util.stream.Collectors;
 
 public class MappingTestHelper {
     public static final AuthenticatedUser mockedContact = new AuthenticatedUser();
-
-    {
-        mockedContact.setDisplayName("D. O'Seven");
-        mockedContact.setEmail("J.Bond@does.not.exist.dans.knaw.nl");
-        mockedContact.setAffiliation("DANS");
-    }
-
     public static final VaultMetadata mockedVaultMetadata = new VaultMetadata(
         "doi:10.17026/AR/6L7NBB",
         "urn:uuid:ced0be49-f863-4477-9473-23010526abf3",
@@ -66,8 +59,17 @@ public class MappingTestHelper {
         "otherId:something",
         "1.0",
         "swordToken");
-
+    public static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
+        + "         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"
+        + "         xmlns:dc='http://purl.org/dc/elements/1.1/'\n"
+        + "         xmlns:dct='http://purl.org/dc/terms/'\n";
     private static final IngestFlowConfig config = getIngestFlowConfig();
+
+    {
+        mockedContact.setDisplayName("D. O'Seven");
+        mockedContact.setEmail("J.Bond@does.not.exist.dans.knaw.nl");
+        mockedContact.setAffiliation("DANS");
+    }
 
     private static IngestFlowConfig getIngestFlowConfig() {
         IngestFlowConfig config;
@@ -102,13 +104,8 @@ public class MappingTestHelper {
             config.getIso1ToDataverseLanguage(),
             config.getIso2ToDataverseLanguage(),
             config.getSpatialCoverageCountryTerms()
-        ).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent);
+        ).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent, null);
     }
-
-    public static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
-        + "         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"
-        + "         xmlns:dc='http://purl.org/dc/elements/1.1/'\n"
-        + "         xmlns:dct='http://purl.org/dc/terms/'\n";
 
     public static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {
         return readDocumentFromString(""
@@ -201,9 +198,10 @@ public class MappingTestHelper {
     public static Map<String, List<String>> getFieldNamesOfMetadataBlocks(Dataset result) {
         var metadataBlocks = result.getDatasetVersion().getMetadataBlocks();
         Map<String, List<String>> fields = new HashMap<>();
-        for (String blockName : metadataBlocks.keySet())
+        for (String blockName : metadataBlocks.keySet()) {
             fields.put(blockName, metadataBlocks.get(blockName).getFields()
                 .stream().map(MetadataField::getTypeName).collect(Collectors.toList()));
+        }
         return fields;
     }
 }

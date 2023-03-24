@@ -41,6 +41,8 @@ import nl.knaw.dans.ingest.core.service.mapper.mapping.DcxDaiOrganization;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.DepositPropertiesOtherDoi;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.DepositPropertiesVaultMetadata;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Description;
+import nl.knaw.dans.ingest.core.service.mapper.mapping.Funder;
+import nl.knaw.dans.ingest.core.service.mapper.mapping.HasOrganizationalIdentifier;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Identifier;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.InCollection;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Language;
@@ -109,7 +111,9 @@ public class DepositToDvDatasetMetadataMapper {
         @Nullable String dateOfDeposit,
         @Nullable AuthenticatedUser contactData,
         @NonNull VaultMetadata vaultMetadata,
-        boolean restrictedFilesPresent) throws MissingRequiredFieldException {
+        boolean restrictedFilesPresent,
+        String hasOrganizationalIdentifier
+    ) throws MissingRequiredFieldException {
         var termsOfAccess = "";
 
         if (activeMetadataBlocks.contains("citation")) {
@@ -124,7 +128,8 @@ public class DepositToDvDatasetMetadataMapper {
 
             citationFields.addOtherIds(getIdentifiers(ddm).filter(Identifier::canBeMappedToOtherId), Identifier.toOtherIdValue); // CIT002B, CIT004
             citationFields.addOtherIdsStrings(Stream.ofNullable(otherDoiId), DepositPropertiesOtherDoi.toOtherIdValue); // PAN second version DOIs (migration)
-            // TODO: CIT003
+            citationFields.addOtherIdsStrings(Stream.ofNullable(hasOrganizationalIdentifier).filter(HasOrganizationalIdentifier::isValidOtherIdValue),
+                HasOrganizationalIdentifier.toOtherIdValue); // CIT003
             citationFields.addAuthors(getCreators(ddm), Author.toAuthorValueObject); // CIT005, CIT006, CIT007
             citationFields.addDatasetContact(Stream.ofNullable(contactData), Contact.toContactValue); // CIT008
             citationFields.addDescription(getProfileDescriptions(ddm), Description.toDescription); // CIT009
@@ -159,7 +164,7 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addContributors(getContributorDetails(ddm).filter(Contributor::isValidContributor), Contributor.toContributorValueObject); // CIT020, CIT021
             citationFields.addContributors(getDcmiDdmDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Contributor.toContributorValueObject); // TODO: REMOVE AFTER MIGRATION
             citationFields.addGrantNumbers(getIdentifiers(ddm).filter(Identifier::isNwoGrantNumber), Identifier.toNwoGrantNumber); // CIT023
-            // TODO: CIT022 ?? (role = funder)
+            citationFields.addGrantNumbers(getFunders(ddm), Funder.toGrantNumberValueObject); // CIT022
             citationFields.addDistributor(getPublishers(ddm).filter(Publisher::isNotDans), Publisher.toDistributorValueObject); // CIT024
             citationFields.addDistributionDate(getAvailable(ddm).map(Base::toYearMonthDayFormat)); // CIT025
             citationFields.addDateOfDeposit(dateOfDeposit); // CIT025A
@@ -447,8 +452,11 @@ public class DepositToDvDatasetMetadataMapper {
         return XPathEvaluator.strings(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:rightsHolder");
     }
 
-    private void checkRequiredField(HashMap<String, MetadataBlock> blocks, String blockName, String fieldName) {
+    Stream<Node> getFunders(Document ddm) {
+        return XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/ddm:funding");
+    }
 
+    private void checkRequiredField(HashMap<String, MetadataBlock> blocks, String blockName, String fieldName) {
         if (blocks.get(blockName).getFields().stream().map(MetadataField::getTypeName).noneMatch(fieldName::equals)) {
             throw new MissingRequiredFieldException(fieldName);
         }

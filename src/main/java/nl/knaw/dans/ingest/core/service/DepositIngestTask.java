@@ -397,7 +397,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             date.orElse(null),
             contact.orElse(null),
             deposit.getVaultMetadata(),
-            deposit.restrictedFilesPresent()
+            deposit.restrictedFilesPresent(),
+            deposit.getHasOrganizationalIdentifier()
       );
     }
 

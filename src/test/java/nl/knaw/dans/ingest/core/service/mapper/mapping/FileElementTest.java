@@ -116,4 +116,40 @@ class FileElementTest extends BaseTest {
         assertEquals("original_filepath: \"directory/path/with/all/leg\u00e5l/chars/n\u00f8rmal_filename.txt\"", result.getDescription());
     }
 
+    @Test
+    void replaceForbiddenCharactersInFilename_should_replace_each_char_with_underscore() {
+        /*
+        Replace forbidden chars with underscore. (Forbidden chars are:
+        : (colon)
+        * (asterisk)
+        ? (question mark)
+        "" (double quote)
+        < (lower than)
+        > (greater than)
+        | (pipe)
+        ; (semicolon)
+        # (hash)
+        */
+        // note that there are 7 invalid characters between 'test' and '.txt'
+        var filename = "test**::?>>.txt";
+        var result = FileElement.replaceForbiddenCharactersInFilename(filename);
+
+        assertEquals("test_______.txt", result);
+    }
+    @Test
+    void replaceForbiddenCharactersInPath_should_replace_each_char_with_underscore() {
+        /*
+        Replace forbidden chars with underscore. Only the following characters are allowed:
+        alphanumeric chars (only ASCII)
+        / slash
+        \ backslash
+        . dot
+        - hyphen
+         space (but not tab)
+        */
+        var filename = "dir()\t\t ^^^/xyz/\\a.b-c";
+        var result = FileElement.replaceForbiddenCharactersInPath(filename);
+
+        assertEquals("dir____ ___/xyz/\\a.b-c", result);
+    }
 }

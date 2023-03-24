@@ -23,21 +23,25 @@ import nl.knaw.dans.lib.dataverse.model.RoleAssignmentReadOnly;
 import nl.knaw.dans.lib.dataverse.model.dataset.Embargo;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType;
+import nl.knaw.dans.lib.dataverse.model.license.License;
 import nl.knaw.dans.lib.dataverse.model.search.DatasetResultItem;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class DataverseDatasetServiceImpl implements DatasetService {
+public class DataverseServiceImpl implements DatasetService {
     public static final String AUTHENTICATED_USERS = ":authenticated-users";
     private final DataverseClient dataverseClient;
     private final int publishAwaitUnlockMillisecondsBetweenRetries;
@@ -45,7 +49,7 @@ public class DataverseDatasetServiceImpl implements DatasetService {
 
     private final SimpleDateFormat dateAvailableFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-    public DataverseDatasetServiceImpl(DataverseClient dataverseClient, int publishAwaitUnlockMillisecondsBetweenRetries, int publishAwaitUnlockMaxNumberOfRetries) {
+    public DataverseServiceImpl(DataverseClient dataverseClient, int publishAwaitUnlockMillisecondsBetweenRetries, int publishAwaitUnlockMaxNumberOfRetries) {
         this.dataverseClient = dataverseClient;
         this.publishAwaitUnlockMillisecondsBetweenRetries = publishAwaitUnlockMillisecondsBetweenRetries;
         this.publishAwaitUnlockMaxNumberOfRetries = publishAwaitUnlockMaxNumberOfRetries;
@@ -184,6 +188,24 @@ public class DataverseDatasetServiceImpl implements DatasetService {
         return items.stream()
             .filter(r -> r instanceof DatasetResultItem)
             .map(r -> (DatasetResultItem) r)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<URI> getLicenses() throws IOException, DataverseException {
+        return dataverseClient.license().getLicenses().getData().stream()
+            .map(License::getUri)
+            .map(l -> {
+                try {
+                    return new URI(l);
+                }
+                catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            })
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
     }
 }

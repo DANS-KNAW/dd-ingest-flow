@@ -101,7 +101,6 @@ public class DepositStartImportTaskWrapperTest {
             "dummy",
             null,
             new ZipFileHandler(Path.of("target/test")),
-            Map.of(),
             List.of(),
             validator,
             Path.of("dummy"),

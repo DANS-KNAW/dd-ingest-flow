@@ -47,7 +47,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -59,7 +58,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     protected final String depositorRole;
     protected final Pattern fileExclusionPattern;
     protected final ZipFileHandler zipFileHandler;
-    protected final Map<String, String> variantToLicense;
     protected final List<URI> supportedLicenses;
     protected final DansBagValidator dansBagValidator;
     protected final DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory;
@@ -80,7 +78,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         String depositorRole,
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
-        Map<String, String> variantToLicense,
         List<URI> supportedLicenses,
         DansBagValidator dansBagValidator,
         Path outboxDir,
@@ -91,12 +88,9 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         DepositorAuthorizationValidator depositorAuthorizationValidator
     ) {
         this.datasetMetadataMapperFactory = datasetMetadataMapperFactory;
-
         this.depositorRole = depositorRole;
         this.fileExclusionPattern = fileExclusionPattern;
-
         this.zipFileHandler = zipFileHandler;
-        this.variantToLicense = variantToLicense;
         this.supportedLicenses = supportedLicenses;
         this.dansBagValidator = dansBagValidator;
         this.outboxDir = outboxDir;
@@ -363,7 +357,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             isMigration,
             dataset,
             deposit,
-            variantToLicense,
             supportedLicenses,
             fileExclusionPattern,
             zipFileHandler,
@@ -382,7 +375,6 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             dataset,
             deposit,
             new ObjectMapper(),
-            variantToLicense,
             supportedLicenses,
             fileExclusionPattern,
             zipFileHandler,

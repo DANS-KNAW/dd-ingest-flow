@@ -35,8 +35,6 @@ public class IngestFlowConfigReader {
         config.setIso1ToDataverseLanguage(getMap(config, "iso639-1-to-dv.csv", "ISO639-1", "Dataverse-language"));
         config.setIso2ToDataverseLanguage(getMap(config, "iso639-2-to-dv.csv", "ISO639-2", "Dataverse-language"));
         config.setReportIdToTerm(getMap(config, "ABR-reports.csv", "URI-suffix", "Term"));
-        config.setVariantToLicense(getMap(config, "license-uri-variants.csv", "Variant", "Normalized"));
-        config.setSupportedLicenses(getUriList(config, "supported-licenses.txt"));
         config.setSpatialCoverageCountryTerms(FileUtils.readLines(config.getMappingDefsDir().resolve("spatial-coverage-country-terms.txt").toFile(), StandardCharsets.UTF_8));
     }
 
@@ -58,14 +56,4 @@ public class IngestFlowConfigReader {
             valueColumn);
     }
 
-    private static List<URI> getUriList(IngestFlowConfig ingestFlowConfig, String listFile) throws URISyntaxException, IOException {
-        var uris = FileUtils.readLines(ingestFlowConfig.getMappingDefsDir().resolve(listFile).toFile(), StandardCharsets.UTF_8);
-        var result = new ArrayList<URI>();
-
-        for (var u : uris) {
-            result.add(new URI(u));
-        }
-
-        return result;
-    }
 }

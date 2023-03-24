@@ -33,7 +33,7 @@ import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.dataverse.DatasetService;
-import nl.knaw.dans.ingest.core.dataverse.DataverseDatasetServiceImpl;
+import nl.knaw.dans.ingest.core.dataverse.DataverseServiceImpl;
 import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
@@ -134,7 +134,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getValidateDansBag().getBaseUrl(),
             configuration.getValidateDansBag().getPingUrl());
 
-        final DatasetService datasetService = new DataverseDatasetServiceImpl(
+        final DatasetService datasetService = new DataverseServiceImpl(
             dataverseClient,
             configuration.getDataverseExtra().getPublishAwaitUnlockWaitTimeMs(),
             configuration.getDataverseExtra().getPublishAwaitUnlockMaxRetries()
@@ -155,10 +155,8 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getAutoIngest());
 
         final DepositIngestTaskFactoryBuilder builder = new DepositIngestTaskFactoryBuilder(
-            dataverseClient,
             validator,
             configuration.getIngestFlow(),
-            configuration.getDataverseExtra(),
             depositManager,
             depositToDvDatasetMetadataMapperFactory,
             zipFileHandler,

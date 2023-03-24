@@ -185,7 +185,7 @@ public class DepositToDvDatasetMetadataMapper {
 
         if (activeMetadataBlocks.contains("dansRelationMetadata")) {
             relationFields.addAudiences(getAudiences(ddm).map(Audience::toNarcisTerm)); // REL001
-            relationFields.addCollections(getInCollections(ddm).map(InCollection::toCollection)); // REL002
+            relationFields.addCollections(getInCollections(ddm).filter(InCollection::isCollection).map(InCollection::toCollection)); // REL002
             relationFields.addRelations(getRelations(ddm)
                 .filter(Relation::isRelation), Relation.toRelationObject); // REL003
         }

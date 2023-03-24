@@ -23,6 +23,8 @@ import java.util.Optional;
 @Slf4j
 public final class InCollection extends Base {
     private static final String valueURI = "valueURI";
+    private static final String SCHEME = "DANS Collection";
+    private static final String SCHEME_URI = "https://vocabularies.dans.knaw.nl/collections";
 
     public static String toCollection(Node node) {
         return Optional.ofNullable(node.getAttributes())
@@ -30,5 +32,10 @@ public final class InCollection extends Base {
             .flatMap(i -> i)
             .map(Node::getTextContent)
             .orElseThrow(() -> new IllegalArgumentException(String.format("Missing attribute %s on ddm:inCollection node", valueURI)));
+    }
+
+    public static boolean isCollection(Node node) {
+        return hasAttributeValue(node, "subjectScheme", SCHEME)
+            && hasAttributeValue(node, "schemeURI", SCHEME_URI);
     }
 }

@@ -20,6 +20,7 @@ import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.service.XmlReader;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import nl.knaw.dans.ingest.core.service.mapper.builder.ArchaeologyFieldBuilder;
+import nl.knaw.dans.ingest.core.service.mapper.mapping.AbrAcquisitionMethod;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -124,7 +125,7 @@ class DepositToDvDatasetMetadataMapperTest {
         var mapper = getMapper();
         var doc = readDocument("abrs.xml");
 
-        var result = mapper.getAcquisitionMethods(doc);
+        var result = mapper.getAcquisitionMethods(doc).filter(AbrAcquisitionMethod::isVerwervingswijze);
 
         assertThat(result)
             .map(Node::getTextContent)

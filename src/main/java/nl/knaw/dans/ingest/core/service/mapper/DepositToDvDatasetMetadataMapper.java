@@ -29,7 +29,7 @@ import nl.knaw.dans.ingest.core.service.mapper.builder.RelationFieldBuilder;
 import nl.knaw.dans.ingest.core.service.mapper.builder.RightsFieldBuilder;
 import nl.knaw.dans.ingest.core.service.mapper.builder.TemporalSpatialFieldBuilder;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.AbrAcquisitionMethod;
-import nl.knaw.dans.ingest.core.service.mapper.mapping.AbrReportType;
+import nl.knaw.dans.ingest.core.service.mapper.mapping.AbrReport;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Audience;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Author;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Base;
@@ -76,8 +76,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_HOLDER;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_VERWERVINGSWIJZE;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_VERWERVINGSWIJZE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
 
@@ -190,7 +188,7 @@ public class DepositToDvDatasetMetadataMapper {
 
         if (activeMetadataBlocks.contains("dansRelationMetadata")) {
             relationFields.addAudiences(getAudiences(ddm).map(Audience::toNarcisTerm)); // REL001
-            relationFields.addCollections(getInCollections(ddm).map(InCollection::toCollection)); // REL002
+            relationFields.addCollections(getInCollections(ddm).filter(InCollection::isCollection).map(InCollection::toCollection)); // REL002
             relationFields.addRelations(getRelations(ddm)
                 .filter(Relation::isRelation), Relation.toRelationObject); // REL003
         }
@@ -198,13 +196,13 @@ public class DepositToDvDatasetMetadataMapper {
         if (activeMetadataBlocks.contains("dansArchaeologyMetadata")) {
             archaeologyFields.addArchisZaakId(getIdentifiers(ddm).filter(Identifier::isArchisZaakId).map(Identifier::toArchisZaakId)); // AR001
             archaeologyFields.addArchisNumber(getIdentifiers(ddm).filter(Identifier::isArchisNumber), Identifier.toArchisNumberValue); // AR002
-            archaeologyFields.addRapportType(getReportNumbers(ddm).filter(AbrReportType::isAbrReportType).map(AbrReportType::toAbrRapportType)); // AR003
-            archaeologyFields.addRapportNummer(getReportNumbers(ddm).map(Base::asText)); // AR004
-            archaeologyFields.addVerwervingswijze(getAcquisitionMethods(ddm).map(AbrAcquisitionMethod::toVerwervingswijze)); // AR005
+            archaeologyFields.addRapportType(getReportNumbers(ddm).filter(AbrReport::isAbrReportType).map(AbrReport::toAbrRapportType)); // AR003
+            archaeologyFields.addRapportNummer(getReportNumbers(ddm).filter(AbrReport::isAbrReportType).map(AbrReport::toAbrRapportNumber)); // AR004
+            archaeologyFields.addVerwervingswijze(getAcquisitionMethods(ddm).filter(AbrAcquisitionMethod::isVerwervingswijze).map(AbrAcquisitionMethod::toVerwervingswijze)); // AR005
             archaeologyFields.addComplex(getDdmSubjects(ddm).filter(SubjectAbr::isAbrComplex).map(SubjectAbr::toAbrComplex)); // AR006
             archaeologyFields.addArtifact(getDdmSubjects(ddm).filter(SubjectAbr::isOldAbr).map(SubjectAbr::fromAbrOldToAbrArtifact)); // TODO: REMOVE AFTER MIGRATION
             archaeologyFields.addArtifact(getDdmSubjects(ddm).filter(SubjectAbr::isAbrArtifact).map(SubjectAbr::toAbrArtifact)); // AR007
-            archaeologyFields.addPeriod(getDdmTemporal(ddm).filter(TemporalAbr::isAbrPeriod).map(TemporalAbr::toAbrPeriod));
+            archaeologyFields.addPeriod(getDdmTemporal(ddm).filter(TemporalAbr::isAbrPeriod).map(TemporalAbr::toAbrPeriod)); // AR008
         }
 
         if (activeMetadataBlocks.contains("dansTemporalSpatial")) {
@@ -351,11 +349,7 @@ public class DepositToDvDatasetMetadataMapper {
     }
 
     Stream<Node> getAcquisitionMethods(Document ddm) {
-        var expr = String.format(
-            "/ddm:DDM/ddm:dcmiMetadata/ddm:acquisitionMethod[@subjectScheme = '%s' and @schemeURI = '%s']",
-            SCHEME_ABR_VERWERVINGSWIJZE, SCHEME_URI_ABR_VERWERVINGSWIJZE
-        );
-
+        var expr = "/ddm:DDM/ddm:dcmiMetadata/ddm:acquisitionMethod";
         return XPathEvaluator.nodes(ddm, expr);
     }
 

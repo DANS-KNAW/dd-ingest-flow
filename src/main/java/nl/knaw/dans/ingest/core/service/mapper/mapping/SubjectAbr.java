@@ -33,65 +33,50 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_U
 
 @Slf4j
 public class SubjectAbr extends Base {
-    private static boolean hasAttributes(Node node, String a1, String v1, String a2, String v2) {
-        for (var i = 0; i < node.getAttributes().getLength(); ++i) {
-            var n = node.getAttributes().item(i);
-        }
-        var r1 = getAttribute(node, a1)
-            .map(item -> v1.equals(item.getTextContent()))
-            .orElse(false);
-
-        var r2 = getAttribute(node, a2)
-            .map(item -> v2.equals(item.getTextContent()))
-            .orElse(false);
-
-        return r1 && r2;
-    }
 
     public static boolean isAbrComplex(Node node) {
-        return hasAttributes(node,
-            "subjectScheme", SCHEME_ABR_COMPLEX,
-            "schemeURI", SCHEME_URI_ABR_COMPLEX
+        return hasSchemeAndUriAttribute(node,
+            SCHEME_ABR_COMPLEX,
+            SCHEME_URI_ABR_COMPLEX
         );
     }
 
     public static boolean isOldAbr(Node node) {
-        return hasAttributes(node,
-            "subjectScheme", SCHEME_ABR_OLD,
-            "schemeURI", SCHEME_URI_ABR_OLD
+        return hasSchemeAndUriAttribute(node,
+            SCHEME_ABR_OLD,
+            SCHEME_URI_ABR_OLD
         );
     }
 
     public static boolean isAbrArtifact(Node node) {
-        return hasAttributes(node,
-            "subjectScheme", SCHEME_ABR_ARTIFACT,
-            "schemeURI", SCHEME_URI_ABR_ARTIFACT
+        return hasSchemeAndUriAttribute(node,
+            SCHEME_ABR_ARTIFACT,
+            SCHEME_URI_ABR_ARTIFACT
         );
     }
 
-    private static String attributeToText(Node node, String attribute) {
-
-        return getAttribute(node, attribute)
+    private static String attributeToText(Node node) {
+        return getAttribute(node, "valueURI")
             .map(Node::getTextContent)
             .orElseGet(() -> {
-                log.error("Missing {} attribute on {} node", attribute, node.getNodeName());
+                log.error("Missing {} attribute on {} node", "valueURI", node.getNodeName());
                 return null;
             });
     }
 
     public static String toAbrComplex(Node node) {
-        return attributeToText(node, "valueURI");
+        return attributeToText(node);
     }
 
     public static String toAbrArtifact(Node node) {
-        return attributeToText(node, "valueURI");
+        return attributeToText(node);
     }
 
     public static String fromAbrOldToAbrArtifact(Node node) {
         if (!isOldAbr(node)) {
             return null;
         }
-        return Optional.ofNullable(attributeToText(node, "valueURI"))
+        return Optional.ofNullable(attributeToText(node))
             .map(value -> {
                 try {
                     var uuid = Paths.get(new URI(value).getPath()).getFileName().toString();

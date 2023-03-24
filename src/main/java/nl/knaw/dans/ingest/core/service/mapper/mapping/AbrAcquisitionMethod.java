@@ -16,11 +16,17 @@
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.service.XmlReader;
 import org.w3c.dom.Node;
+
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_VERWERVINGSWIJZE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_VERWERVINGSWIJZE;
 
 @Slf4j
 public class AbrAcquisitionMethod extends Base {
+    public static boolean isVerwervingswijze(Node node) {
+        return hasSchemeAndUriAttribute(node, SCHEME_ABR_VERWERVINGSWIJZE, SCHEME_URI_ABR_VERWERVINGSWIJZE);
+    }
+
     public static String toVerwervingswijze(Node node) {
         return getAttribute(node, "valueURI")
             .map(Node::getTextContent)

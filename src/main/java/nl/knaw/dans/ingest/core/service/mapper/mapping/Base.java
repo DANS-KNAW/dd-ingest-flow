@@ -73,6 +73,11 @@ public class Base {
 
     }
 
+    static boolean hasSchemeAndUriAttribute(Node node, String subjectScheme, String schemeURI) {
+        return hasAttributeValue(node, "subjectScheme", subjectScheme)
+            && hasAttributeValue(node, "schemeURI", schemeURI);
+    }
+
     static boolean hasAttributeValue(Node node, String name, String value) {
         return getAttribute(node, name)
             .map(n -> StringUtils.equals(value, n.getTextContent()))

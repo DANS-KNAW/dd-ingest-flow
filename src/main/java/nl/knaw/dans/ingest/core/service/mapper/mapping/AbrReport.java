@@ -22,13 +22,11 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_A
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_RAPPORT_TYPE;
 
 @Slf4j
-public class AbrReportType extends Base {
+public class AbrReport extends Base {
 
     public static boolean isAbrReportType(Node node) {
         return "reportNumber".equals(node.getLocalName())
-            && hasAttributeValue(node, "subjectScheme", SCHEME_ABR_RAPPORT_TYPE)
-            && hasAttributeValue(node, "schemeURI", SCHEME_URI_ABR_RAPPORT_TYPE);
-
+            && hasSchemeAndUriAttribute(node, SCHEME_ABR_RAPPORT_TYPE, SCHEME_URI_ABR_RAPPORT_TYPE);
     }
 
     public static String toAbrRapportType(Node node) {
@@ -38,5 +36,9 @@ public class AbrReportType extends Base {
                 log.error("Missing valueURI attribute on ddm:reportNumber node");
                 return null;
             });
+    }
+
+    public static String toAbrRapportNumber(Node node) {
+        return node.getTextContent();
     }
 }

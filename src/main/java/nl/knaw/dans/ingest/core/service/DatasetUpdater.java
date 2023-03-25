@@ -282,11 +282,13 @@ public class DatasetUpdater extends DatasetEditor {
             log.debug("Replacing file with ID = {}", entry.getKey());
             var fileApi = dataverseClient.file(entry.getKey());
 
-            var meta = new FileMeta();
-            meta.setForceReplace(true);
-            var json = objectMapper.writeValueAsString(meta);
             var wrappedZip = zipFileHandler.wrapIfZipFile(entry.getValue().getPath());
             var file = wrappedZip.orElse(entry.getValue().getPath());
+
+            var meta = new FileMeta();
+            meta.setForceReplace(true);
+            meta.setLabel(file.getFileName().toString());
+            var json = objectMapper.writeValueAsString(meta);
 
             log.debug("Calling replaceFileItem({}, {})", entry.getValue().getPath(), json);
             var result = fileApi.replaceFileItem(

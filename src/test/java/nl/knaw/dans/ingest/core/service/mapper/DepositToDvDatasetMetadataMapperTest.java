@@ -39,7 +39,6 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DepositToDvDatasetMetadataMapperTest {
 
@@ -81,7 +80,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
@@ -95,7 +94,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "otherIdVersion", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
@@ -111,7 +110,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", null, "otherIdVersion", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()

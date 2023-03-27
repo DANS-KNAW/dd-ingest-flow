@@ -19,7 +19,6 @@ import gov.loc.repository.bagit.domain.Bag;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositFile;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
-import nl.knaw.dans.ingest.core.domain.FileInfo;
 import nl.knaw.dans.ingest.core.domain.OriginalFilePathMapping;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.io.BagDataManager;
@@ -111,6 +110,7 @@ public class DepositReaderImpl implements DepositReader {
         deposit.setDataverseOtherId(config.getString("dataverse.other-id", ""));
         deposit.setDataverseOtherIdVersion(config.getString("dataverse.other-id-version", ""));
         deposit.setDataverseSwordToken(config.getString("dataverse.sword-token", ""));
+        deposit.setHasOrganizationalIdentifier(getFirstValue(bag.getMetadata().get("Has-Organizational-Identifier")));
 
         var isVersionOf = bag.getMetadata().get("Is-Version-Of");
 
@@ -178,6 +178,16 @@ public class DepositReaderImpl implements DepositReader {
                 return new DepositFile(filePath, absolutePath, sha1, node);
             })
             .collect(Collectors.toList());
+    }
+
+    private String getFirstValue(List<String> value) {
+        if (value == null) {
+            return null;
+        }
+        return value.stream()
+            .filter(StringUtils::isNotBlank)
+            .findFirst()
+            .orElse(null);
     }
 
 }

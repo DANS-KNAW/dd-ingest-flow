@@ -57,6 +57,7 @@ public class Deposit {
     private String dataverseOtherId;
     private String dataverseOtherIdVersion;
     private String dataverseSwordToken;
+    private String hasOrganizationalIdentifier;
 
     private String isVersionOf;
 

@@ -133,8 +133,7 @@ public class DepositReaderImpl implements DepositReader {
         if (Files.exists(originalFilepathsFile)) {
             var lines = Files.readAllLines(originalFilepathsFile);
             var mappings = lines.stream().map(line -> {
-                    // the 2 spaces are mandatory
-                    var parts = line.split("  ", 2);
+                    var parts = line.split(" {2}", 2);
 
                     if (parts.length == 2) {
                         return new OriginalFilePathMapping.Mapping(

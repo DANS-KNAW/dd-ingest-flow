@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Data
@@ -115,8 +114,7 @@ public class Deposit {
     }
 
     public boolean restrictedFilesPresent() {
-        var numberOfFiles = XPathEvaluator
-            .strings(filesXml, "/files:files/files:file").count();
+        var numberOfFiles = files.size();
         var explicitAccessibleToValues = XPathEvaluator
             .strings(filesXml, "/files:files/files:file/files:accessibleToRights")
             .map(String::trim).collect(Collectors.toList());
@@ -150,4 +148,5 @@ public class Deposit {
     public Path getAmdPath() {
         return bagDir.resolve("metadata/amd.xml");
     }
+
 }

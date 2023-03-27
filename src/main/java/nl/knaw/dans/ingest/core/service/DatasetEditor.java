@@ -126,7 +126,7 @@ public abstract class DatasetEditor {
             var checksum = DigestUtils.sha1Hex(new FileInputStream(path.toFile()));
             var fileMeta = new FileMeta();
             fileMeta.setLabel("original-metadata.zip");
-            var fileInfo = new FileInfo(path, null, checksum, fileMeta);
+            var fileInfo = new FileInfo(path, path, checksum, fileMeta);
             var id = addFile(persistentId, fileInfo);
             result.put(id, fileInfo);
             try {
@@ -142,9 +142,9 @@ public abstract class DatasetEditor {
 
     private Integer addFile(String persistentId, FileInfo fileInfo) throws IOException, DataverseException {
         var dataset = dataverseClient.dataset(persistentId);
-        var wrappedZip = zipFileHandler.wrapIfZipFile(fileInfo.getPath());
+        var wrappedZip = zipFileHandler.wrapIfZipFile(fileInfo.getPhysicalPath());
 
-        var file = wrappedZip.orElse(fileInfo.getPath());
+        var file = wrappedZip.orElse(fileInfo.getPhysicalPath());
         if (log.isDebugEnabled()) {
             var metadata = objectMapper.writeValueAsString(fileInfo.getMetadata());
             log.debug("Adding file {} with metadata {}", file, metadata);
@@ -178,13 +178,11 @@ public abstract class DatasetEditor {
     }
 
     Map<Path, FileInfo> getFileInfo() {
-
         var files = FileElement.pathToFileInfo(deposit);
 
         return files.entrySet().stream()
             .map(entry -> {
                 // relativize the path
-                // TODO make this all tested
                 var bagPath = entry.getKey();
                 var fileInfo = entry.getValue();
                 var newKey = Path.of("data").relativize(bagPath);

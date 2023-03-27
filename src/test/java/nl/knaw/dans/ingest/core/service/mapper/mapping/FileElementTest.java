@@ -15,7 +15,12 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.DepositFile;
 import org.junit.jupiter.api.Test;
+
+import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -136,6 +141,7 @@ class FileElementTest extends BaseTest {
 
         assertEquals("test_______.txt", result);
     }
+
     @Test
     void replaceForbiddenCharactersInPath_should_replace_each_char_with_underscore() {
         /*
@@ -151,5 +157,52 @@ class FileElementTest extends BaseTest {
         var result = FileElement.replaceForbiddenCharactersInPath(filename);
 
         assertEquals("dir____ ___/xyz/\\a.b-c", result);
+    }
+
+    @Test
+    void pathToFileInfo_should_return_same_path_for_physical_and_normal() throws Exception {
+        var doc = readDocumentFromString(
+            "<file filepath=\"data/path/to/file1.txt\" xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" xmlns:dcterms=\"http://purl.org/dc/terms/\">\n"
+                + "    <dcterms:format>text/plain</dcterms:format>\n"
+                + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+                + "    <dcterms:description>Empty file</dcterms:description>\n"
+                + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+                + "</file>");
+
+        var filePath = Path.of("data/path/to/file1.txt");
+        var deposit = new Deposit();
+        deposit.setBagDir(Path.of("bagdir"));
+        deposit.setFiles(List.of(
+                new DepositFile(filePath, null, "check1", doc.getDocumentElement())
+            )
+        );
+
+        deposit.setDdm(readDocumentFromString("<root></root>"));
+
+        var result = FileElement.pathToFileInfo(deposit);
+        assertEquals(result.get(filePath).getPath(), result.get(filePath).getPhysicalPath());
+    }
+    @Test
+    void pathToFileInfo_should_store_physical_path_if_available() throws Exception {
+        var doc = readDocumentFromString(
+            "<file filepath=\"data/path/to/file1.txt\" xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" xmlns:dcterms=\"http://purl.org/dc/terms/\">\n"
+                + "    <dcterms:format>text/plain</dcterms:format>\n"
+                + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+                + "    <dcterms:description>Empty file</dcterms:description>\n"
+                + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+                + "</file>");
+
+        var filePath = Path.of("data/path/to/file1.txt");
+        var deposit = new Deposit();
+        deposit.setBagDir(Path.of("bagdir"));
+        deposit.setFiles(List.of(
+                new DepositFile(filePath, Path.of("data/new-file-name"), "check1", doc.getDocumentElement())
+            )
+        );
+
+        deposit.setDdm(readDocumentFromString("<root></root>"));
+
+        var result = FileElement.pathToFileInfo(deposit);
+        assertEquals(Path.of("bagdir/data/new-file-name"), result.get(filePath).getPhysicalPath());
     }
 }

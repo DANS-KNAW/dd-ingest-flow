@@ -182,6 +182,7 @@ class FileElementTest extends BaseTest {
         var result = FileElement.pathToFileInfo(deposit);
         assertEquals(result.get(filePath).getPath(), result.get(filePath).getPhysicalPath());
     }
+
     @Test
     void pathToFileInfo_should_store_physical_path_if_available() throws Exception {
         var doc = readDocumentFromString(

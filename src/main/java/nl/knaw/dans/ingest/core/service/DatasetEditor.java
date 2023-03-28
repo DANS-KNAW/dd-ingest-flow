@@ -150,6 +150,7 @@ public abstract class DatasetEditor {
             log.debug("Adding file {} with metadata {}", file, metadata);
         }
         var result = dataset.addFile(file, fileInfo.getMetadata());
+        log.debug("Called addFile for {}; result: {}", file, result);
 
         if (wrappedZip.isPresent()) {
             try {

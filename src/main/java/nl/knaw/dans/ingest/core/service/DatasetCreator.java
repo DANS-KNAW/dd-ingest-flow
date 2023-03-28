@@ -124,17 +124,14 @@ public class DatasetCreator extends DatasetEditor {
     private void updateFileMetadata(Map<Integer, FileInfo> databaseIds) throws IOException, DataverseException {
         for (var entry : databaseIds.entrySet()) {
             var id = entry.getKey();
-            var fileMeta = objectMapper.writeValueAsString(entry.getValue().getMetadata());
-
-            log.debug("id = {}, json = {}", id, fileMeta);
-            var result = dataverseClient.file(id).updateMetadata(fileMeta);
-            log.debug("id = {}, result = {}", id, result);
+            var result = dataverseClient.file(id).updateMetadata(entry.getValue().getMetadata());
+            log.debug("Called updateFileMetadata for id = {}; result = {}", id, result);
         }
     }
 
     String importDataset(DataverseApi api) throws IOException, DataverseException {
         var response = isMigration
-            ? api.importDataset(dataset, Optional.of(String.format("doi:%s", deposit.getDoi())), false)
+            ? api.importDataset(dataset, String.format("doi:%s", deposit.getDoi()), false)
             : api.createDataset(dataset);
 
         return response.getData().getPersistentId();

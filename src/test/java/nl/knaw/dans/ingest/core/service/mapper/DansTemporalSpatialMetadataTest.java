@@ -68,7 +68,7 @@ public class DansTemporalSpatialMetadataTest {
     }
 
     @Test
-    void point_with_invalid_srs_name_maps_to_degrees() throws Exception {
+    void point_with_invalid_srs_name_maps_to_null() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -81,12 +81,7 @@ public class DansTemporalSpatialMetadataTest {
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
         var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
-        assertThat(point).extracting("dansSpatialPointX").extracting("value")
-            .containsOnly("529006");
-        assertThat(point).extracting("dansSpatialPointY").extracting("value")
-            .containsOnly("126466");
-        assertThat(point).extracting("dansSpatialPointScheme").extracting("value")
-            .containsOnly("longitude/latitude (degrees)");
+        assertThat(point).isNull();
     }
 
     @Test
@@ -234,8 +229,7 @@ public class DansTemporalSpatialMetadataTest {
     }
 
     @Test
-    void box_with_invalid_srs_name_maps_to_degrees() throws Exception {
-        // TODO https://drivenbydata.atlassian.net/browse/DD-1305
+    void box_with_invalid_srs_name_maps_to_null() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi(""
@@ -250,16 +244,8 @@ public class DansTemporalSpatialMetadataTest {
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
         var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
-        assertThat(box).extracting("dansSpatialBoxNorth").extracting("value")
-            .containsOnly("3");
-        assertThat(box).extracting("dansSpatialBoxEast").extracting("value")
-            .containsOnly("4");
-        assertThat(box).extracting("dansSpatialBoxSouth").extracting("value")
-            .containsOnly("1");
-        assertThat(box).extracting("dansSpatialBoxWest").extracting("value")
-            .containsOnly("2");
-        assertThat(box).extracting("dansSpatialBoxScheme").extracting("value")
-            .containsOnly("longitude/latitude (degrees)");
+        assertThat(box).isNull();
+
     }
 
     @Test
@@ -270,7 +256,7 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope>"
+            + "                <Envelope srsName='http://www.opengis.net/def/crs/EPSG/0/4326'>"
             + "                    <lowerCorner>1 2</lowerCorner>"
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
@@ -298,13 +284,14 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope>"
+            + "                <Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/4326\">"
             + "                    <lowerCorner>1 2</lowerCorner>"
             + "                    <upperCorner>3</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
+
         var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
         thrown.isInstanceOf(ArrayIndexOutOfBoundsException.class);
     }
@@ -316,7 +303,7 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope>"
+            + "                <Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/4326\">"
             + "                    <lowerCorner>2</lowerCorner>"
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
@@ -334,7 +321,7 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope srsName='XXX'>"
+            + "                <Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/4326\">"
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
@@ -352,7 +339,7 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope srsName='XXX'>"
+            + "                <Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/4326\">"
             + "                    <lowerCorner>1 2</lowerCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
@@ -361,22 +348,6 @@ public class DansTemporalSpatialMetadataTest {
         var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
         thrown.isInstanceOf(IllegalArgumentException.class);
         thrown.hasMessage("Missing gml:upperCorner node in gml:Envelope");
-    }
-
-    @Test
-    void box_without_envelope_causes_an_exception() throws Exception {
-        // TODO ignoring would be consistent with POINT without POS
-        var doc = readDocumentFromString(""
-            + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
-            + minimalDdmProfile() + dcmi(""
-            + "        <dcx-gml:spatial>"
-            + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "            </boundedBy>"
-            + "        </dcx-gml:spatial>")
-            + "</ddm:DDM>");
-        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
-        thrown.isInstanceOf(IllegalArgumentException.class);
-        thrown.hasMessage("Missing gml:Envelope node");
     }
 
     @Test

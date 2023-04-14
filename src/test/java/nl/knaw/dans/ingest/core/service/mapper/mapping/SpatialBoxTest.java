@@ -16,7 +16,6 @@
 package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
-
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +26,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_SOUTH;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_WEST;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -85,7 +85,7 @@ class SpatialBoxTest extends BaseTest {
         var builder = new CompoundFieldBuilder(SPATIAL_BOX, true);
         SpatialBox.toEasyTsmSpatialBoxValueObject.build(builder, doc.getDocumentElement());
 
-        assertThat(((CompoundMultiValueField)builder.build()).getValue())
+        assertThat(((CompoundMultiValueField) builder.build()).getValue())
             .extracting(x -> x.get(SPATIAL_BOX_SCHEME))
             .extracting("value")
             .containsOnly("RD (in m.)");
@@ -104,5 +104,57 @@ class SpatialBoxTest extends BaseTest {
         var e = assertThrows(NumberFormatException.class,
             () -> SpatialBox.toEasyTsmSpatialBoxValueObject.build(null, doc.getDocumentElement()));
         assertTrue(e.getMessage().contains("469470,"));
+    }
+
+    @Test
+    void isBox_should_return_true_for_RD_scheme() throws Exception {
+        var node = readDocumentFromString(
+            "        <gml:boundedBy xmlns:gml=\"http://www.opengis.net/gml\">\n"
+                + "            <gml:Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/28992\">\n"
+                + "                <gml:lowerCorner>469470 209942</gml:lowerCorner>\n"
+                + "                <gml:upperCorner>469890 209914</gml:upperCorner>\n"
+                + "            </gml:Envelope>\n"
+                + "        </gml:boundedBy>").getDocumentElement();
+
+        assertTrue(SpatialBox.isBox(node));
+    }
+
+    @Test
+    void isBox_should_return_true_for_LONLAT_scheme() throws Exception {
+        var node = readDocumentFromString(
+            "        <gml:boundedBy xmlns:gml=\"http://www.opengis.net/gml\">\n"
+                + "            <gml:Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/4326\">\n"
+                + "                <gml:lowerCorner>469470 209942</gml:lowerCorner>\n"
+                + "                <gml:upperCorner>469890 209914</gml:upperCorner>\n"
+                + "            </gml:Envelope>\n"
+                + "        </gml:boundedBy>").getDocumentElement();
+
+        assertTrue(SpatialBox.isBox(node));
+    }
+
+    @Test
+    void isBox_should_return_false_for_missing_srsName() throws Exception {
+        var node = readDocumentFromString(
+            "        <gml:boundedBy xmlns:gml=\"http://www.opengis.net/gml\">\n"
+                + "            <gml:Envelope>\n"
+                + "                <gml:lowerCorner>469470 209942</gml:lowerCorner>\n"
+                + "                <gml:upperCorner>469890 209914</gml:upperCorner>\n"
+                + "            </gml:Envelope>\n"
+                + "        </gml:boundedBy>").getDocumentElement();
+
+        assertFalse(SpatialBox.isBox(node));
+    }
+
+    @Test
+    void isBox_should_return_false_for_incorrect_srsName() throws Exception {
+        var node = readDocumentFromString(
+            "        <gml:boundedBy xmlns:gml=\"http://www.opengis.net/gml\">\n"
+                + "            <gml:Envelope srsName=\"http://www.opengis.net/INVALID\">\n"
+                + "                <gml:lowerCorner>469470 209942</gml:lowerCorner>\n"
+                + "                <gml:upperCorner>469890 209914</gml:upperCorner>\n"
+                + "            </gml:Envelope>\n"
+                + "        </gml:boundedBy>").getDocumentElement();
+
+        assertFalse(SpatialBox.isBox(node));
     }
 }

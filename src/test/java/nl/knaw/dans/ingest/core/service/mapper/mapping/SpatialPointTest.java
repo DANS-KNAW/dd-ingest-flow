@@ -17,7 +17,6 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.dataverse.CompoundFieldBuilder;
-
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
 import org.junit.jupiter.api.Test;
 
@@ -25,9 +24,12 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT_X;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT_Y;
 import static nl.knaw.dans.ingest.core.service.XmlNamespaces.NAMESPACE_OPEN_GIS;
+import static nl.knaw.dans.ingest.core.service.mapper.mapping.Spatial.LONLAT_SCHEME;
+import static nl.knaw.dans.ingest.core.service.mapper.mapping.Spatial.LONLAT_SRS_NAME;
 import static nl.knaw.dans.ingest.core.service.mapper.mapping.Spatial.RD_SCHEME;
 import static nl.knaw.dans.ingest.core.service.mapper.mapping.Spatial.RD_SRS_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -104,5 +106,127 @@ class SpatialPointTest extends BaseTest {
         );
 
         assertTrue(e.getMessage().contains("52.08113,"));
+    }
+
+    @Test
+    void toEasyTsmSpatialPointValueObject_should_swap_first_and_second_value_for_epsg_4326() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "      <spatial xmlns=\"%s\" srsName=\"%s\">\n"
+                + "        <Point><pos>52.08113 4.34510</pos></Point>\n"
+                + "      </spatial>", NAMESPACE_OPEN_GIS, LONLAT_SRS_NAME));
+
+        var builder = new CompoundFieldBuilder("", true);
+        SpatialPoint.toEasyTsmSpatialPointValueObject.build(builder, doc.getDocumentElement());
+        var result = (CompoundMultiValueField) builder.build();
+
+        assertThat(result.getValue())
+            .extracting(SPATIAL_POINT_SCHEME)
+            .extracting("value")
+            .containsOnly(LONLAT_SCHEME);
+
+        assertThat(result.getValue())
+            .extracting(SPATIAL_POINT_X)
+            .extracting("value")
+            .containsOnly("4.34510");
+
+        assertThat(result.getValue())
+            .extracting(SPATIAL_POINT_Y)
+            .extracting("value")
+            .containsOnly("52.08113");
+    }
+
+    @Test
+    void toEasyTsmSpatialPointValueObject_should_swap_first_and_second_value_for_unspecified_srsName() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "      <spatial xmlns=\"%s\">\n"
+                + "        <Point><pos>52.08113 4.34510</pos></Point>\n"
+                + "      </spatial>", NAMESPACE_OPEN_GIS));
+
+        var builder = new CompoundFieldBuilder("", true);
+        SpatialPoint.toEasyTsmSpatialPointValueObject.build(builder, doc.getDocumentElement());
+        var result = (CompoundMultiValueField) builder.build();
+
+        assertThat(result.getValue())
+            .extracting(SPATIAL_POINT_SCHEME)
+            .extracting("value")
+            .containsOnly(LONLAT_SCHEME);
+
+        assertThat(result.getValue())
+            .extracting(SPATIAL_POINT_X)
+            .extracting("value")
+            .containsOnly("4.34510");
+
+        assertThat(result.getValue())
+            .extracting(SPATIAL_POINT_Y)
+            .extracting("value")
+            .containsOnly("52.08113");
+    }
+
+    @Test
+    void toEasyTsmSpatialPointValueObject_should_map_x_y_in_same_order_for_epsg28992() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "      <spatial xmlns=\"%s\" srsName=\"%s\">\n"
+                + "        <Point><pos>52.08113 4.34510</pos></Point>\n"
+                + "      </spatial>", NAMESPACE_OPEN_GIS, RD_SRS_NAME));
+
+        var builder = new CompoundFieldBuilder("", true);
+        SpatialPoint.toEasyTsmSpatialPointValueObject.build(builder, doc.getDocumentElement());
+        var result = (CompoundMultiValueField) builder.build();
+
+        assertThat(result.getValue())
+            .extracting(SPATIAL_POINT_SCHEME)
+            .extracting("value")
+            .containsOnly(RD_SCHEME);
+
+        assertThat(result.getValue())
+            .extracting(SPATIAL_POINT_X)
+            .extracting("value")
+            .containsOnly("52.08113");
+
+        assertThat(result.getValue())
+            .extracting(SPATIAL_POINT_Y)
+            .extracting("value")
+            .containsOnly("4.34510");
+
+    }
+
+    @Test
+    void isPoint_should_return_true_when_point_is_given() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "      <spatial xmlns=\"%s\" srsName=\"%s\">\n"
+                + "        <Point><pos>52.08113 4.34510</pos></Point>\n"
+                + "      </spatial>", NAMESPACE_OPEN_GIS, RD_SRS_NAME));
+
+        assertTrue(SpatialPoint.isPoint(doc.getDocumentElement()));
+    }
+
+    @Test
+    void isPoint_should_return_true_when_lonlat_point_is_given() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "      <spatial xmlns=\"%s\" srsName=\"%s\">\n"
+                + "        <Point><pos>52.08113 4.34510</pos></Point>\n"
+                + "      </spatial>", NAMESPACE_OPEN_GIS, LONLAT_SRS_NAME));
+
+        assertTrue(SpatialPoint.isPoint(doc.getDocumentElement()));
+    }
+
+    @Test
+    void isPoint_should_return_true_when_no_srsName_is_given() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "      <spatial xmlns=\"%s\">\n"
+                + "        <Point><pos>52.08113 4.34510</pos></Point>\n"
+                + "      </spatial>", NAMESPACE_OPEN_GIS));
+
+        assertTrue(SpatialPoint.isPoint(doc.getDocumentElement()));
+    }
+
+    @Test
+    void isPoint_should_return_false_when_invalid_srsName_is_given() throws Exception {
+        var doc = readDocumentFromString(String.format(
+            "      <spatial xmlns=\"%s\" srsName=\"%s\">\n"
+                + "        <Point><pos>52.08113 4.34510</pos></Point>\n"
+                + "      </spatial>", NAMESPACE_OPEN_GIS, "INVALID_SRS"));
+
+        assertFalse(SpatialPoint.isPoint(doc.getDocumentElement()));
     }
 }

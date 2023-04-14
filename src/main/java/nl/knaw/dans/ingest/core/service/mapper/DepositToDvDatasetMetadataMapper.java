@@ -207,9 +207,9 @@ public class DepositToDvDatasetMetadataMapper {
 
         if (activeMetadataBlocks.contains("dansTemporalSpatial")) {
             temporalSpatialFields.addTemporalCoverage(getDctermsTemporal(ddm).map(TemporalAbr::asText)); // TS001
-            temporalSpatialFields.addSpatialPoint(getDcxGmlSpatial(ddm)
-                .filter(node -> SpatialPoint.hasChildNode(node, "gml:Point/gml:pos")), SpatialPoint.toEasyTsmSpatialPointValueObject); // TS002, TS003
-            temporalSpatialFields.addSpatialBox(getBoundedBy(ddm), SpatialBox.toEasyTsmSpatialBoxValueObject); // TS004, TS005
+            temporalSpatialFields.addSpatialPoint(getDcxGmlSpatial(ddm).filter(SpatialPoint::isPoint),
+                SpatialPoint.toEasyTsmSpatialPointValueObject); // TS002, TS003
+            temporalSpatialFields.addSpatialBox(getBoundedBy(ddm).filter(SpatialBox::isBox), SpatialBox.toEasyTsmSpatialBoxValueObject); // TS004, TS005
             temporalSpatialFields.addSpatialCoverageControlled(getSpatial(ddm)
                 .map(node -> SpatialCoverage.toControlledSpatialValue(node, spatialCoverageCountryTerms))); // TS006
             temporalSpatialFields.addSpatialCoverageUncontrolled(getSpatial(ddm)

@@ -44,7 +44,7 @@ public class ImportsResource {
     @Path("/:start")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response startImport(StartImport start) {
-        log.info("Received command = {}", start);
+        log.debug("Received command = {}", start);
         String batchName;
         try {
             batchName = importArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());

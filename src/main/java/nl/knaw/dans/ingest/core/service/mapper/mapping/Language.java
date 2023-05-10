@@ -33,10 +33,6 @@ public class Language extends Base {
         builder.addSubfield(KEYWORD_VOCABULARY_URI, "");
     };
 
-    public static boolean isNotIsoLanguage(Node node) {
-        return !isIsoLanguage(node);
-    }
-
     public static boolean isIsoLanguage(Node node) {
         var isoLanguages = Set.of("ISO639-1", "ISO639-2");
         var hasTypes = hasXsiType(node, "ISO639-1") || hasXsiType(node, "ISO639-2");

@@ -26,12 +26,14 @@ import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,6 +48,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class DatasetUpdater extends DatasetEditor {
+
     protected DatasetUpdater(boolean isMigration, Dataset dataset,
         Deposit deposit, List<URI> supportedLicenses,
         Pattern fileExclusionPattern, ZipFileHandler zipFileHandler,
@@ -58,6 +61,8 @@ public class DatasetUpdater extends DatasetEditor {
     @Override
     public String performEdit() throws IOException, DataverseException, InterruptedException {
         // TODO wait for the doi to become available (uses sleep in scala, but this was frowned upon!)
+        FileInfo originalMetadata = null;
+
         try {
             Thread.sleep(4000);
 
@@ -98,6 +103,12 @@ public class DatasetUpdater extends DatasetEditor {
                 api.awaitUnlock();
 
                 var pathToFileInfo = getFileInfo();
+
+                if (!isMigration) {
+                    originalMetadata = createOriginalMetadataFileInfo();
+                    pathToFileInfo.put(Paths.get(ORIGINAL_METADATA_ZIP), originalMetadata);
+                }
+
                 log.debug("pathToFileInfo = {}", pathToFileInfo);
                 var pathToFileMetaInLatestVersion = getFilesInfoInLatestVersion(api);
 
@@ -119,9 +130,18 @@ public class DatasetUpdater extends DatasetEditor {
                  *
                  * - trying to update the file metadata by a database ID that is not the "HEAD" of a file version history (which Dataverse doesn't allow anyway, it
                  * fails with "You cannot edit metadata on a dataFile that has been replaced"). This happens when a file A is renamed to B, but a different file A
-                 * is also added in the same update.
+                 * is also added in the same update. Schematically, (1) means unique file 1, A is a file name:
+                 * V1    -> V2
                  *
-                 * - trying to add a file with a name that already exists. This happens when a file A is renamed to B, while B is also part of the latest version
+                 * (1)A -> (1)B (move)
+                 * ..   -> (2)A  (add)
+                 *
+                 * - trying to add a file with a name that already exists. This happens when a file A is renamed to B, while B is also part of the latest version (V1)
+                 *
+                 * V1 -> V2
+                 * (1)A -> (1)B (move)
+                 * (2)B -> .. (delete)
+                 *
                  */
                 var fileReplacementCandidates = pathToFileMetaInLatestVersion.entrySet().stream()
                     .filter(pathToFileInfoEntry -> !oldToNewPathMovedFiles.containsKey(pathToFileInfoEntry.getKey()))
@@ -138,15 +158,15 @@ public class DatasetUpdater extends DatasetEditor {
                  * However, if a file is moved/renamed to a path that was also present in the latest version, then the old file at that path must first be deleted
                  * (and must therefore NOT be included in candidateRemainingFiles). Otherwise, we'll end up trying to use an existing (directoryLabel, label) pair.
                  */
-                var oldPathsOfMovedFiles = new HashSet<>(oldToNewPathMovedFiles.keySet());
-                var candidateRemainingFiles = diff(pathToFileInfo.keySet(), oldPathsOfMovedFiles);
-
+                var newPathsOfMovedFiles = new HashSet<>(oldToNewPathMovedFiles.values());
+                var candidateRemainingFiles = diff(pathToFileInfo.keySet(), newPathsOfMovedFiles);
 
                 /*
                  * The paths to delete, now, are the paths in the latest version minus the remaining files. We further subtract the old paths of the moved files.
-                 * This may be a bit confusing, but the goals is to make sure that the underlying FILE remains present (after all, it is to be renamed/moved). The
+                 * This may be a bit confusing, but the goal is to make sure that the underlying FILE remains present (after all, it is to be renamed/moved). The
                  * path itself WILL be "removed" from the latest version by the move. (It MAY be filled again by a file addition in the same update, though.)
                  */
+                var oldPathsOfMovedFiles = new HashSet<>(oldToNewPathMovedFiles.keySet());
                 var pathsToDelete = diff(diff(pathToFileMetaInLatestVersion.keySet(), candidateRemainingFiles), oldPathsOfMovedFiles);
                 log.debug("pathsToDelete = {}", pathsToDelete);
 
@@ -170,7 +190,7 @@ public class DatasetUpdater extends DatasetEditor {
                  * All paths in the deposit that are not occupied, are new files to be added.
                  */
 
-                var diffed = diff(diff(pathToFileMetaInLatestVersion.keySet(), oldPathsOfMovedFiles), pathsToDelete);
+                var diffed = diff(diff(pathToFileMetaInLatestVersion.keySet(), newPathsOfMovedFiles), pathsToDelete);
                 var occupiedPaths = union(diffed, oldToNewPathMovedFiles.values());
 
                 log.debug("occupiedPaths = {}", occupiedPaths);
@@ -208,6 +228,11 @@ public class DatasetUpdater extends DatasetEditor {
             log.error("Error updating dataset", e);
             throw e;
         }
+        finally {
+            if (originalMetadata != null) {
+                FileUtils.deleteQuietly(originalMetadata.getPath().toFile())    ;
+            }
+        }
     }
 
     void deleteDraftIfExists(String persistentId) throws IOException, DataverseException {
@@ -240,7 +265,7 @@ public class DatasetUpdater extends DatasetEditor {
                 seen.add(id);
 
                 var result = dataverseClient.file(id).updateMetadata(fileMeta);
-                log.debug("Called updateFileMetadata for id = {}; result = {}", id, result);
+                log.debug("Called updateFileMetadata for id = {}; result = {}", id, result.getHttpResponse().getStatusLine());
             }
         }
     }

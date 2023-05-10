@@ -79,11 +79,9 @@ taskEventDatabase:
 validateDansBag:
   baseUrl: 'http://localhost:20330'
   pingUrl: 'http://localhost:20331/ping'
-  connectionTimeoutMs: 10000
-  readTimeoutMs: 30000
   httpClient:
-    timeout: 30000ms
-    connectionTimeout: 10000ms
+    timeout: 5min
+    connectionTimeout: 1min
     chunkedEncodingEnabled: false
     timeToLive: 1h
     cookiesEnabled: false

@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class FileElement extends Base {
@@ -86,7 +87,7 @@ public class FileElement extends Base {
         return fm;
     }
 
-    static String getDescription(Map<String, List<String>> kv) {
+    private static String getDescription(Map<String, List<String>> kv) {
         if (!kv.isEmpty()) {
             if (kv.keySet().size() == 1 && kv.containsKey("description")) {
                 // FIL004
@@ -100,7 +101,7 @@ public class FileElement extends Base {
         return null;
     }
 
-    static String formatKeyValuePairs(Map<String, List<String>> kv) {
+    private static String formatKeyValuePairs(Map<String, List<String>> kv) {
         return kv.entrySet().stream().map(entry -> {
                 var values = StringUtils.join(entry.getValue(), ",");
                 return String.format("%s: \"%s\"", entry.getKey(), values);
@@ -109,7 +110,7 @@ public class FileElement extends Base {
     }
 
     // FIL002AB, FIL003
-    static Map<String, List<String>> getKeyValuePairs(Node node, String filename, String originalFilePath) {
+    private static Map<String, List<String>> getKeyValuePairs(Node node, String filename, String originalFilePath) {
         var fixedKeys = List.of(
             "hardware",
             "original_OS",
@@ -171,14 +172,14 @@ public class FileElement extends Base {
         return result;
     }
 
-    static String replaceForbiddenCharactersInPath(String dirPath) {
+    private static String replaceForbiddenCharactersInPath(String dirPath) {
         if (dirPath == null) {
             return null;
         }
         return directoryLabelForbidden.matcher(dirPath).replaceAll("_");
     }
 
-    static String replaceForbiddenCharactersInFilename(String filename) {
+    private static String replaceForbiddenCharactersInFilename(String filename) {
         if (filename == null) {
             return null;
         }

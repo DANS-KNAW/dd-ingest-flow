@@ -23,7 +23,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID
 public class DepositPropertiesOtherDoi extends Base {
 
     public static CompoundFieldGenerator<String> toOtherIdValue = (builder, value) -> {
-        builder.addSubfield(OTHER_ID_AGENCY, "");
-        builder.addSubfield(OTHER_ID_VALUE, value);
+        builder.addSubfield(OTHER_ID_AGENCY, value.replaceAll(":.*",""));
+        builder.addSubfield(OTHER_ID_VALUE, value.replaceAll("^[^:]*:",""));
     };
 }

@@ -23,6 +23,8 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE_OF_METADATA;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PERSONAL_DATA_PRESENT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_HOLDER;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getControlledMultiValueField;
@@ -36,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class RightsMetadataTest {
 
-    RightsMetadataTest() throws ParserConfigurationException, IOException, SAXException {
+    RightsMetadataTest() throws Exception {
     }
 
     private final Document ddmWithOrganizations = readDocumentFromString(""
@@ -64,18 +66,18 @@ class RightsMetadataTest {
         + "</ddm:DDM>\n");
 
     @Test
-    void RIG000A_should_map_dai_authors() {
+    void RIG000A_organizations_with_role_rightsHolder_map_to_rights_holder() {
 
         var result = mapDdmToDataset(ddmWithOrganizations, false);
-        assertThat(getPrimitiveMultiValueField("dansRights", "dansRightsHolder", result))
+        assertThat(getPrimitiveMultiValueField("dansRights", RIGHTS_HOLDER, result))
             .containsOnly("Some org", "Some other org");
     }
 
     @Test
-    void RIG003_should_collect_languages_from_authors() {
+    void RIG003_lang_attributes_of_organizations_map_to_language_of_metadata() {
 
         var result = mapDdmToDataset(ddmWithOrganizations, false);
-        assertThat(getControlledMultiValueField("dansRights", "dansMetadataLanguage", result))
+        assertThat(getControlledMultiValueField("dansRights", LANGUAGE_OF_METADATA, result))
             .containsOnly("Dutch", "German");
     }
 
@@ -103,23 +105,23 @@ class RightsMetadataTest {
         + "</ddm:DDM>\n");
 
     @Test
-    void RIG000B_should_map_organizations() {
+    void RIG000B_authors_with_role_rightsHolder_and_organization_map_to_rights_holders() {
 
         var result = mapDdmToDataset(ddmWithAuthors, false);
-        assertThat(getPrimitiveMultiValueField("dansRights", "dansRightsHolder", result))
+        assertThat(getPrimitiveMultiValueField("dansRights", RIGHTS_HOLDER, result))
             .containsOnly("Example Org", "Another Org");
     }
 
     @Test
-    void RIG003_should_collect_languages_from_organizations() {
+    void RIG003_lang_attributes_of_authors_with_role_rightsHolder_and_organization_map_to_language_of_metadata() {
 
         var result = mapDdmToDataset(ddmWithAuthors, false);
-        assertThat(getControlledMultiValueField("dansRights", "dansMetadataLanguage", result))
+        assertThat(getControlledMultiValueField("dansRights", LANGUAGE_OF_METADATA, result))
             .containsOnly("Dutch", "German");
     }
 
     @Test
-    void RIG001_should_map_dcterms_rights_holders() throws ParserConfigurationException, IOException, SAXException {
+    void RIG001_dct_rights_holders_map_to_rights_holders() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">\n"
             + minimalDdmProfile()
@@ -135,7 +137,7 @@ class RightsMetadataTest {
     }
 
     @Test
-    void RIG003_should_collect_languages_from_dcterms_rights_holders() throws ParserConfigurationException, IOException, SAXException {
+    void RIG003_lang_attributes_of_plain_rightHolders_map_to_language_of_metadata() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">\n"
             + minimalDdmProfile()
@@ -146,12 +148,12 @@ class RightsMetadataTest {
             + "</ddm:DDM>\n");
 
         var result = mapDdmToDataset(doc, false);
-        assertThat(getControlledMultiValueField("dansRights", "dansMetadataLanguage", result))
+        assertThat(getControlledMultiValueField("dansRights", LANGUAGE_OF_METADATA, result))
             .containsOnly("Dutch");
     }
 
     @Test
-    void RIG00N_rights_holder_must_be_present() throws ParserConfigurationException, IOException, SAXException {
+    void RIG00N_rights_holder_must_be_present() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">\n"
             + minimalDdmProfile()
@@ -165,7 +167,7 @@ class RightsMetadataTest {
     }
 
     @Test
-    void RIG002_should_apply_default_personal_data() throws ParserConfigurationException, IOException, SAXException {
+    void RIG002_no_ddm_personalData_maps_to_default() throws Exception {
         // required in DDM, validated by v2-schema
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">\n"
@@ -174,12 +176,12 @@ class RightsMetadataTest {
             + "</ddm:DDM>\n");
 
         var result = mapDdmToDataset(doc, false);
-        assertThat(getControlledSingleValueField("dansRights", "dansPersonalDataPresent", result))
+        assertThat(getControlledSingleValueField("dansRights", PERSONAL_DATA_PRESENT, result))
             .isEqualTo("Unknown");
     }
 
     @Test
-    void RIG002_should_map_personal_data() throws ParserConfigurationException, IOException, SAXException {
+    void RIG002_ddm_personalData_maps_to_personal_data_present() throws Exception {
         // required in DDM, validated by v2-schema
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">\n"
@@ -192,8 +194,26 @@ class RightsMetadataTest {
             + "</ddm:DDM>");
 
         var result = mapDdmToDataset(doc, false);
-        assertThat(getControlledSingleValueField("dansRights", "dansPersonalDataPresent", result))
+        assertThat(getControlledSingleValueField("dansRights", PERSONAL_DATA_PRESENT, result))
             .isEqualTo("Yes");
         // "No" is tested in the PersonalDataTest class
+    }
+
+    @Test
+    void RIG002_ddm_personalData_without_attribute_maps_to_default() throws Exception {
+        // required in DDM, validated by v2-schema
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">\n"
+            + "    <ddm:profile>\n"
+            + "        <dc:title>Title of the dataset</dc:title>\n"
+            + "        <ddm:audience>D19200</ddm:audience>\n"
+            + "        <ddm:personalData></ddm:personalData>\n"
+            + "    </ddm:profile>\n"
+            + dcmi("")
+            + "</ddm:DDM>");
+
+        var result = mapDdmToDataset(doc, false);
+        assertThat(getControlledSingleValueField("dansRights", PERSONAL_DATA_PRESENT, result))
+            .isEqualTo("Unknown");
     }
 }

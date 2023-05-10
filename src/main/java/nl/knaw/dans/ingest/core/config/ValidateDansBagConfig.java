@@ -16,60 +16,23 @@
 package nl.knaw.dans.ingest.core.config;
 
 import io.dropwizard.client.JerseyClientConfiguration;
+import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
 
+@Data
 public class ValidateDansBagConfig {
+    @NotNull
+    @Valid
     private URI baseUrl;
 
+    @NotNull
+    @Valid
     private URI pingUrl;
 
-    private int connectionTimeoutMs;
     @Valid
     @NotNull
     private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
-
-    public JerseyClientConfiguration getHttpClient() {
-        return httpClient;
-    }
-
-    public void setHttpClient(JerseyClientConfiguration jerseyClient) {
-        this.httpClient = jerseyClient;
-    }
-
-    private int readTimeoutMs;
-
-    public URI getBaseUrl() {
-        return baseUrl;
-    }
-
-    public void setBaseUrl(URI baseUrl) {
-        this.baseUrl = baseUrl;
-    }
-
-    public URI getPingUrl() {
-        return pingUrl;
-    }
-
-    public void setPingUrl(URI pingUrl) {
-        this.pingUrl = pingUrl;
-    }
-
-    public int getConnectionTimeoutMs() {
-        return connectionTimeoutMs;
-    }
-
-    public void setConnectionTimeoutMs(int connectionTimeoutMs) {
-        this.connectionTimeoutMs = connectionTimeoutMs;
-    }
-
-    public int getReadTimeoutMs() {
-        return readTimeoutMs;
-    }
-
-    public void setReadTimeoutMs(int readTimeoutMs) {
-        this.readTimeoutMs = readTimeoutMs;
-    }
 }

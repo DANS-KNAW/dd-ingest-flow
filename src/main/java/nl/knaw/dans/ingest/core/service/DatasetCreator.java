@@ -25,13 +25,14 @@ import nl.knaw.dans.lib.dataverse.DataverseApi;
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.RoleAssignment;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -65,7 +66,7 @@ public class DatasetCreator extends DatasetEditor {
     public String performEdit() {
         var api = dataverseClient.dataverse("root");
 
-        log.info("Creating new dataset");
+        log.debug("Creating new dataset");
 
         try {
             var persistentId = importDataset(api);
@@ -92,18 +93,29 @@ public class DatasetCreator extends DatasetEditor {
 
         // license stuff
         var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.getDdm())));
-        log.info("Setting license to {}", license);
+        log.debug("Setting license to {}", license);
         api.updateMetadataFromJsonLd(license, true);
         api.awaitUnlock();
 
         // add files to dataset
         var pathToFileInfo = getFileInfo();
-        log.debug("File info: {}", pathToFileInfo);
-        var databaseIds = addFiles(persistentId, pathToFileInfo.values());
 
-        log.debug("Database ID's: {}", databaseIds);
+        FileInfo originalMetadata = null;
+        if (!isMigration) {
+            originalMetadata = createOriginalMetadataFileInfo();
+            pathToFileInfo.put(Paths.get(ORIGINAL_METADATA_ZIP), originalMetadata);
+        }
+
+        log.debug("File info: {}", pathToFileInfo);
+        var databaseIdToFileInfo = addFiles(persistentId, pathToFileInfo.values());
+
+        if (originalMetadata != null) {
+            FileUtils.deleteQuietly(originalMetadata.getPath().toFile());
+        }
+
+        log.debug("Database ID -> FileInfo: {}", databaseIdToFileInfo);
         // update individual files metadata
-        updateFileMetadata(databaseIds);
+        updateFileMetadata(databaseIdToFileInfo);
         api.awaitUnlock();
 
         api.assignRole(getRoleAssignment());
@@ -125,7 +137,7 @@ public class DatasetCreator extends DatasetEditor {
         for (var entry : databaseIds.entrySet()) {
             var id = entry.getKey();
             var result = dataverseClient.file(id).updateMetadata(entry.getValue().getMetadata());
-            log.debug("Called updateFileMetadata for id = {}; result = {}", id, result);
+            log.debug("Called updateFileMetadata for id = {}; result = {}", id, result.getHttpResponse().getStatusLine());
         }
     }
 

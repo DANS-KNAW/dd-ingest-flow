@@ -17,6 +17,19 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import org.junit.jupiter.api.Test;
 
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_EAST;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_NORTH;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_SCHEME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_SOUTH;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_WEST;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_COVERAGE_CONTROLLED;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_COVERAGE_UNCONTROLLED;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT_SCHEME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT_X;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT_Y;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TEMPORAL_COVERAGE;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getControlledMultiValueField;
@@ -31,7 +44,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class DansTemporalSpatialMetadataTest {
 
     @Test
-    void TS001_temporal_coverage() throws Exception {
+    void TS001_dct_temporal_maps_to_temporal_coverage() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -41,12 +54,12 @@ public class DansTemporalSpatialMetadataTest {
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
 
-        assertThat(getPrimitiveMultiValueField("dansTemporalSpatial", "dansTemporalCoverage", result))
+        assertThat(getPrimitiveMultiValueField("dansTemporalSpatial", TEMPORAL_COVERAGE, result))
             .containsOnly("Het Romeinse Rijk", "De Oudheid");
     }
 
     @Test
-    void TS002_spatial_point_rd() throws Exception {
+    void TS002_point_with_srs_28992_maps_to_spatial_point_scheme_rd() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -58,17 +71,17 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
-        assertThat(point).extracting("dansSpatialPointX").extracting("value")
+        var point = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_POINT, result);
+        assertThat(point).extracting(SPATIAL_POINT_X).extracting("value")
             .containsOnly("126466");
-        assertThat(point).extracting("dansSpatialPointY").extracting("value")
+        assertThat(point).extracting(SPATIAL_POINT_Y).extracting("value")
             .containsOnly("529006");
-        assertThat(point).extracting("dansSpatialPointScheme").extracting("value")
+        assertThat(point).extracting(SPATIAL_POINT_SCHEME).extracting("value")
             .containsOnly("RD (in m.)");
     }
 
     @Test
-    void point_with_invalid_srs_name_maps_to_degrees() throws Exception {
+    void TS002_point_with_invalid_srs_maps_to_spatial_point_scheme_degrees() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -80,17 +93,17 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
-        assertThat(point).extracting("dansSpatialPointX").extracting("value")
+        var point = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_POINT, result);
+        assertThat(point).extracting(SPATIAL_POINT_X).extracting("value")
             .containsOnly("529006");
-        assertThat(point).extracting("dansSpatialPointY").extracting("value")
+        assertThat(point).extracting(SPATIAL_POINT_Y).extracting("value")
             .containsOnly("126466");
-        assertThat(point).extracting("dansSpatialPointScheme").extracting("value")
+        assertThat(point).extracting(SPATIAL_POINT_SCHEME).extracting("value")
             .containsOnly("longitude/latitude (degrees)");
     }
 
     @Test
-    void point_without_srs_name_maps_to_degrees() throws Exception {
+    void TS002_point_without_srs_name_maps_to_spatial_point_scheme_degrees() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -102,17 +115,17 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
-        assertThat(point).extracting("dansSpatialPointX").extracting("value")
+        var point = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_POINT, result);
+        assertThat(point).extracting(SPATIAL_POINT_X).extracting("value")
             .containsOnly("529006");
-        assertThat(point).extracting("dansSpatialPointY").extracting("value")
+        assertThat(point).extracting(SPATIAL_POINT_Y).extracting("value")
             .containsOnly("126466");
-        assertThat(point).extracting("dansSpatialPointScheme").extracting("value")
+        assertThat(point).extracting(SPATIAL_POINT_SCHEME).extracting("value")
             .containsOnly("longitude/latitude (degrees)");
     }
 
     @Test
-    void point_single_number() throws Exception {
+    void TS002_point_with_single_number_throws_an_exception() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -128,7 +141,7 @@ public class DansTemporalSpatialMetadataTest {
     }
 
     @Test
-    void point_without_pos_is_ignored() throws Exception {
+    void TS002_point_without_pos_is_ignored() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi(""
@@ -138,45 +151,45 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
+        var point = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_POINT, result);
         assertThat(point).isNull();
     }
 
     @Test
-    void spatial_without_anything_is_ignored() throws Exception {
+    void TS002_spatial_without_anything_is_ignored() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi("<dcx-gml:spatial></dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
+        var point = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_POINT, result);
         assertThat(point).isNull();
     }
 
     @Test
-    void TS003_spatial_point_degrees() throws Exception {
+    void TS003_spatial_point_with_srs_4326_maps_to_spatial_point_scheme_degrees() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi(""
-            + "        <dcx-gml:spatial>"
+            + "        <dcx-gml:spatial srsName='http://www.opengis.net/def/crs/EPSG/0/4326'>"
             + "            <Point xmlns='http://www.opengis.net/gml'>"
             + "                <pos>52.078663 4.288788</pos>"
             + "            </Point>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
-        assertThat(point).extracting("dansSpatialPointX").extracting("value")
+        var point = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_POINT, result);
+        assertThat(point).extracting(SPATIAL_POINT_X).extracting("value")
             .containsOnly("4.288788");
-        assertThat(point).extracting("dansSpatialPointY").extracting("value")
+        assertThat(point).extracting(SPATIAL_POINT_Y).extracting("value")
             .containsOnly("52.078663");
-        assertThat(point).extracting("dansSpatialPointScheme").extracting("value")
+        assertThat(point).extracting(SPATIAL_POINT_SCHEME).extracting("value")
             .containsOnly("longitude/latitude (degrees)");
     }
 
     @Test
-    void TS004_spatial_box_rd() throws Exception {
+    void TS004_spatial_box_with_srs_28992_maps_to_scheme_rd() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -191,21 +204,21 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
-        assertThat(box).extracting("dansSpatialBoxNorth").extracting("value")
+        var box = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_BOX, result);
+        assertThat(box).extracting(SPATIAL_BOX_NORTH).extracting("value")
             .containsOnly("628000");
-        assertThat(box).extracting("dansSpatialBoxEast").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_EAST).extracting("value")
             .containsOnly("140000");
-        assertThat(box).extracting("dansSpatialBoxSouth").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_SOUTH).extracting("value")
             .containsOnly("335000");
-        assertThat(box).extracting("dansSpatialBoxWest").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_WEST).extracting("value")
             .containsOnly("102000");
-        assertThat(box).extracting("dansSpatialBoxScheme").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_SCHEME).extracting("value")
             .containsOnly("RD (in m.)");
     }
 
     @Test
-    void TS005_spatial_box_degrees() throws Exception {
+    void TS005_spatial_box_with_srs_4326_mapsTo_spatial_box_scheme_degrees() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -220,21 +233,21 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
-        assertThat(box).extracting("dansSpatialBoxNorth").extracting("value")
+        var box = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_BOX, result);
+        assertThat(box).extracting(SPATIAL_BOX_NORTH).extracting("value")
             .containsOnly("53.23074335194507");
-        assertThat(box).extracting("dansSpatialBoxEast").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_EAST).extracting("value")
             .containsOnly("6.563118076315912");
-        assertThat(box).extracting("dansSpatialBoxSouth").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_SOUTH).extracting("value")
             .containsOnly("51.46343658020442");
-        assertThat(box).extracting("dansSpatialBoxWest").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_WEST).extracting("value")
             .containsOnly("3.5621054065986075");
-        assertThat(box).extracting("dansSpatialBoxScheme").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_SCHEME).extracting("value")
             .containsOnly("longitude/latitude (degrees)");
     }
 
     @Test
-    void box_with_invalid_srs_name_maps_to_degrees() throws Exception {
+    void TS005_spatial_box_with_invalid_srs_name_maps_to_scheme_degrees() throws Exception {
         // TODO https://drivenbydata.atlassian.net/browse/DD-1305
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -249,21 +262,21 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
-        assertThat(box).extracting("dansSpatialBoxNorth").extracting("value")
+        var box = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_BOX, result);
+        assertThat(box).extracting(SPATIAL_BOX_NORTH).extracting("value")
             .containsOnly("3");
-        assertThat(box).extracting("dansSpatialBoxEast").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_EAST).extracting("value")
             .containsOnly("4");
-        assertThat(box).extracting("dansSpatialBoxSouth").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_SOUTH).extracting("value")
             .containsOnly("1");
-        assertThat(box).extracting("dansSpatialBoxWest").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_WEST).extracting("value")
             .containsOnly("2");
-        assertThat(box).extracting("dansSpatialBoxScheme").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_SCHEME).extracting("value")
             .containsOnly("longitude/latitude (degrees)");
     }
 
     @Test
-    void box_without_srs_name() throws Exception {
+    void TS005_spatial_box_without_srs_name_maps_to_scheme_degrees() throws Exception {
         // TODO not explicit in https://drivenbydata.atlassian.net/browse/DD-1305
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -278,21 +291,21 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
-        assertThat(box).extracting("dansSpatialBoxNorth").extracting("value")
+        var box = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_BOX, result);
+        assertThat(box).extracting(SPATIAL_BOX_NORTH).extracting("value")
             .containsOnly("3");
-        assertThat(box).extracting("dansSpatialBoxEast").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_EAST).extracting("value")
             .containsOnly("4");
-        assertThat(box).extracting("dansSpatialBoxSouth").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_SOUTH).extracting("value")
             .containsOnly("1");
-        assertThat(box).extracting("dansSpatialBoxWest").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_WEST).extracting("value")
             .containsOnly("2");
-        assertThat(box).extracting("dansSpatialBoxScheme").extracting("value")
+        assertThat(box).extracting(SPATIAL_BOX_SCHEME).extracting("value")
             .containsOnly("longitude/latitude (degrees)");
     }
 
     @Test
-    void box_without_single_number_in_upper_corner_cause_an_exception() throws Exception {
+    void TS005_spatial_box_with_single_number_in_upper_corner_throws_an_exception() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi(""
@@ -310,7 +323,7 @@ public class DansTemporalSpatialMetadataTest {
     }
 
     @Test
-    void box_without_single_number_in_lower_corner_cause_an_exception() throws Exception {
+    void TS005_spatial_box_with_single_number_in_lower_corner_throws_an_exception() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi(""
@@ -328,7 +341,7 @@ public class DansTemporalSpatialMetadataTest {
     }
 
     @Test
-    void box_without_lower_corner_causes_an_exception() throws Exception {
+    void TS005_spatial_box_without_lower_corner_throws_an_exception() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi(""
@@ -346,7 +359,7 @@ public class DansTemporalSpatialMetadataTest {
     }
 
     @Test
-    void box_without_upper_corner_causes_an_exception() throws Exception {
+    void TS005_spatial_box_without_upper_corner_throws_an_exception() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi(""
@@ -364,7 +377,7 @@ public class DansTemporalSpatialMetadataTest {
     }
 
     @Test
-    void box_without_envelope_causes_an_exception() throws Exception {
+    void TS005_spatial_box_without_envelope_throws_an_exception() throws Exception {
         // TODO ignoring would be consistent with POINT without POS
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -380,7 +393,7 @@ public class DansTemporalSpatialMetadataTest {
     }
 
     @Test
-    void TS006_coverage_controlled() throws Exception {
+    void TS006_dct_spatial_maps_to_spatial_coverage_controlled() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -389,12 +402,12 @@ public class DansTemporalSpatialMetadataTest {
             + "        <dct:spatial>Japan</dct:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var box = getControlledMultiValueField("dansTemporalSpatial", "dansSpatialCoverageControlled", result);
+        var box = getControlledMultiValueField("dansTemporalSpatial", SPATIAL_COVERAGE_CONTROLLED, result);
         assertThat(box).containsOnly("South Africa", "Japan");
     }
 
     @Test
-    void TS007_spatial_coverage_trims_text() throws Exception {
+    void TS007_dct_spatial_with_surrounding_white_space_maps_to_trimmed_spatial_coverage() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
@@ -404,7 +417,7 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dct:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        assertThat(getPrimitiveMultiValueField("dansTemporalSpatial", "dansSpatialCoverageText", result))
+        assertThat(getPrimitiveMultiValueField("dansTemporalSpatial", SPATIAL_COVERAGE_UNCONTROLLED, result))
             .containsOnly("Roman Empire");
     }
 }

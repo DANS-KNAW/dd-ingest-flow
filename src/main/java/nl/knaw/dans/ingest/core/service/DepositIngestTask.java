@@ -108,11 +108,13 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
     @Override
     public void run() {
+        log.info("START processing deposit {}", depositLocation.getDepositId());
         writeEvent(TaskEvent.EventType.START_PROCESSING, TaskEvent.Result.OK, null);
 
         // TODO this is really ugly, fix it at some point
         try {
             this.deposit = depositManager.readDeposit(depositLocation);
+            log.info("Deposit {} is update: {}", deposit.getDepositId(), deposit.isUpdate());
         }
         catch (InvalidDepositException e) {
             try {
@@ -129,21 +131,22 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         try {
             doRun();
             updateDepositFromResult(DepositState.PUBLISHED, "The deposit was successfully ingested in the Data Station and will be automatically archived");
+            log.info("END processing (SUCCESS) deposit {}", deposit.getDepositId());
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.OK, null);
         }
         catch (RejectedDepositException e) {
-            log.error("deposit was rejected", e);
+            log.error("Deposit was rejected", e);
             updateDepositFromResult(DepositState.REJECTED, e.getMessage());
             blockTarget(e.getMessage(), DepositState.REJECTED);
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.REJECTED, e.getMessage());
         }
         catch (TargetBlockedException e) {
-            log.error("deposit was rejected because a previous deposit with the same target failed", e);
+            log.error("Deposit was rejected because a previous deposit with the same target failed", e);
             updateDepositFromResult(DepositState.FAILED, e.getMessage());
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.FAILED, e.getMessage());
         }
         catch (Throwable e) {
-            log.error("deposit failed", e);
+            log.error("Deposit failed", e);
             updateDepositFromResult(DepositState.FAILED, e.getMessage());
             blockTarget(e.getMessage(), DepositState.FAILED);
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.FAILED, e.getMessage());

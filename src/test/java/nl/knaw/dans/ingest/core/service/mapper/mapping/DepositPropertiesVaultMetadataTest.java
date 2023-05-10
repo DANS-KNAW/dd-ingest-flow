@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_AGENCY;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -46,20 +47,32 @@ class DepositPropertiesVaultMetadataTest extends BaseTest {
     void toOtherIdValue_should_throw_error_if_value_is_invalid() {
         var builder = new CompoundFieldBuilder("", true);
 
-        assertThrows(IllegalArgumentException.class,
-            () -> DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, "in/valid"));
+        assertThatThrownBy(
+            () -> DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, "in/valid"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Other ID value has invalid format. It should be '<prefix>:<suffix>'");
+        assertThatThrownBy(
+            () -> DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, "a b c"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Identifier must not contain whitespace");
     }
 
     @Test
     void toOtherIdValue_should_throw_error_with_empty_values() {
         var builder = new CompoundFieldBuilder("", true);
 
-        assertThrows(IllegalArgumentException.class,
-            () -> DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, ""));
-        assertThrows(IllegalArgumentException.class,
-            () -> DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, " "));
-        assertThrows(IllegalArgumentException.class,
-            () -> DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, null));
+        assertThatThrownBy(
+            () -> DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, ""),"")
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Identifier must not be blank");
+        assertThatThrownBy(
+            () -> DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, " "),"")
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Identifier must not be blank");
+        assertThatThrownBy(
+            () -> DepositPropertiesVaultMetadata.toOtherIdValue.build(builder, null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Identifier must not be blank");
     }
 
     @Test

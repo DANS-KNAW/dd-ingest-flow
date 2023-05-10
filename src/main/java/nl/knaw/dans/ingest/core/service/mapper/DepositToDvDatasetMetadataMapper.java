@@ -418,6 +418,7 @@ public class DepositToDvDatasetMetadataMapper {
             "/ddm:DDM/ddm:dcmiMetadata/dc:date",
             "/ddm:DDM/ddm:dcmiMetadata/dcterms:dateAccepted",
             "/ddm:DDM/ddm:dcmiMetadata/dcterms:dateCopyrighted",
+            "/ddm:DDM/ddm:dcmiMetadata/dcterms:dateSubmitted",
             "/ddm:DDM/ddm:dcmiMetadata/dcterms:modified",
             "/ddm:DDM/ddm:dcmiMetadata/dcterms:issued",
             "/ddm:DDM/ddm:dcmiMetadata/dcterms:valid",

@@ -22,12 +22,10 @@ import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.FileInfo;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
-import nl.knaw.dans.ingest.core.service.mapper.mapping.AccessRights;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.FileElement;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.License;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
-import nl.knaw.dans.lib.dataverse.DataverseResponse;
 import nl.knaw.dans.lib.dataverse.Version;
 import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.file.DataFile;
@@ -48,7 +46,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +54,9 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class DatasetEditor {
-    protected static final List<String> embargoExclusions = Arrays.asList("easy-migration.zip", "original-metadata.zip");
+
+    public static final String ORIGINAL_METADATA_ZIP = "original-metadata.zip";
+    protected static final List<String> embargoExclusions = Arrays.asList("easy-migration.zip", ORIGINAL_METADATA_ZIP);
 
     protected final DataverseClient dataverseClient;
     protected final boolean isMigration;
@@ -90,7 +89,7 @@ public abstract class DatasetEditor {
         this.datasetService = datasetService;
     }
 
-    static Instant parseDate(String value) {
+    private static Instant parseDate(String value) {
         try {
             log.debug("Trying to parse {} as LocalDate", value);
             return LocalDate.parse(value).atStartOfDay(ZoneId.systemDefault()).toInstant();
@@ -121,23 +120,15 @@ public abstract class DatasetEditor {
             result.put(id, fileInfo);
         }
 
-        if (!isMigration) {
-            var path = zipFileHandler.zipOriginalMetadata(deposit.getDdmPath(), deposit.getFilesXmlPath());
-            var checksum = DigestUtils.sha1Hex(new FileInputStream(path.toFile()));
-            var fileMeta = new FileMeta();
-            fileMeta.setLabel("original-metadata.zip");
-            var fileInfo = new FileInfo(path, path, checksum, fileMeta);
-            var id = addFile(persistentId, fileInfo);
-            result.put(id, fileInfo);
-            try {
-                Files.deleteIfExists(path);
-            }
-            catch (IOException e) {
-                log.warn("Unable to delete zipfile {}", path, e);
-            }
-        }
-
         return result;
+    }
+
+    protected FileInfo createOriginalMetadataFileInfo() throws IOException {
+        var path = zipFileHandler.zipOriginalMetadata(deposit.getDdmPath(), deposit.getFilesXmlPath());
+        var checksum = DigestUtils.sha1Hex(new FileInputStream(path.toFile()));
+        var fileMeta = new FileMeta();
+        fileMeta.setLabel(ORIGINAL_METADATA_ZIP);
+        return new FileInfo(path, path, checksum, fileMeta);
     }
 
     private Integer addFile(String persistentId, FileInfo fileInfo) throws IOException, DataverseException {
@@ -194,11 +185,7 @@ public abstract class DatasetEditor {
                 // remove entries that match the file exclusion pattern
                 var path = entry.getKey().toString();
 
-                if (fileExclusionPattern != null) {
-                    return !fileExclusionPattern.matcher(path).matches();
-                }
-
-                return true;
+                return (fileExclusionPattern == null || !fileExclusionPattern.matcher(path).matches());
             })
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }

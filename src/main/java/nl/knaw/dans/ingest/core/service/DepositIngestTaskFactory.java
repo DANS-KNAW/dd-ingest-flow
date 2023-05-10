@@ -76,29 +76,29 @@ public class DepositIngestTaskFactory {
         }
         catch (DataverseException e) {
             log.error("Unexpected dataverse error while preparing data for deposit at path {}, moving deposit", depositDir);
-            moveDepositToOutbox(depositDir, outboxDir);
+            moveDepositToFailed(depositDir, outboxDir);
             throw new InvalidDepositException(e.getMessage(), e);
         }
         catch (InvalidDepositException | IOException e) {
             // the reading of the deposit failed, so we cannot update its internal state. All we can do is move it
             // to the "failed" directory
             log.error("Unable to load deposit properties, considering deposit at path {} to be broken", depositDir);
-            moveDepositToOutbox(depositDir, outboxDir);
+            moveDepositToFailed(depositDir, outboxDir);
             throw e;
         }
         catch (Throwable e) {
             // if something bad happens while loading the deposit, we want to wrap it into an InvalidDepositException as well
             log.error("Unexpected error occurred while loading deposit at path {}, moving deposit", depositDir);
-            moveDepositToOutbox(depositDir, outboxDir);
+            moveDepositToFailed(depositDir, outboxDir);
             throw new InvalidDepositException("Unexpected error occurred: " + e.getMessage(), e);
         }
     }
 
-    void moveDepositToOutbox(Path depositDir, Path outboxDir) throws IOException {
+    void moveDepositToFailed(Path depositDir, Path outboxDir) throws IOException {
         var target = outboxDir
             .resolve(OutboxSubDir.FAILED.getValue());
 
-        log.info("Moving path {} to {}", depositDir, target);
+        log.debug("Moving path {} to {}", depositDir, target);
         depositManager.moveDeposit(depositDir, target);
     }
 
@@ -110,7 +110,7 @@ public class DepositIngestTaskFactory {
         var licenses = datasetService.getLicenses();
         log.debug("Licenses retrieved: {}", licenses);
 
-        log.info("Creating deposit ingest task, isMigration={}, role={}, outboxDir={}", isMigration, depositorRole, outboxDir);
+        log.debug("Creating deposit ingest task, isMigration={}, role={}, outboxDir={}", isMigration, depositorRole, outboxDir);
         if (isMigration) {
             return new DepositMigrationTask(
                 depositToDvDatasetMetadataMapperFactory,

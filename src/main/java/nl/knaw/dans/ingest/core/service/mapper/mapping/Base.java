@@ -64,10 +64,6 @@ public class Base {
             .flatMap(i -> i);
     }
 
-    public static boolean hasAttribute(Node node, String name) {
-        return getAttribute(node, name).isPresent();
-    }
-
     static boolean hasAttribute(Node node, String namespaceURI, String name) {
         return getAttribute(node, namespaceURI, name).isPresent();
 
@@ -80,13 +76,6 @@ public class Base {
 
     static boolean hasAttributeValue(Node node, String name, String value) {
         return getAttribute(node, name)
-            .map(n -> StringUtils.equals(value, n.getTextContent()))
-            .orElse(false);
-
-    }
-
-    static boolean hasAttributeValue(Node node, String namespaceURI, String name, String value) {
-        return getAttribute(node, namespaceURI, name)
             .map(n -> StringUtils.equals(value, n.getTextContent()))
             .orElse(false);
 

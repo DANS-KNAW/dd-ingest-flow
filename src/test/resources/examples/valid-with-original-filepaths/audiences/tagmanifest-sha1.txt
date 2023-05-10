@@ -1,0 +1,6 @@
+db992fa6e4623b4eaf10faba7a0006fd5b930e77  metadata/files.xml
+d87248dcd5158c6bcb0258aa89d3c84ceac994a7  manifest-sha1.txt
+165498ce71d70818c72a19b36631a0edf092b62f  metadata/dataset.xml
+e2924b081506bac23f5fffe650ad1848a1c8ac1d  bagit.txt
+78c6dbeaad9e04da66bbcf69e6b2c2c9958cbff9  README.md
+bdfb3a43c6b0889e38748f9cacbde8d66e2edde1  original-filepaths.txt

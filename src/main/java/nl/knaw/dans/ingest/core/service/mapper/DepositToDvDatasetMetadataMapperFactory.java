@@ -42,13 +42,14 @@ public class DepositToDvDatasetMetadataMapperFactory {
         this.dataverseClient = dataverseClient;
     }
 
-    public DepositToDvDatasetMetadataMapper createMapper(boolean deduplicate) {
+    public DepositToDvDatasetMetadataMapper createMapper(boolean deduplicate, boolean isMigration) {
         return new DepositToDvDatasetMetadataMapper(
             deduplicate,
             getActiveMetadataBlocks(),
             iso1ToDataverseLanguage,
             iso2ToDataverseLanguage,
-            spatialCoverageCountryTerms
+            spatialCoverageCountryTerms,
+            isMigration
         );
     }
 

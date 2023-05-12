@@ -101,8 +101,8 @@ public class MappingTestHelper {
             Set.of("citation", "dansRights", "dansRelationMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata"),
             config.getIso1ToDataverseLanguage(),
             config.getIso2ToDataverseLanguage(),
-            config.getSpatialCoverageCountryTerms()
-        );
+            config.getSpatialCoverageCountryTerms(),
+            isMigration);
     }
 
     public static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {

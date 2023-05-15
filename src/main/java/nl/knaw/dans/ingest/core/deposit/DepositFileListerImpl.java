@@ -60,7 +60,7 @@ public class DepositFileListerImpl implements DepositFileLister {
         if (Files.exists(originalFilepathsFile)) {
             var lines = Files.readAllLines(originalFilepathsFile);
             var mappings = lines.stream().map(line -> {
-                    var parts = line.split(" {2}", 2);
+                    var parts = line.split("\\s+", 2);
 
                     if (parts.length == 2) {
                         return new OriginalFilePathMapping.Mapping(

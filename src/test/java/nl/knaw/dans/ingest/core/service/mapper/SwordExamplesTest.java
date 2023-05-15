@@ -105,7 +105,7 @@ public class SwordExamplesTest {
 
         var filesXml = parseSwordExampleXml("all-mappings/metadata/files.xml");
         var files = XPathEvaluator.nodes(filesXml, "/files:files/files:file")
-            .map(node -> toFileMeta(node, true))
+            .map(node -> toFileMeta(node, true, true))
             .collect(Collectors.toList());
 
         assertThat(files.stream().map(FileMeta::getLabel)) // FIL001

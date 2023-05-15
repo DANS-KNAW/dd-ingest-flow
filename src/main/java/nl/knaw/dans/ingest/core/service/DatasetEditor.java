@@ -166,7 +166,7 @@ public abstract class DatasetEditor {
 
     Map<Path, FileInfo> getFileInfo() {
 
-        var files = FileElement.pathToFileInfo(deposit);
+        var files = FileElement.pathToFileInfo(deposit, isMigration);
 
         return files.entrySet().stream()
             .map(entry -> {

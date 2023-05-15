@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class FileElement extends Base {
@@ -45,7 +44,7 @@ public class FileElement extends Base {
         "ANONYMOUS", false
     );
 
-    public static FileMeta toFileMeta(Node node, boolean defaultRestrict) {
+    public static FileMeta toFileMeta(Node node, boolean defaultRestrict, boolean isMigration) {
         var filepathAttribute = getAttribute(node, "filepath")
             .map(Node::getTextContent)
             .orElseThrow(() -> new RuntimeException("File node without a filepath attribute"));
@@ -75,7 +74,7 @@ public class FileElement extends Base {
             ? pathInDataset.toString()
             : null;
 
-        var kv = getKeyValuePairs(node, filename, originalFilePath);
+        var kv = getKeyValuePairs(node, filename, originalFilePath, isMigration);
 
         var description = getDescription(kv);
 
@@ -89,7 +88,6 @@ public class FileElement extends Base {
     }
 
     private static String getDescription(Map<String, List<String>> kv) {
-        // TODO keep only key "originalFilePath" if not isMigration
         if (!kv.isEmpty()) {
             if (kv.keySet().size() == 1 && kv.containsKey("description")) {
                 // FIL004
@@ -111,7 +109,7 @@ public class FileElement extends Base {
             .collect(Collectors.joining("; "));
     }
 
-    private static Map<String, List<String>> getKeyValuePairs(Node node, String filename, String originalFilePath) {
+    private static Map<String, List<String>> getKeyValuePairs(Node node, String filename, String originalFilePath, boolean isMigration) {
         var fixedKeys = List.of(
             "hardware",
             "original_OS",
@@ -119,7 +117,7 @@ public class FileElement extends Base {
             "notes",
             "case_quantity",
             "file_category",
-            "description",
+            "description", // FIL004
             "othmat_codebook",
             "data_collector",
             "collection_date",
@@ -161,12 +159,17 @@ public class FileElement extends Base {
                         .add(value);
                 }
             });
-
-        getChildNodes(node, "title")
-            .map(Node::getTextContent)
-            .filter(n -> StringUtils.equalsIgnoreCase(filename, n))
-            .forEach(n -> result.computeIfAbsent("title", k -> new ArrayList<>())
-                .add(n));
+        if (isMigration) {
+            // TODO which rule is this ?????
+            getChildNodes(node, "title")
+                .map(Node::getTextContent)
+                .filter(n -> StringUtils.equalsIgnoreCase(filename, n))
+                .forEach(n -> result.computeIfAbsent("title", k -> new ArrayList<>())
+                    .add(n));
+        } else {
+            // keep only FIL004
+            result.entrySet().removeIf(entry -> "description".equals(entry.getKey()));
+        }
 
         // FIL003
         if (originalFilePath != null) {
@@ -190,7 +193,7 @@ public class FileElement extends Base {
         return filenameForbidden.matcher(filename).replaceAll("_");
     }
 
-    public static Map<Path, FileInfo> pathToFileInfo(Deposit deposit) {
+    public static Map<Path, FileInfo> pathToFileInfo(Deposit deposit, boolean isMigration) {
         // FIL006
         var defaultRestrict = XPathEvaluator.nodes(deposit.getDdm(), "/ddm:DDM/ddm:profile/ddm:accessRights")
             .map(AccessRights::toDefaultRestrict)
@@ -209,7 +212,7 @@ public class FileElement extends Base {
             var sha1 = filePathToSha1.get(path);
             var absolutePath = deposit.getBagDir().resolve(path);
 
-            result.put(path, new FileInfo(absolutePath, sha1, toFileMeta(node, defaultRestrict)));
+            result.put(path, new FileInfo(absolutePath, sha1, toFileMeta(node, defaultRestrict, isMigration)));
         });
 
         return result;

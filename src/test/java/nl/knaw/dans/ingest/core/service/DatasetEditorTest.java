@@ -84,7 +84,7 @@ public class DatasetEditorTest extends BaseTest {
             + "    <file filepath='data/subdir/file2.txt'/>"
             + "    <file filepath='data/subdir2/file3.txt'/>"
             + "</files>"));
-        var fileInfoMap = FileElement.pathToFileInfo(deposit);
+        var fileInfoMap = FileElement.pathToFileInfo(deposit, true);
         var filteredFileInfoMap = createDatasetEditor(deposit, true, Pattern.compile(".*file2.*"), null)
             .getFileInfo();
 

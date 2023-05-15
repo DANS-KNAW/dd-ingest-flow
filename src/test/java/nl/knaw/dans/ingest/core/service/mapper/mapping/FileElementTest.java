@@ -50,7 +50,7 @@ class FileElementTest extends BaseTest {
                 + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
                 + "</file>",ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
 
         assertEquals("leeg.txt", result.getLabel());
         assertEquals(" ", result.getDirectoryLabel());
@@ -64,7 +64,7 @@ class FileElementTest extends BaseTest {
                 + "    <file filepath='data/this/is/the/directory/label/leeg.txt' %s>\n"
                 + "    </file>",ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
         assertEquals("leeg.txt", result.getLabel());
         assertEquals("this/is/the/directory/label", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -76,7 +76,7 @@ class FileElementTest extends BaseTest {
             + "    <file filepath='/this/is/the/directory/label/leeg.txt' %s>"
             + "    </file>",ns));
 
-        assertThatThrownBy(() ->  FileElement.toFileMeta(doc.getDocumentElement(), true))
+        assertThatThrownBy(() ->  FileElement.toFileMeta(doc.getDocumentElement(), true, true))
             .isInstanceOf(RuntimeException.class) // TODO shouldn't this be something like InvalidPathException?
             .hasMessage("file outside data folder: /this/is/the/directory/label/leeg.txt");
     }
@@ -88,7 +88,7 @@ class FileElementTest extends BaseTest {
             + "         <dcterms:description>Empty file</dcterms:description>\n"
             + "    </file>",ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
         assertEquals("leeg.txt", result.getLabel());
         assertEquals("this/is/the/directory/label", result.getDirectoryLabel());
         assertEquals("Empty file", result.getDescription());
@@ -108,7 +108,7 @@ class FileElementTest extends BaseTest {
             + "</file>", filePath, ns)
         );
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
         assertEquals("leeg.txt", result.getLabel());
         assertEquals("this/is/the/directory/label", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -121,7 +121,7 @@ class FileElementTest extends BaseTest {
         String s = String.format("<file filepath=\"%s\" %s></file>", filePath, ns);
         var doc = readDocumentFromString(s);
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
         assertEquals("strange_filename_.txt", result.getLabel());
         assertEquals("directory/path/with/_for_bidden_/_chars_", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -133,7 +133,7 @@ class FileElementTest extends BaseTest {
         String filePath = "data/directory/path/with/all/legal/chars/normal_filename.txt";
         var doc = readDocumentFromString(String.format(
             "<file filepath='%s' %s></file>", filePath, ns));
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
         assertEquals("normal_filename.txt", result.getLabel());
         assertEquals("directory/path/with/all/legal/chars", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -146,7 +146,7 @@ class FileElementTest extends BaseTest {
         var doc = readDocumentFromString(String.format(
             "<file filepath='%s' %s></file>", originalFilePath, ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
         assertEquals("n\u00f8rmal_filename.txt", result.getLabel());
         assertEquals("directory/path/with/all/leg_l/chars", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -173,7 +173,7 @@ class FileElementTest extends BaseTest {
         var doc = readDocumentFromString(String.format(
             "<file filepath='%s' %s></file>", filePath, ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
         assertEquals("directory/path/with/all/leg_l/chars", result.getDirectoryLabel());
         assertEquals("test_______.txt", result.getLabel());
     }
@@ -193,7 +193,7 @@ class FileElementTest extends BaseTest {
         var doc = readDocumentFromString(String.format(
             "<file filepath='data/%s/fil^e.txt' %s></file>", filename, ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
         assertEquals("dir__   ___/xyz/\\a.b-c", result.getDirectoryLabel());
         assertEquals("fil^e.txt", result.getLabel());
     }

@@ -127,7 +127,7 @@ public class DepositToDvDatasetMetadataMapper {
                 citationFields.addOtherIdsStrings(Stream.ofNullable(vaultMetadata.getOtherId()) // CIT002A
                     .filter(DepositPropertiesVaultMetadata::isValidOtherIdValue), DepositPropertiesVaultMetadata.toOtherIdValue);
 
-            // TODO CIT002B is migration-only, CIT004 not, also VLT00nA and FIL002A-B
+            // TODO CIT002B is migration-only, CIT004 not
             citationFields.addOtherIds(getIdentifiers(ddm).filter(Identifier::canBeMappedToOtherId), Identifier.toOtherIdValue); // CIT002B, CIT004
             if (isMigration)
                 citationFields.addOtherIdsStrings(Stream.ofNullable(otherDoiId), DepositPropertiesOtherDoi.toOtherIdValue); // PAN second version DOIs (migration)
@@ -228,11 +228,12 @@ public class DepositToDvDatasetMetadataMapper {
             throw new IllegalStateException("dansDataVaultMetadata must always be active");
         }
 
-        dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId());
-        dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn());
-        dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId());
-        dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion());
-        dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken());
+        // TODO migration-only: VLT00nA
+        dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId()); // VLT003 / VLT003A
+        dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn()); // VLT004 / VLT004A
+        dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId()); // VLT005 / VLT005A
+        dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion()); // VLT006
+        dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken()); // VLT007 / VLT007A
 
         return assembleDataverseDataset(termsOfAccess);
     }

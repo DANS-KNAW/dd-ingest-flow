@@ -89,6 +89,7 @@ public class FileElement extends Base {
     }
 
     private static String getDescription(Map<String, List<String>> kv) {
+        // TODO keep only key "originalFilePath" if not isMigration
         if (!kv.isEmpty()) {
             if (kv.keySet().size() == 1 && kv.containsKey("description")) {
                 // FIL004
@@ -110,7 +111,6 @@ public class FileElement extends Base {
             .collect(Collectors.joining("; "));
     }
 
-    // FIL002AB, FIL003
     private static Map<String, List<String>> getKeyValuePairs(Node node, String filename, String originalFilePath) {
         var fixedKeys = List.of(
             "hardware",
@@ -132,6 +132,7 @@ public class FileElement extends Base {
 
         var result = new HashMap<String, List<String>>();
 
+        // FIL002B
         for (var key : fixedKeys) {
             var child = getChildNodes(node, String.format("*[local-name() = '%s']", key))
                 .map(Node::getTextContent)
@@ -144,6 +145,7 @@ public class FileElement extends Base {
             }
         }
 
+        // FIL002A
         getChildNodes(node, "*[local-name() = 'keyvaluepair']")
             .forEach(n -> {
                 var key = getChildNode(n, "*[local-name() = 'key']")
@@ -166,6 +168,7 @@ public class FileElement extends Base {
             .forEach(n -> result.computeIfAbsent("title", k -> new ArrayList<>())
                 .add(n));
 
+        // FIL003
         if (originalFilePath != null) {
             result.computeIfAbsent("original_filepath", k -> new ArrayList<>()).add(originalFilePath);
         }

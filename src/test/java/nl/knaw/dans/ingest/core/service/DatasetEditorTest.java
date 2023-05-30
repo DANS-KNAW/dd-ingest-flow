@@ -18,11 +18,13 @@ package nl.knaw.dans.ingest.core.service;
 import gov.loc.repository.bagit.reader.BagReader;
 import nl.knaw.dans.ingest.core.dataverse.DataverseServiceImpl;
 import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.DepositFile;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.BaseTest;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.FileElement;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,8 +38,10 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,7 +55,7 @@ public class DatasetEditorTest extends BaseTest {
     }
 
     private DatasetEditor createDatasetEditor(Deposit deposit, final boolean isMigration, final Pattern fileExclusionPattern, final List<URI> supportedLicenses) {
-        var dataverseService = new DataverseServiceImpl(Mockito.mock(DataverseClient.class),1,1);
+        var dataverseService = new DataverseServiceImpl(Mockito.mock(DataverseClient.class), 1, 1);
         var zipFileHandler = new ZipFileHandler(testDir.resolve("tmp"));
         return new DatasetEditor(isMigration, null, deposit, supportedLicenses, fileExclusionPattern, zipFileHandler, null, dataverseService) {
 
@@ -63,7 +67,19 @@ public class DatasetEditorTest extends BaseTest {
     }
 
     private Deposit createDeposit(String manifest) throws Exception {
+        var filesXml = ""
+            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/'>"
+            + "    <file filepath='data/file1.txt'/>"
+            + "    <file filepath='data/subdir/file2.txt'/>"
+            + "    <file filepath='data/subdir2/file3.txt'/>"
+            + "</files>";
+
+        return createDeposit(manifest, filesXml);
+    }
+
+    private Deposit createDeposit(String manifest, String filesXml) throws Exception {
         var bagDir = testDir.resolve("bag");
+        var filesXmlElement = readDocumentFromString(filesXml);
         FileUtils.write(bagDir.resolve("bagit.txt").toFile(), (""
             + "BagIt-Version: 0.97\n"
             + "Tag-File-Character-Encoding: UTF-8\n"), StandardCharsets.UTF_8);
@@ -71,19 +87,37 @@ public class DatasetEditorTest extends BaseTest {
         var deposit = new Deposit();
         deposit.setBagDir(bagDir);
         deposit.setBag(new BagReader().read(bagDir));
+        deposit.setFilesXml(filesXmlElement);
+
+        var manifestChecksums = Arrays.stream(manifest.split("\n"))
+            .filter(StringUtils::isNotBlank)
+            .map(row -> row.trim().split(" {2}", 2))
+            .collect(Collectors.toMap(row -> Path.of(row[1]), row -> row[0]));
+
+        var fileList = XPathEvaluator.nodes(filesXmlElement.getDocumentElement(), "/files:files/files:file")
+            .map(item -> {
+                var filepath = Path.of(item.getAttributes().getNamedItem("filepath").getTextContent());
+                var checksum = manifestChecksums.getOrDefault(filepath, "default-checksum");
+                return new DepositFile(filepath, filepath, checksum, item);
+            })
+            .collect(Collectors.toList());
+
+        deposit.setFiles(fileList);
         return deposit;
     }
 
     @Test
     void getFileInfo_trims_and_filters_paths() throws Exception {
-        Deposit deposit = createDeposit("");
-        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
-        deposit.setFilesXml(readDocumentFromString(""
+        var filesXml = ""
             + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/'>"
             + "    <file filepath='data/file1.txt'/>"
             + "    <file filepath='data/subdir/file2.txt'/>"
             + "    <file filepath='data/subdir2/file3.txt'/>"
-            + "</files>"));
+            + "</files>";
+
+        var deposit = createDeposit("", filesXml);
+        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
+
         var fileInfoMap = FileElement.pathToFileInfo(deposit, true);
         var filteredFileInfoMap = createDatasetEditor(deposit, true, Pattern.compile(".*file2.*"), null)
             .getFileInfo();
@@ -99,12 +133,12 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void FIL001_FIL002_FIL003() throws Exception {
-        Deposit deposit = createDeposit("");
-        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
-        deposit.setFilesXml(readDocumentFromString(""
+        var filesXml = ""
             + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:dcterms='http://purl.org/dc/terms/'>"
             + "    <file filepath='data/subdir_υποφάκελο/c:a*q?d&quot;l&lt;g&gt;p|s;h#.txt'/>"
-            + "</files>"));
+            + "</files>";
+        var deposit = createDeposit("", filesXml);
+        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
         var fileMeta = createDatasetEditor(deposit, true, null, null)
             .getFileInfo().values().iterator().next().getMetadata();
         assertThat(fileMeta)
@@ -118,9 +152,7 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void FIL002A_FIL003() throws Exception {
-        Deposit deposit = createDeposit("");
-        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
-        deposit.setFilesXml(readDocumentFromString(""
+        var filesXml = ""
             + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:afm='http://easy.dans.knaw.nl/schemas/bag/metadata/afm/'>"
             + "    <file filepath='data/subdir/#.txt'>"
             + "        <afm:keyvaluepair>"
@@ -132,7 +164,9 @@ public class DatasetEditorTest extends BaseTest {
             + "            <afm:value>thing</afm:value>"
             + "        </afm:keyvaluepair>"
             + "    </file>"
-            + "</files>"));
+            + "</files>";
+        var deposit = createDeposit("", filesXml);
+        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
         var descriptions = createDatasetEditor(deposit, true, null, null)
             .getFileInfo().values().iterator().next().getMetadata().getDescription().split("; ");
         assertThat(descriptions).containsExactlyInAnyOrder(
@@ -143,14 +177,14 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void FIL002B_FIL003() throws Exception {
-        Deposit deposit = createDeposit("");
-        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
-        deposit.setFilesXml(readDocumentFromString(""
+        var filesXml = ""
             + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:afm='http://easy.dans.knaw.nl/schemas/bag/metadata/afm/'>"
             + "    <file filepath='data/subdir/#.txt'>"
             + "        <afm:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</afm:othmat_codebook>"
             + "    </file>"
-            + "</files>"));
+            + "</files>";
+        var deposit = createDeposit("", filesXml);
+        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
         var description = createDatasetEditor(deposit, true, null, null)
             .getFileInfo().values().iterator().next().getMetadata().getDescription();
         assertThat(description)
@@ -161,14 +195,14 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void FIL004_FIL003() throws Exception {
-        Deposit deposit = createDeposit("");
-        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
-        deposit.setFilesXml(readDocumentFromString(""
+        var filesXml = ""
             + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:dcterms='http://purl.org/dc/terms/'>"
             + "    <file filepath='data/subdir/#.txt'>"
             + "        <dcterms:description>A file with a problematic name</dcterms:description>"
             + "    </file>"
-            + "</files>"));
+            + "</files>";
+        var deposit = createDeposit("", filesXml);
+        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
         var fileMeta = createDatasetEditor(deposit, true, null, null)
             .getFileInfo().values().iterator().next().getMetadata();
         assertThat(fileMeta)
@@ -178,14 +212,14 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void FIL005_anonymous() throws Exception {
-        Deposit deposit = createDeposit("");
-        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
-        deposit.setFilesXml(readDocumentFromString(""
+        var filesXml = ""
             + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/'>"
             + "    <file filepath='data/file1.txt'>"
             + "        <accessibleToRights>ANONYMOUS</accessibleToRights>"
             + "    </file>"
-            + "</files>"));
+            + "</files>";
+        var deposit = createDeposit("", filesXml);
+        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
         var fileInfo = createDatasetEditor(deposit, true, null, null)
             .getFileInfo().values().iterator().next();
         assertThat(fileInfo.getMetadata().getRestricted()).isEqualTo(false);
@@ -193,16 +227,16 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void FIL005_not_anonymous() throws Exception {
-        Deposit deposit = createDeposit(""
-            + "a5c5c4051724b655863c517a15c56e45753c3e5a  data/file1.txt\n"
-            + "0d57a5bc9f5af7e8edcc90d64fd3c24dfc23e727  data/original-metadata.zip\n");
-        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
-        deposit.setFilesXml(readDocumentFromString(""
+        var filesXml = ""
             + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/'>"
             + "    <file filepath='data/file1.txt'>"
             + "        <accessibleToRights>blabla</accessibleToRights>"
             + "    </file>"
-            + "</files>"));
+            + "</files>";
+        var deposit = createDeposit(""
+            + "a5c5c4051724b655863c517a15c56e45753c3e5a  data/file1.txt\n"
+            + "0d57a5bc9f5af7e8edcc90d64fd3c24dfc23e727  data/original-metadata.zip\n", filesXml);
+        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
         // NOTE this test fails when replaced with FileElement.pathToFileInfo(deposit);
         var pathFileInfoMap = createDatasetEditor(deposit, true, null, null)
             .getFileInfo();
@@ -212,19 +246,19 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void FIL006_open_access() throws Exception {
-        Deposit deposit = createDeposit(""
+        var filesXml = ""
+            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/'>"
+            + "    <file filepath='data/file1.txt'/>"
+            + "</files>";
+        var deposit = createDeposit(""
             + "a5c5c4051724b655863c517a15c56e45753c3e5a  data/file1.txt\n"
-            + "0d57a5bc9f5af7e8edcc90d64fd3c24dfc23e727  data/original-metadata.zip\n");
+            + "0d57a5bc9f5af7e8edcc90d64fd3c24dfc23e727  data/original-metadata.zip\n", filesXml);
         deposit.setDdm(readDocumentFromString(""
             + "<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'>"
             + "    <ddm:profile>"
             + "        <ddm:accessRights>OPEN_ACCESS</ddm:accessRights>"
             + "    </ddm:profile>"
             + "</ddm:DDM>"));
-        deposit.setFilesXml(readDocumentFromString(""
-            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/'>"
-            + "    <file filepath='data/file1.txt'/>"
-            + "</files>"));
         var fileInfo = createDatasetEditor(deposit, true, null, null)
             .getFileInfo().values().iterator().next();
         assertThat(fileInfo.getMetadata().getRestricted()).isEqualTo(false);
@@ -232,19 +266,19 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void FIL006_not_open_access() throws Exception {
-        Deposit deposit = createDeposit(""
+        var filesXml = ""
+            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/'>"
+            + "    <file filepath='data/file1.txt'/>"
+            + "</files>";
+        var deposit = createDeposit(""
             + "a5c5c4051724b655863c517a15c56e45753c3e5a  data/file1.txt\n"
-            + "0d57a5bc9f5af7e8edcc90d64fd3c24dfc23e727  data/original-metadata.zip\n");
+            + "0d57a5bc9f5af7e8edcc90d64fd3c24dfc23e727  data/original-metadata.zip\n", filesXml);
         deposit.setDdm(readDocumentFromString(""
             + "<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'>"
             + "    <ddm:profile>"
             + "        <ddm:accessRights>blabla</ddm:accessRights>"
             + "    </ddm:profile>"
             + "</ddm:DDM>"));
-        deposit.setFilesXml(readDocumentFromString(""
-            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/'>"
-            + "    <file filepath='data/file1.txt'/>"
-            + "</files>"));
         // NOTE this test fails when replaced with FileElement.pathToFileInfo(deposit);
         var pathFileInfoMap = createDatasetEditor(deposit, true, null, null)
             .getFileInfo();
@@ -254,18 +288,18 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void FIL008_FIL009() throws Exception {
-        Deposit deposit = createDeposit("");
-        deposit.setDdm(readDocumentFromString(""
-            + "<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'>"
-            + "    <ddm:profile>"
-            + "        <ddm:available>"+ (new DateTime().plusWeeks(7)) +"</ddm:available>"
-            + "    </ddm:profile>"
-            + "</ddm:DDM>"));
-        deposit.setFilesXml(readDocumentFromString(""
+        var filesXml = ""
             + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/'>"
             + "    <file filepath='data/file1.txt'/>"
             + "    <file filepath='data/easy-migration.zip'/>"
-            + "</files>"));
+            + "</files>";
+        var deposit = createDeposit("", filesXml);
+        deposit.setDdm(readDocumentFromString(""
+            + "<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'>"
+            + "    <ddm:profile>"
+            + "        <ddm:available>" + (new DateTime().plusWeeks(7)) + "</ddm:available>"
+            + "    </ddm:profile>"
+            + "</ddm:DDM>"));
 
         var datasetEditor = createDatasetEditor(deposit, true, null, null);
         // Calling embargoFiles to test these rules makes only sense once
@@ -276,17 +310,17 @@ public class DatasetEditorTest extends BaseTest {
 
     @Test
     void fileInfoFields() throws Exception {
-        Deposit deposit = createDeposit(""
-            + "a5c5c4051724b655863c517a15c56e45753c3e5a  data/file1.txt\n"
-            + "0d57a5bc9f5af7e8edcc90d64fd3c24dfc23e727  data/subdir/file2.txt\n"
-            + "fa4cdb6b45c8a393aaca564ded8a52d62ee7a944  data/subdir_υποφάκελο/c:a*q?d\"l<g>p|s;h#.txt\n");
-        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
-        deposit.setFilesXml(readDocumentFromString(""
+        var filesXml = ""
             + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:dcterms='http://purl.org/dc/terms/'>"
             + "    <file filepath='data/file1.txt'/>"
             + "    <file filepath='data/subdir/file2.txt'/>"
             + "    <file filepath='data/subdir_υποφάκελο/c:a*q?d&quot;l&lt;g&gt;p|s;h#.txt'/>"
-            + "</files>"));
+            + "</files>";
+        var deposit = createDeposit(""
+            + "a5c5c4051724b655863c517a15c56e45753c3e5a  data/file1.txt\n"
+            + "0d57a5bc9f5af7e8edcc90d64fd3c24dfc23e727  data/subdir/file2.txt\n"
+            + "fa4cdb6b45c8a393aaca564ded8a52d62ee7a944  data/subdir_υποφάκελο/c:a*q?d\"l<g>p|s;h#.txt\n", filesXml);
+        deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
         var fileInfoMap = createDatasetEditor(deposit, true, null, null)
             .getFileInfo();
 

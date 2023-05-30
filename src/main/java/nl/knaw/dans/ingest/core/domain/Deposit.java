@@ -26,6 +26,7 @@ import org.w3c.dom.Document;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
@@ -65,6 +66,8 @@ public class Deposit {
     private Document filesXml;
     private Document amd;
     private Bag bag;
+
+    private List<DepositFile> files;
 
     public VaultMetadata getVaultMetadata() {
         return new VaultMetadata(getDataversePid(), getDataverseBagId(), getDataverseNbn(), getDataverseOtherId(), getOtherIdVersion(), getDataverseSwordToken());
@@ -111,8 +114,7 @@ public class Deposit {
     }
 
     public boolean restrictedFilesPresent() {
-        var numberOfFiles = XPathEvaluator
-            .strings(filesXml, "/files:files/files:file").count();
+        var numberOfFiles = files.size();
         var explicitAccessibleToValues = XPathEvaluator
             .strings(filesXml, "/files:files/files:file/files:accessibleToRights")
             .map(String::trim).collect(Collectors.toList());
@@ -146,4 +148,5 @@ public class Deposit {
     public Path getAmdPath() {
         return bagDir.resolve("metadata/amd.xml");
     }
+
 }

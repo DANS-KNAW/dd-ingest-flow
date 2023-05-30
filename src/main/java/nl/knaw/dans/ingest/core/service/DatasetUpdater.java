@@ -303,9 +303,10 @@ public class DatasetUpdater extends DatasetEditor {
         for (var entry : filesToReplace.entrySet()) {
             log.debug("Replacing file with ID = {}", entry.getKey());
             var fileApi = dataverseClient.file(entry.getKey());
+            var filePath = entry.getValue().getPhysicalPath();
 
-            var wrappedZip = zipFileHandler.wrapIfZipFile(entry.getValue().getPath());
-            var file = wrappedZip.orElse(entry.getValue().getPath());
+            var wrappedZip = zipFileHandler.wrapIfZipFile(filePath);
+            var file = wrappedZip.orElse(filePath);
 
             var meta = new FileMeta();
             meta.setForceReplace(true);

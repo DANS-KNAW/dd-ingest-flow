@@ -35,6 +35,7 @@ import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.dataverse.DataverseServiceImpl;
 import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositFileListerImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositReaderImpl;
@@ -105,12 +106,13 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final var xmlReader = new XmlReaderImpl();
 
         final var fileService = new FileServiceImpl();
+        final var depositFileLister = new DepositFileListerImpl();
 
         // the parts responsible for reading and writing deposits to disk
         final var bagReader = new BagReader();
         final var bagDataManager = new BagDataManagerImpl(bagReader);
         final var bagDirResolver = new BagDirResolverImpl(fileService);
-        final var depositReader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager);
+        final var depositReader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister);
         final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
         final var depositWriter = new DepositWriterImpl(bagDataManager);
         final var depositManager = new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);

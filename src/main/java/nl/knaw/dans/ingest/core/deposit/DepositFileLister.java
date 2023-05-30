@@ -13,22 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.domain;
+package nl.knaw.dans.ingest.core.deposit;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.ToString;
-import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.DepositFile;
 
-import java.nio.file.Path;
+import java.io.IOException;
+import java.util.List;
 
-@Data
-@ToString
-@AllArgsConstructor
-public class FileInfo {
-    private Path path;
-    private Path physicalPath;
-    private String checksum;
-    private FileMeta metadata;
+public interface DepositFileLister {
+    List<DepositFile> getDepositFiles(Deposit deposit) throws IOException;
 
 }

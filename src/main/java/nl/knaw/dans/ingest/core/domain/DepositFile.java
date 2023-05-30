@@ -17,18 +17,23 @@ package nl.knaw.dans.ingest.core.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.ToString;
-import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
+import org.w3c.dom.Node;
 
 import java.nio.file.Path;
 
 @Data
-@ToString
 @AllArgsConstructor
-public class FileInfo {
+public class DepositFile {
     private Path path;
     private Path physicalPath;
     private String checksum;
-    private FileMeta metadata;
+    private Node xmlNode;
 
+    public Path getPhysicalPath() {
+        if (this.physicalPath != null) {
+            return physicalPath;
+        }
+
+        return path;
+    }
 }

@@ -18,7 +18,6 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.FileInfo;
-import nl.knaw.dans.ingest.core.service.ManifestHelper;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta;
 import org.apache.commons.lang3.StringUtils;
@@ -200,19 +199,16 @@ public class FileElement extends Base {
             .findFirst()
             .orElse(true);
 
-        var filePathToSha1 = ManifestHelper.getFilePathToSha1(deposit.getBag());
         var result = new HashMap<Path, FileInfo>();
+        var bagDir = deposit.getBagDir();
 
-        XPathEvaluator.nodes(deposit.getFilesXml(), "/files:files/files:file").forEach(node -> {
-            var path = getAttribute(node, "filepath")
-                .map(Node::getTextContent)
-                .map(Path::of)
-                .orElseThrow();
-
-            var sha1 = filePathToSha1.get(path);
-            var absolutePath = deposit.getBagDir().resolve(path);
-
-            result.put(path, new FileInfo(absolutePath, sha1, toFileMeta(node, defaultRestrict, isMigration)));
+        deposit.getFiles().forEach(depositFile -> {
+            result.put(depositFile.getPath(), new FileInfo(
+                bagDir.resolve(depositFile.getPath()),
+                bagDir.resolve(depositFile.getPhysicalPath()),
+                depositFile.getChecksum(),
+                toFileMeta(depositFile.getXmlNode(), defaultRestrict, isMigration))
+            );
         });
 
         return result;

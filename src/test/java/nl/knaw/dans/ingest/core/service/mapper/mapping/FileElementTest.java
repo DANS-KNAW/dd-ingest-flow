@@ -221,7 +221,7 @@ class FileElementTest extends BaseTest {
 
         deposit.setDdm(readDocumentFromString("<root></root>"));
 
-        var result = FileElement.pathToFileInfo(deposit);
+        var result = FileElement.pathToFileInfo(deposit, true);
         assertEquals(result.get(filePath).getPath(), result.get(filePath).getPhysicalPath());
     }
 
@@ -245,7 +245,7 @@ class FileElementTest extends BaseTest {
 
         deposit.setDdm(readDocumentFromString("<root></root>"));
 
-        var result = FileElement.pathToFileInfo(deposit);
+        var result = FileElement.pathToFileInfo(deposit, true);
         assertEquals(Path.of("bagdir/data/new-file-name"), result.get(filePath).getPhysicalPath());
     }
 }

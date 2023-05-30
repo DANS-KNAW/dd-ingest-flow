@@ -40,6 +40,8 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocu
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DansTemporalSpatialMetadataTest {
 
@@ -376,10 +378,8 @@ public class DansTemporalSpatialMetadataTest {
             + "</ddm:DDM>");
 
 
-        var result = mapDdmToDataset(doc, true);
-        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
-        thrown.isInstanceOf(IllegalArgumentException.class);
-        thrown.hasMessage("Missing gml:Envelope node");
+        var thrown = assertThrows(IllegalArgumentException.class, () -> mapDdmToDataset(doc, true));
+        assertEquals("Missing gml:Envelope node", thrown.getMessage());
     }
 
     @Test

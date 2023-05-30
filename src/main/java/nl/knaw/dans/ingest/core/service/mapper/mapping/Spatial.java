@@ -19,12 +19,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.w3c.dom.Node;
 
+import java.util.Optional;
+
 public class Spatial extends Base {
 
     /**
      * coordinate order x, y = longitude (DCX_SPATIAL_X), latitude (DCX_SPATIAL_Y)
      */
     final static String RD_SRS_NAME = "http://www.opengis.net/def/crs/EPSG/0/28992";
+    final static String LONLAT_SRS_NAME = "http://www.opengis.net/def/crs/EPSG/0/4326";
 
     final static String RD_SCHEME = "RD (in m.)";
     final static String LONLAT_SCHEME = "longitude/latitude (degrees)";
@@ -62,6 +65,5 @@ public class Spatial extends Base {
     static class Point {
         private String x;
         private String y;
-
     }
 }

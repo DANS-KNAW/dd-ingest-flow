@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.mapper.builder.CompoundFieldGenerator;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_POINT_SCHEME;
@@ -36,4 +37,20 @@ public class SpatialPoint extends Spatial {
         builder.addSubfield(SPATIAL_POINT_X, point.getX());
         builder.addSubfield(SPATIAL_POINT_Y, point.getY());
     };
+
+    public static boolean isPoint(Node node) {
+        var hasChild = hasChildNode(node, "gml:Point/gml:pos");
+        var srsName = Base.getAttribute(node, "srsName")
+            .map(Node::getTextContent)
+            .filter(StringUtils::isNotBlank)
+            .orElse(null);
+
+        if (!hasChild) {
+            return false;
+        }
+
+        // TS002: if @srsName=http://www.opengis.net/def/crs/EPSG/0/28992
+        // TS003: if @srsName not present OR @srsName=http://www.opengis.net/def/crs/EPSG/0/4326
+        return srsName == null || LONLAT_SRS_NAME.equals(srsName) || RD_SRS_NAME.equals(srsName);
+    }
 }

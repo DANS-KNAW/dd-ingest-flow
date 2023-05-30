@@ -17,13 +17,10 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.service.mapper.builder.CompoundFieldGenerator;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_EAST;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_NORTH;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_SCHEME;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_SOUTH;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SPATIAL_BOX_WEST;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.*;
 
 @Slf4j
 public class SpatialBox extends Spatial {
@@ -48,4 +45,19 @@ public class SpatialBox extends Spatial {
         builder.addSubfield(SPATIAL_BOX_WEST, lowerCorner.getX());
     };
 
+    public static boolean isBox(Node node) {
+        var envelope = getChildNode(node, "gml:Envelope");
+
+        if (envelope.isEmpty()) {
+            throw new IllegalArgumentException("Missing gml:Envelope node");
+        }
+
+        var srsName = Base.getAttribute(envelope.get(), "srsName")
+            .map(Node::getTextContent)
+            .filter(StringUtils::isNotBlank)
+            .orElse(null);
+
+        // TS004 and TS005 require an explicit srs name, no default is assumed
+        return RD_SRS_NAME.equals(srsName) || LONLAT_SRS_NAME.equals(srsName);
+    }
 }

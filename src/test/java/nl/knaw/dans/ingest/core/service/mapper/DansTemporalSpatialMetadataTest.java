@@ -40,6 +40,8 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocu
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DansTemporalSpatialMetadataTest {
 
@@ -93,13 +95,8 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var point = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_POINT, result);
-        assertThat(point).extracting(SPATIAL_POINT_X).extracting("value")
-            .containsOnly("529006");
-        assertThat(point).extracting(SPATIAL_POINT_Y).extracting("value")
-            .containsOnly("126466");
-        assertThat(point).extracting(SPATIAL_POINT_SCHEME).extracting("value")
-            .containsOnly("longitude/latitude (degrees)");
+        var point = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialPoint", result);
+        assertThat(point).isNull();
     }
 
     @Test
@@ -262,17 +259,8 @@ public class DansTemporalSpatialMetadataTest {
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
         var result = mapDdmToDataset(doc, true);
-        var box = getCompoundMultiValueField("dansTemporalSpatial", SPATIAL_BOX, result);
-        assertThat(box).extracting(SPATIAL_BOX_NORTH).extracting("value")
-            .containsOnly("3");
-        assertThat(box).extracting(SPATIAL_BOX_EAST).extracting("value")
-            .containsOnly("4");
-        assertThat(box).extracting(SPATIAL_BOX_SOUTH).extracting("value")
-            .containsOnly("1");
-        assertThat(box).extracting(SPATIAL_BOX_WEST).extracting("value")
-            .containsOnly("2");
-        assertThat(box).extracting(SPATIAL_BOX_SCHEME).extracting("value")
-            .containsOnly("longitude/latitude (degrees)");
+        var box = getCompoundMultiValueField("dansTemporalSpatial", "dansSpatialBox", result);
+        assertThat(box).isNull();
     }
 
     @Test
@@ -283,7 +271,7 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope>"
+            + "                <Envelope srsName='http://www.opengis.net/def/crs/EPSG/0/4326'>"
             + "                    <lowerCorner>1 2</lowerCorner>"
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
@@ -311,13 +299,14 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope>"
+            + "                <Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/4326\">"
             + "                    <lowerCorner>1 2</lowerCorner>"
             + "                    <upperCorner>3</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
+
         var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
         thrown.isInstanceOf(ArrayIndexOutOfBoundsException.class);
     }
@@ -329,7 +318,7 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope>"
+            + "                <Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/4326\">"
             + "                    <lowerCorner>2</lowerCorner>"
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
@@ -347,7 +336,7 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope srsName='XXX'>"
+            + "                <Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/4326\">"
             + "                    <upperCorner>3 4</upperCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
@@ -365,7 +354,7 @@ public class DansTemporalSpatialMetadataTest {
             + minimalDdmProfile() + dcmi(""
             + "        <dcx-gml:spatial>"
             + "            <boundedBy xmlns='http://www.opengis.net/gml'>"
-            + "                <Envelope srsName='XXX'>"
+            + "                <Envelope srsName=\"http://www.opengis.net/def/crs/EPSG/0/4326\">"
             + "                    <lowerCorner>1 2</lowerCorner>"
             + "                </Envelope>"
             + "            </boundedBy>"
@@ -387,14 +376,14 @@ public class DansTemporalSpatialMetadataTest {
             + "            </boundedBy>"
             + "        </dcx-gml:spatial>")
             + "</ddm:DDM>");
-        var thrown = assertThatThrownBy(() -> mapDdmToDataset(doc, true));
-        thrown.isInstanceOf(IllegalArgumentException.class);
-        thrown.hasMessage("Missing gml:Envelope node");
+
+
+        var thrown = assertThrows(IllegalArgumentException.class, () -> mapDdmToDataset(doc, true));
+        assertEquals("Missing gml:Envelope node", thrown.getMessage());
     }
 
     @Test
     void TS006_dct_spatial_maps_to_spatial_coverage_controlled() throws Exception {
-
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi(""
@@ -408,7 +397,6 @@ public class DansTemporalSpatialMetadataTest {
 
     @Test
     void TS007_dct_spatial_with_surrounding_white_space_maps_to_trimmed_spatial_coverage() throws Exception {
-
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-gml='http://easy.dans.knaw.nl/schemas/dcx/gml/'>"
             + minimalDdmProfile() + dcmi(""

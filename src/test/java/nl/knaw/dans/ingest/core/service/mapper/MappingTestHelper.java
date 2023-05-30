@@ -52,6 +52,13 @@ import java.util.stream.Collectors;
 
 public class MappingTestHelper {
     public static final AuthenticatedUser mockedContact = new AuthenticatedUser();
+
+    static {
+        mockedContact.setDisplayName("D. O'Seven");
+        mockedContact.setEmail("J.Bond@does.not.exist.dans.knaw.nl");
+        mockedContact.setAffiliation("DANS");
+    }
+
     public static final VaultMetadata mockedVaultMetadata = new VaultMetadata(
         "doi:10.17026/AR/6L7NBB",
         "urn:uuid:ced0be49-f863-4477-9473-23010526abf3",
@@ -63,13 +70,7 @@ public class MappingTestHelper {
         + "         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"
         + "         xmlns:dc='http://purl.org/dc/elements/1.1/'\n"
         + "         xmlns:dct='http://purl.org/dc/terms/'\n";
-    private static final IngestFlowConfig config = getIngestFlowConfig();
-
-    {
-        mockedContact.setDisplayName("D. O'Seven");
-        mockedContact.setEmail("J.Bond@does.not.exist.dans.knaw.nl");
-        mockedContact.setAffiliation("DANS");
-    }
+    public static final IngestFlowConfig config = getIngestFlowConfig();
 
     private static IngestFlowConfig getIngestFlowConfig() {
         IngestFlowConfig config;
@@ -91,20 +92,17 @@ public class MappingTestHelper {
     }
 
     static Dataset mapDdmToDataset(Document ddm, boolean restrictedFilesPresent) {
-        final Set<String> activeMetadataBlocks = Set.of("citation", "dansRights", "dansRelationalMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata");
-        final VaultMetadata vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
-        final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
-        final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
-        iso1ToDataverseLanguage.put("nl", "Dutch");
-        iso1ToDataverseLanguage.put("de", "German");
+        return createMapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent, null);
+    }
 
+    static DepositToDvDatasetMetadataMapper createMapper() {
         return new DepositToDvDatasetMetadataMapper(
             true,
             Set.of("citation", "dansRights", "dansRelationMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata"),
             config.getIso1ToDataverseLanguage(),
             config.getIso2ToDataverseLanguage(),
             config.getSpatialCoverageCountryTerms()
-        ).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent, null);
+        );
     }
 
     public static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {
@@ -138,12 +136,6 @@ public class MappingTestHelper {
         return new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
-            .writeValueAsString(result);
-    }
-
-    public static String toCompactJsonString(Dataset result) throws JsonProcessingException {
-        return new ObjectMapper()
-            .writer()
             .writeValueAsString(result);
     }
 

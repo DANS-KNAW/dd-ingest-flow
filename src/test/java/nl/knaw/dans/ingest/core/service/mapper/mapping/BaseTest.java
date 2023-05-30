@@ -45,7 +45,7 @@ public class BaseTest {
         ));
     }
 
-    Document readDocumentFromString(String xml) throws ParserConfigurationException, IOException, SAXException {
+    public Document readDocumentFromString(String xml) throws ParserConfigurationException, IOException, SAXException {
         return xmlReader.readXmlString(xml);
     }
 

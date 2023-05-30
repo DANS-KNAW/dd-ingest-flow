@@ -38,14 +38,15 @@ public class DepositReaderImpl implements DepositReader {
     private final XmlReader xmlReader;
     private final BagDirResolver bagDirResolver;
     private final FileService fileService;
-
     private final BagDataManager bagDataManager;
+    private final DepositFileLister depositFileLister;
 
-    public DepositReaderImpl(XmlReader xmlReader, BagDirResolver bagDirResolver, FileService fileService, BagDataManager bagDataManager) {
+    public DepositReaderImpl(XmlReader xmlReader, BagDirResolver bagDirResolver, FileService fileService, BagDataManager bagDataManager, DepositFileLister depositFileLister) {
         this.xmlReader = xmlReader;
         this.bagDirResolver = bagDirResolver;
         this.fileService = fileService;
         this.bagDataManager = bagDataManager;
+        this.depositFileLister = depositFileLister;
     }
 
     @Override
@@ -67,6 +68,8 @@ public class DepositReaderImpl implements DepositReader {
             deposit.setDdm(readOptionalXmlFile(deposit.getDdmPath()));
             deposit.setFilesXml(readOptionalXmlFile(deposit.getFilesXmlPath()));
             deposit.setAmd(readOptionalXmlFile(deposit.getAmdPath()));
+
+            deposit.setFiles(depositFileLister.getDepositFiles(deposit));
 
             return deposit;
         }
@@ -121,6 +124,7 @@ public class DepositReaderImpl implements DepositReader {
         if (value == null) {
             return null;
         }
+
         return value.stream()
             .filter(StringUtils::isNotBlank)
             .findFirst()

@@ -13,17 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.mapper.mapping;
+package nl.knaw.dans.ingest.core.domain;
 
-import nl.knaw.dans.ingest.core.service.mapper.builder.CompoundFieldGenerator;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.w3c.dom.Node;
 
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_AGENCY;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
+import java.nio.file.Path;
 
-public class DepositPropertiesOtherDoi extends Base {
+@Data
+@AllArgsConstructor
+public class DepositFile {
+    private Path path;
+    private Path physicalPath;
+    private String checksum;
+    private Node xmlNode;
 
-    public static CompoundFieldGenerator<String> toOtherIdValue = (builder, value) -> {
-        builder.addSubfield(OTHER_ID_AGENCY, value.replaceAll(":.*",""));
-        builder.addSubfield(OTHER_ID_VALUE, value.replaceAll("^[^:]*:",""));
-    };
+    public Path getPhysicalPath() {
+        if (this.physicalPath != null) {
+            return physicalPath;
+        }
+
+        return path;
+    }
 }

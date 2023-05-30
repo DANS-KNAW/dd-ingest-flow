@@ -15,15 +15,6 @@ Open a separate terminal tab:
 start-hsqldb-server.sh
 ```
 
-### dd-validate-dans-bag
-
-Open a separated terminal and cd to the `dd-validate-dans-bag-project`:
-
-```commandline
-start-env.sh
-start-service.sh
-```
-
 ### dd-dtap
 
 The service needs a Dataverse instance to talk to. For this you can use [dd-dtap]{:target=_blank} (only accessible to DANS developers):
@@ -40,13 +31,15 @@ curl -X PUT -d s3kretKey http://localhost:8080/api/admin/settings/:BlockedApiKey
 curl -X PUT -d unblock-key http://localhost:8080/api/admin/settings/:BlockedApiPolicy
 ```
 
-### dd-ingest-flow
+### dd-ingest-flow + dd-validate-dans-bag/application
+
+Open both projects in separate terminal tabs do the following for each:
 
 ```commandline
 start-env.sh
 ```
 
-Configure the correct API key in `etc/config.yml` in the `dd-ingest-flow` project directory.
+Configure the correct API key in `etc/config.yml`.
 
 Now you can start the service:
 

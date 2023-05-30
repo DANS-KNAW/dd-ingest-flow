@@ -16,15 +16,17 @@
 package nl.knaw.dans.ingest.core.service.mapper;
 
 import org.junit.jupiter.api.Test;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
+import java.util.List;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION_VALUE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTION_DATE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PRODUCTION_DATE;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.ddmWithCustomProfileContent;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundMultiValueField;
@@ -33,21 +35,22 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimi
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toPrettyJsonString;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CitationMetadataFromProfileTest {
 
     @Test
-    void CIT001_should_map_title() throws ParserConfigurationException, IOException, SAXException {
+    void CIT001_title_maps_to_title() throws Exception{
         var doc = ddmWithCustomProfileContent("");
 
         var result = mapDdmToDataset(doc, false);
-        assertThat(getPrimitiveSingleValueField("citation", "title", result))
+        assertThat(getPrimitiveSingleValueField("citation", TITLE, result))
             .isEqualTo("Title of the dataset");
     }
 
     @Test
-    void CIT005_should_map_dc_creators() throws ParserConfigurationException, IOException, SAXException {
+    void CIT005_simple_creators_map_to_dc_creators() throws Exception{
         var doc = ddmWithCustomProfileContent(""
             + "<dc:creator>J. Bond</dc:creator>\n"
             + "<dc:creator>D. O'Seven</dc:creator>\n");
@@ -59,7 +62,7 @@ public class CitationMetadataFromProfileTest {
     }
 
     @Test
-    void CIT006_should_map_names_of_creatorDetails_author() throws ParserConfigurationException, IOException, SAXException {
+    void CIT006_names_of_creatorDetails_author_map_to_author_names() throws Exception{
         var doc = ddmWithCustomProfileContent(""
             + "<dcx-dai:creatorDetails>\n"
             + "    <dcx-dai:author>\n"
@@ -79,7 +82,7 @@ public class CitationMetadataFromProfileTest {
     }
 
     @Test
-    void CIT007_should_map_names_of_creatorDetails_organization() throws ParserConfigurationException, IOException, SAXException {
+    void CIT007_names_of_creatorDetails_organization_map_to_author_names() throws Exception{
         var doc = ddmWithCustomProfileContent(""
             + "<dcx-dai:creatorDetails>\n"
             + "    <dcx-dai:organization>\n"
@@ -99,7 +102,7 @@ public class CitationMetadataFromProfileTest {
     }
 
     @Test
-    void CIT009_should_map_descriptions() throws ParserConfigurationException, IOException, SAXException {
+    void CIT009_descriptions_map_to_descriptions() throws Exception{
         var doc = ddmWithCustomProfileContent(""
             + "<dc:description>Lorem ipsum.</dc:description>\n"
             + "<dc:description>dolor sit amet</dc:description>\n"
@@ -112,7 +115,33 @@ public class CitationMetadataFromProfileTest {
     }
 
     @Test
-    void CIT013_should_map_audience() throws ParserConfigurationException, IOException, SAXException {
+    void CIT009_description_type_technical_info_maps_once_to_description_DD_1216() throws Exception {
+        String dcmiContent = ""
+            + "<dct:description>plain description</dct:description>\n"
+            + "<ddm:description descriptionType=\"TechnicalInfo\">technical description</ddm:description>\n"
+            + "<ddm:description descriptionType=\"NotKnown\">not known description type</ddm:description>\n";
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">\n"
+            + "    <ddm:profile>\n"
+            + "        <dc:title>Title of the dataset</dc:title>\n"
+            + "        <dc:description>Lorem ipsum.</dc:description>\n"
+            + "        <ddm:audience>D24000</ddm:audience>"
+            + "    </ddm:profile>\n"
+            + dcmi(dcmiContent)
+            + "</ddm:DDM>\n");
+
+        var result = mapDdmToDataset(doc, false);
+        var str = toPrettyJsonString(result);
+        assertThat(str).containsOnlyOnce("not known description type");
+        assertThat(str).containsOnlyOnce("technical description");
+        assertThat(str).containsOnlyOnce("Lorem ipsum");
+        var field = getCompoundMultiValueField("citation", DESCRIPTION, result);
+        assertThat(field).extracting(DESCRIPTION_VALUE).extracting("value")
+            .containsOnly("<p>plain description</p>", "<p>Lorem ipsum.</p>", "<p>technical description</p>", "<p>not known description type</p>");
+    }
+
+    @Test
+    void CIT013_subject_maps_to__subject_without_other_DD_1265() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">\n"
             + "    <ddm:profile>\n"
@@ -124,28 +153,45 @@ public class CitationMetadataFromProfileTest {
             + "        <ddm:audience>D17200</ddm:audience>"
             + "    </ddm:profile>\n"
             + dcmi("")
-            + "</ddm:DDM>\n");
+            + "</ddm:DDM>");
 
         var result = mapDdmToDataset(doc, false);
-        assertThat(getControlledMultiValueField("citation", "subject", result))
-            .containsExactlyInAnyOrder("Astronomy and Astrophysics", "Law", "Mathematical Sciences");
+        assertThat(getControlledMultiValueField("citation", SUBJECT, result))
+            .isEqualTo(List.of("Astronomy and Astrophysics", "Law", "Mathematical Sciences"));
     }
 
     @Test
-    void CIT019_should_map_creation_date() throws ParserConfigurationException, IOException, SAXException {
+    void CIT013_subject_maps_only_to_other_DD_1265() throws Exception {
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">\n"
+            + "    <ddm:profile>\n"
+            + "        <dc:title xml:lang='en'>Title of the dataset</dc:title>\n"
+            + "        <ddm:audience>D19200</ddm:audience>"
+            + "        <ddm:audience>D88200</ddm:audience>"
+            + "    </ddm:profile>\n"
+            + dcmi("")
+            + "</ddm:DDM>");
+
+        var result = mapDdmToDataset(doc, false);
+        assertThat(getControlledMultiValueField("citation", SUBJECT, result))
+            .isEqualTo(List.of("Other"));
+    }
+
+    @Test
+    void CIT019_creation_date_maps_to_production_date() throws Exception{
         var doc = ddmWithCustomProfileContent("<ddm:created>2012-12</ddm:created>");
 
         var result = mapDdmToDataset(doc, false);
-        assertThat(getPrimitiveSingleValueField("citation", "productionDate", result))
+        assertThat(getPrimitiveSingleValueField("citation", PRODUCTION_DATE, result))
             .isEqualTo("2012-12-01");
     }
 
     @Test
-    void CIT025_map_date_available() throws ParserConfigurationException, IOException, SAXException {
+    void CIT025_date_available_maps_to_distribution_date() throws Exception{
         var doc = ddmWithCustomProfileContent("<ddm:available>2014-12</ddm:available>");
 
         var result = mapDdmToDataset(doc, false);
-        assertThat(getPrimitiveSingleValueField("citation", "distributionDate", result))
+        assertThat(getPrimitiveSingleValueField("citation", DISTRIBUTION_DATE, result))
             .isEqualTo("2014-12-01");
     }
 }

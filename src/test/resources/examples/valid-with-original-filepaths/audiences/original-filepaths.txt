@@ -1,0 +1,4 @@
+data/57f6f2f8-8d87-43ec-ac0e-68bdac21223e  data/random images/image02.jpeg
+data/79c713b0-b232-4aaa-80cc-9bc34111acf7  data/random images/image03.jpeg
+data/aa2345ab-bff5-49c9-b224-f8d3df0fd37a  data/random images/image01.png
+data/26e30e9b-64a8-4a2f-8c70-a4653219c984  data/a/deeper/path/With some file.txt

@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ingest.core.service.mapper.mapping;
+package nl.knaw.dans.ingest.core.deposit;
 
-import nl.knaw.dans.ingest.core.service.mapper.builder.CompoundFieldGenerator;
+import nl.knaw.dans.ingest.core.domain.Deposit;
+import nl.knaw.dans.ingest.core.domain.DepositFile;
 
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_AGENCY;
-import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.OTHER_ID_VALUE;
+import java.io.IOException;
+import java.util.List;
 
-public class DepositPropertiesOtherDoi extends Base {
+public interface DepositFileLister {
+    List<DepositFile> getDepositFiles(Deposit deposit) throws IOException;
 
-    public static CompoundFieldGenerator<String> toOtherIdValue = (builder, value) -> {
-        builder.addSubfield(OTHER_ID_AGENCY, value.replaceAll(":.*",""));
-        builder.addSubfield(OTHER_ID_VALUE, value.replaceAll("^[^:]*:",""));
-    };
 }

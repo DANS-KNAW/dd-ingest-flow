@@ -89,7 +89,7 @@ public abstract class DatasetEditor {
         this.datasetService = datasetService;
     }
 
-    static Instant parseDate(String value) {
+    private static Instant parseDate(String value) {
         try {
             log.debug("Trying to parse {} as LocalDate", value);
             return LocalDate.parse(value).atStartOfDay(ZoneId.systemDefault()).toInstant();
@@ -119,6 +119,7 @@ public abstract class DatasetEditor {
             var id = addFile(persistentId, fileInfo);
             result.put(id, fileInfo);
         }
+
         return result;
     }
 
@@ -127,14 +128,18 @@ public abstract class DatasetEditor {
         var checksum = DigestUtils.sha1Hex(new FileInputStream(path.toFile()));
         var fileMeta = new FileMeta();
         fileMeta.setLabel(ORIGINAL_METADATA_ZIP);
-        return new FileInfo(path, checksum, fileMeta);
+        return new FileInfo(path, path, checksum, fileMeta);
     }
 
     private Integer addFile(String persistentId, FileInfo fileInfo) throws IOException, DataverseException {
         var dataset = dataverseClient.dataset(persistentId);
-        var wrappedZip = zipFileHandler.wrapIfZipFile(fileInfo.getPath());
+        var wrappedZip = zipFileHandler.wrapIfZipFile(fileInfo.getPhysicalPath());
 
-        var file = wrappedZip.orElse(fileInfo.getPath());
+        var file = wrappedZip.orElse(fileInfo.getPhysicalPath());
+        if (log.isDebugEnabled()) {
+            var metadata = objectMapper.writeValueAsString(fileInfo.getMetadata());
+            log.debug("Adding file {} with metadata {}", file, metadata);
+        }
         var result = dataset.addFile(file, fileInfo.getMetadata());
         log.debug("Called addFile for {}; result: {}", file, result);
 
@@ -165,13 +170,11 @@ public abstract class DatasetEditor {
     }
 
     Map<Path, FileInfo> getFileInfo() {
-
         var files = FileElement.pathToFileInfo(deposit);
 
         return files.entrySet().stream()
             .map(entry -> {
                 // relativize the path
-                // TODO make this all tested
                 var bagPath = entry.getKey();
                 var fileInfo = entry.getValue();
                 var newKey = Path.of("data").relativize(bagPath);
@@ -182,11 +185,7 @@ public abstract class DatasetEditor {
                 // remove entries that match the file exclusion pattern
                 var path = entry.getKey().toString();
 
-                if (fileExclusionPattern != null) {
-                    return !fileExclusionPattern.matcher(path).matches();
-                }
-
-                return true;
+                return (fileExclusionPattern == null || !fileExclusionPattern.matcher(path).matches());
             })
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }

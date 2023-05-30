@@ -22,10 +22,6 @@ import java.util.Set;
 
 public class SpatialCoverage extends Base {
 
-    public static boolean hasNoChildElement(Node node) {
-        return !hasChildElement(node);
-    }
-
     public static boolean hasChildElement(Node node) {
         var children = node.getChildNodes();
 

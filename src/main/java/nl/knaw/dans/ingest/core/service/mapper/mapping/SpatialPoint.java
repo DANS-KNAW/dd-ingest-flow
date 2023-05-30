@@ -50,11 +50,7 @@ public class SpatialPoint extends Spatial {
         }
 
         // TS002: if @srsName=http://www.opengis.net/def/crs/EPSG/0/28992
-        if (RD_SRS_NAME.equals(srsName)) {
-            return true;
-        }
-
         // TS003: if @srsName not present OR @srsName=http://www.opengis.net/def/crs/EPSG/0/4326
-        return srsName == null || LONLAT_SRS_NAME.equals(srsName);
+        return srsName == null || LONLAT_SRS_NAME.equals(srsName) || RD_SRS_NAME.equals(srsName);
     }
 }

@@ -26,12 +26,15 @@ import java.io.IOException;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE_OF_METADATA;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PERSONAL_DATA_PRESENT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_HOLDER;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.createMapper;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getControlledMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getControlledSingleValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedContact;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedVaultMetadata;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +48,7 @@ class RightsMetadataTest {
         + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>\n"
         + minimalDdmProfile()
         + "    <ddm:dcmiMetadata>\n"
+        + "        <dct:rightsHolder>Mr. Rights</dct:rightsHolder>\n"
         + "        <dcx-dai:contributorDetails>\n"
         + "            <dcx-dai:organization>\n"
         + "                <dcx-dai:role>RightsHolder</dcx-dai:role>\n"
@@ -68,9 +72,17 @@ class RightsMetadataTest {
     @Test
     void RIG000A_organizations_with_role_rightsHolder_map_to_rights_holder() {
 
-        var result = mapDdmToDataset(ddmWithOrganizations, false);
+        var result = createMapper(true).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
         assertThat(getPrimitiveMultiValueField("dansRights", RIGHTS_HOLDER, result))
-            .containsOnly("Some org", "Some other org");
+            .containsOnly("Some org", "Some other org", "Mr. Rights");
+    }
+
+    @Test
+    void RIG000A_organizations_with_role_rightsHolder_is_ignored_when_not_migration() {
+
+        var result = createMapper(false).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        assertThat(getPrimitiveMultiValueField("dansRights", RIGHTS_HOLDER, result))
+            .containsOnly("Mr. Rights");
     }
 
     @Test

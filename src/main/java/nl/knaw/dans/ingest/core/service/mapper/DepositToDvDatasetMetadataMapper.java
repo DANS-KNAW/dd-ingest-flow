@@ -163,13 +163,13 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addLanguages(getDdmLanguages(ddm), node -> Language.toCitationBlockLanguage(node, iso1ToDataverseLanguage, iso2ToDataverseLanguage)); // CIT018
             citationFields.addProductionDate(getCreated(ddm).map(Base::toYearMonthDayFormat)); // CIT019
             citationFields.addGrantNumbers(getIdentifiers(ddm).filter(Identifier::isNwoGrantNumber), Identifier.toNwoGrantNumber); // CIT023
+            citationFields.addContributors(getContributorDetails(ddm).filter(Contributor::isValidContributor), Contributor.toContributorValueObject); // CIT020, CIT021
             citationFields.addGrantNumbers(getFunders(ddm), Funder.toGrantNumberValueObject); // CIT022
             citationFields.addDistributor(getPublishers(ddm).filter(Publisher::isNotDans), Publisher.toDistributorValueObject); // CIT024
             citationFields.addDistributionDate(getAvailable(ddm).map(Base::toYearMonthDayFormat)); // CIT025
             if (isMigration) {
                 citationFields.addNotesText(getProvenance(ddm)); // CIT017A
-                citationFields.addContributors(getContributorDetails(ddm).filter(Contributor::isValidContributor), Contributor.toContributorValueObject); // CIT020, CIT021
-                citationFields.addContributors(getDcmiDdmDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Contributor.toContributorValueObject);
+                citationFields.addContributors(getDcmiDdmDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Contributor.toContributorValueObject); // CIT021A
                 citationFields.addDateOfDeposit(dateOfDeposit); // CIT025A
             }
             citationFields.addDatesOfCollection(getDatesOfCollection(ddm)

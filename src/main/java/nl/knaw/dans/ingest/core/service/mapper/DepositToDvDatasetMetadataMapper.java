@@ -123,14 +123,13 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addTitle(getTitles(ddm)); // CIT001
             citationFields.addAlternativeTitle(otherTitlesAndAlternativeTitles.stream().map(Node::getTextContent)); // CIT002
 
-            if (isMigration)
+            if (isMigration) {
                 citationFields.addOtherIdsStrings(Stream.ofNullable(vaultMetadata.getOtherId()) // CIT002A
                     .filter(DepositPropertiesVaultMetadata::isValidOtherIdValue), DepositPropertiesVaultMetadata.toOtherIdValue);
-
-            // TODO CIT002B is migration-only, CIT004 not
-            citationFields.addOtherIds(getIdentifiers(ddm).filter(Identifier::canBeMappedToOtherId), Identifier.toOtherIdValue); // CIT002B, CIT004
-            if (isMigration)
+                citationFields.addOtherIds(getIdentifiers(ddm).filter(Identifier::hasXsiTypeEasy2), Identifier.toOtherIdValue); // CIT002B
                 citationFields.addOtherIdsStrings(Stream.ofNullable(otherDoiId), DepositPropertiesOtherDoi.toOtherIdValue); // PAN second version DOIs (migration)
+            }
+            citationFields.addOtherIds(getIdentifiers(ddm).filter(Identifier::hasNoXsiType), Identifier.toOtherIdValue); // CIT004
             citationFields.addOtherIdsStrings(Stream.ofNullable(hasOrganizationalIdentifier).filter(HasOrganizationalIdentifier::isValidOtherIdValue),
                 HasOrganizationalIdentifier.toOtherIdValue); // CIT003
             citationFields.addAuthors(getCreators(ddm), Author.toAuthorValueObject); // CIT005, CIT006, CIT007

@@ -88,7 +88,7 @@ class IdentifierTest extends BaseTest {
                 + "    easy-dataset:18335\n"
                 + "</dct:identifier>");
 
-        assertTrue(Identifier.canBeMappedToOtherId(doc.getDocumentElement()));
+        assertTrue(Identifier.hasXsiTypeEasy2(doc.getDocumentElement()));
     }
 
     @Test
@@ -101,7 +101,7 @@ class IdentifierTest extends BaseTest {
                 + "    easy-dataset:18335\n"
                 + "</dct:identifier>");
 
-        assertTrue(Identifier.canBeMappedToOtherId(doc.getDocumentElement()));
+        assertTrue(Identifier.hasNoXsiType(doc.getDocumentElement()));
     }
 
     @Test
@@ -114,7 +114,7 @@ class IdentifierTest extends BaseTest {
                 + "    10.4052/test\n"
                 + "</dct:identifier>");
 
-        assertFalse(Identifier.canBeMappedToOtherId(doc.getDocumentElement()));
+        assertFalse(Identifier.hasNoXsiType(doc.getDocumentElement()));
     }
 
     @Test

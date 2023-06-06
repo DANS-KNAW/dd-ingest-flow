@@ -159,4 +159,5 @@ public class DepositDatasetFieldNames {
     public static final String DANS_OTHER_ID = "dansOtherId";
     public static final String DANS_OTHER_ID_VERSION = "dansOtherIdVersion";
     public static final String SWORD_TOKEN = "dansSwordToken";
+    public static final String DATA_SUPPLIER = "dansDataSupplier";
 }

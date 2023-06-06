@@ -225,6 +225,7 @@ public class DepositToDvDatasetMetadataMapper {
         dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId());
         dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion());
         dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken());
+        dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken());
 
         return assembleDataverseDataset(termsOfAccess);
     }

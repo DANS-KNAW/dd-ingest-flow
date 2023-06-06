@@ -228,10 +228,10 @@ public class DepositToDvDatasetMetadataMapper {
         }
 
         // TODO migration-only: VLT00nA
-        dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId()); // VLT003 / VLT003A
-        dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn()); // VLT004 / VLT004A
-        dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId()); // VLT005 / VLT005A
-        dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion()); // VLT006
+        dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId()); // VLT003A
+        dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn()); // VLT004A
+        dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId()); // VLT005A
+        dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion()); // VLT006 TODO + VLT005 from bag-info.txt
         dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken()); // VLT007 / VLT007A
 
         return assembleDataverseDataset(termsOfAccess);

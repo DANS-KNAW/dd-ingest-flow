@@ -17,22 +17,41 @@ package nl.knaw.dans.ingest.core.deposit;
 
 import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.domain.Metadata;
+import gov.loc.repository.bagit.reader.BagReader;
 import nl.knaw.dans.ingest.core.domain.DepositFile;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.io.BagDataManager;
+import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
 import nl.knaw.dans.ingest.core.io.FileService;
+import nl.knaw.dans.ingest.core.io.FileServiceImpl;
 import nl.knaw.dans.ingest.core.service.XmlReader;
+import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import org.apache.commons.configuration2.BaseConfiguration;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DepositReaderImplTest {
+    private final Path testDir = new File("target/test/" + getClass().getSimpleName()).toPath();
+
+    @BeforeEach
+    void clear() {
+        FileUtils.deleteQuietly(testDir.toFile());
+    }
 
     private DepositFileLister getDepositFileLister() {
         return deposit -> List.of(
@@ -75,6 +94,31 @@ class DepositReaderImplTest {
         Mockito.verify(bagDataManager).readDepositProperties(Mockito.eq(basePath));
 
         assertEquals("4e97185d-b38c-4ed9-bdf6-64339acfb6e8", result.getDepositId());
+    }
+
+    @Test
+    void readDeposit_should_return_other_doi_from_ddm_in_vault_metadata() throws InvalidDepositException, IOException {
+        var depositDir = testDir.resolve("deposit");
+        FileUtils.copyDirectory(Paths.get("src/test/resources/examples/valid-easy-submitted").toFile(), depositDir.toFile());
+        var xml = "<ddm:DDM"
+            + "        xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'"
+            + "        xmlns:dcterms='http://purl.org/dc/terms/'"
+            + "        xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'"
+            + "        xmlns:id-type='http://easy.dans.knaw.nl/schemas/vocab/identifier-type/'>"
+            + "    <ddm:dcmiMetadata>"
+            + "        <dcterms:identifier>blabla</dcterms:identifier><!-- should not cause null pointer exception because of missing type -->"
+            + "        <dcterms:identifier xsi:type='id-type:DOI'>10.17026/dans-12345</dcterms:identifier>"
+            + "    </ddm:dcmiMetadata>"
+            + "</ddm:DDM>";
+        FileUtils.writeByteArrayToFile(depositDir.resolve("example-bag-medium/metadata/dataset.xml").toFile(), xml.getBytes());
+        var xmlReader = new XmlReaderImpl();
+        var fileService = new FileServiceImpl();
+        var bagDirResolver = new BagDirResolverImpl(fileService);
+        var bagDataManager = new BagDataManagerImpl(new BagReader());
+        var depositFileLister = getDepositFileLister();
+        var deposit = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister)
+            .readDeposit(depositDir);
+        assertEquals(deposit.getVaultMetadata().getOtherId(),"10.17026/dans-12345");
     }
 
     @Test

@@ -99,6 +99,10 @@ public class Identifier extends Base {
             .orElse("");
     }
 
+    public static boolean hasXsiTypeDoi(Node node) {
+        return hasXsiType(node, "DOI");
+    }
+
     public static boolean isArchisZaakId(Node node) {
         return hasXsiType(node, "ARCHIS-ZAAK-IDENTIFICATIE");
     }

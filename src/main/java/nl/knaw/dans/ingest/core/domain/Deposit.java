@@ -73,13 +73,7 @@ public class Deposit {
     private List<DepositFile> files;
 
     public VaultMetadata getVaultMetadata() {
-        var otherId = XPathEvaluator.nodes(ddm, "/ddm:DDM/ddm:dcmiMetadata/dcterms:identifier") // VLT005A
-            .filter(Deposit::hasTypeDoi)
-            .findFirst()
-            .orElseThrow()
-            .getTextContent();
-        // other values form deposit.properties, see DepositReaderImpl.mapToDeposit
-        return new VaultMetadata(getDataversePid(), getDataverseBagId(), getDataverseNbn(), otherId, getOtherIdVersion(), getDataverseSwordToken());
+        return new VaultMetadata(getDataversePid(), getDataverseBagId(), getDataverseNbn(), getOtherId(), getOtherIdVersion(), getDataverseSwordToken());
     }
 
     private static boolean hasTypeDoi(Node n) {

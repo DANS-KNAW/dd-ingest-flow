@@ -97,31 +97,6 @@ class DepositReaderImplTest {
     }
 
     @Test
-    void readDeposit_should_return_other_doi_from_ddm_in_vault_metadata() throws InvalidDepositException, IOException {
-        var depositDir = testDir.resolve("deposit");
-        FileUtils.copyDirectory(Paths.get("src/test/resources/examples/valid-easy-submitted").toFile(), depositDir.toFile());
-        var xml = "<ddm:DDM"
-            + "        xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'"
-            + "        xmlns:dcterms='http://purl.org/dc/terms/'"
-            + "        xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'"
-            + "        xmlns:id-type='http://easy.dans.knaw.nl/schemas/vocab/identifier-type/'>"
-            + "    <ddm:dcmiMetadata>"
-            + "        <dcterms:identifier>blabla</dcterms:identifier><!-- should not cause null pointer exception because of missing type -->"
-            + "        <dcterms:identifier xsi:type='id-type:DOI'>10.17026/dans-12345</dcterms:identifier>"
-            + "    </ddm:dcmiMetadata>"
-            + "</ddm:DDM>";
-        FileUtils.writeByteArrayToFile(depositDir.resolve("example-bag-medium/metadata/dataset.xml").toFile(), xml.getBytes());
-        var xmlReader = new XmlReaderImpl();
-        var fileService = new FileServiceImpl();
-        var bagDirResolver = new BagDirResolverImpl(fileService);
-        var bagDataManager = new BagDataManagerImpl(new BagReader());
-        var depositFileLister = getDepositFileLister();
-        var deposit = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister)
-            .readDeposit(depositDir);
-        assertEquals(deposit.getVaultMetadata().getOtherId(),"10.17026/dans-12345");
-    }
-
-    @Test
     void mapToDeposit_should_return_new_deposit_for_sparse_data() {
         var xmlReader = Mockito.mock(XmlReader.class);
         var bagDirResolver = Mockito.mock(BagDirResolver.class);

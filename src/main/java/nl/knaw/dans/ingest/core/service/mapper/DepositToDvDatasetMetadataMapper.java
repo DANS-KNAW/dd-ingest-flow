@@ -18,6 +18,7 @@ package nl.knaw.dans.ingest.core.service.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.exception.MissingRequiredFieldException;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
@@ -78,6 +79,7 @@ import java.util.stream.Stream;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_HOLDER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
+import static nl.knaw.dans.ingest.core.service.XmlNamespaces.NAMESPACE_XSI;
 
 @Slf4j
 public class DepositToDvDatasetMetadataMapper {
@@ -227,12 +229,23 @@ public class DepositToDvDatasetMetadataMapper {
             throw new IllegalStateException("dansDataVaultMetadata must always be active");
         }
 
-        // TODO migration-only: VLT00nA
-        dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId()); // VLT003A
-        dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn()); // VLT004A
-        dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId()); // VLT005A
-        dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion()); // VLT006 TODO + VLT005 from bag-info.txt
-        dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken()); // VLT007 / VLT007A
+        if (isMigration) {
+            var otherId = getIdentifiers(ddm)
+                .filter(Identifier::hasXsiTypeDoi)
+                .findFirst()
+                .map(Node::getTextContent)
+                .orElse(null);
+
+            dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId()); // VLT003A
+            dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn()); // VLT004A
+            if (null != otherId) // Vault service only
+                dataVaultFieldBuilder.addDansOtherId(otherId); // VLT005A
+            dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken()); // VLT007A
+        }
+        else {
+            dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId()); // VLT005
+            dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion()); // VLT006
+        }
 
         return assembleDataverseDataset(termsOfAccess);
     }

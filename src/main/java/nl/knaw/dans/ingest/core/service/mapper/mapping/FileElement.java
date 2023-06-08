@@ -159,7 +159,8 @@ public class FileElement extends Base {
                 }
             });
         if (isMigration) {
-            // TODO which rule is this ?????
+            // "archival_name" of EASY-I and "original_file" of EASY-II are mapped to titles
+            // see easy-fedora-to-bag.FileItem[Spec]
             getChildNodes(node, "title")
                 .map(Node::getTextContent)
                 .filter(n -> StringUtils.equalsIgnoreCase(filename, n))

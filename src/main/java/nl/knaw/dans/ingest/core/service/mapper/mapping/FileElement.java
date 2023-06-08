@@ -168,7 +168,7 @@ public class FileElement extends Base {
                     .add(n));
         } else {
             // keep only FIL004
-            result.entrySet().removeIf(entry -> "description".equals(entry.getKey()));
+            result.entrySet().removeIf(entry -> ! "description".equals(entry.getKey()));
         }
 
         // FIL003

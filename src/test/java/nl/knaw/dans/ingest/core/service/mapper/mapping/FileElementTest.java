@@ -50,6 +50,7 @@ class FileElementTest extends BaseTest {
             + "    <dcterms:format>text/plain</dcterms:format>\n"
             + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
             + "    <dcterms:description>Empty file</dcterms:description>\n"
+            + "    <dcterms:title>original/archival file name</dcterms:title>\n"
             + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
             + "</file>", ns));
 
@@ -58,6 +59,25 @@ class FileElementTest extends BaseTest {
         assertEquals("leeg.txt", result.getLabel());
         assertEquals(" ", result.getDirectoryLabel());
         assertEquals("description: \"Empty file\"; time_period: \"Classical\"; hardware: \"Hardware\"", result.getDescription());
+        assertEquals(true, result.getRestricted());
+    }
+
+    @Test
+    void toFileMeta_should_include_only_description_if_not_migration() throws Exception {
+        var doc = readDocumentFromString(String.format(""
+            + "<file filepath='data/leeg.txt' %s>\n"
+            + "    <dcterms:format>text/plain</dcterms:format>\n"
+            + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+            + "    <dcterms:description>Empty file</dcterms:description>\n"
+            + "    <dcterms:title>original/archival file name</dcterms:title>\n"
+            + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+            + "</file>", ns));
+
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, false);
+
+        assertEquals("leeg.txt", result.getLabel());
+        assertEquals(" ", result.getDirectoryLabel());
+        assertEquals("Empty file", result.getDescription());
         assertEquals(true, result.getRestricted());
     }
 
@@ -203,6 +223,30 @@ class FileElementTest extends BaseTest {
 
     @Test
     void pathToFileInfo_should_return_same_path_for_physical_and_normal() throws Exception {
+        var doc = readDocumentFromString(
+            "<file filepath=\"data/path/to/file1.txt\" xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" xmlns:dcterms=\"http://purl.org/dc/terms/\">\n"
+                + "    <dcterms:format>text/plain</dcterms:format>\n"
+                + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+                + "    <dcterms:description>Empty file</dcterms:description>\n"
+                + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+                + "</file>");
+
+        var filePath = Path.of("data/path/to/file1.txt");
+        var deposit = new Deposit();
+        deposit.setBagDir(Path.of("bagdir"));
+        deposit.setFiles(List.of(
+                new DepositFile(filePath, null, "check1", doc.getDocumentElement())
+            )
+        );
+
+        deposit.setDdm(readDocumentFromString("<root></root>"));
+
+        var result = FileElement.pathToFileInfo(deposit, true);
+        assertEquals(result.get(filePath).getPath(), result.get(filePath).getPhysicalPath());
+    }
+
+    @Test
+    void pathToFileInfo_should_return_same_path_for_physical_and_normal_not_migration() throws Exception {
         var doc = readDocumentFromString(
             "<file filepath=\"data/path/to/file1.txt\" xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" xmlns:dcterms=\"http://purl.org/dc/terms/\">\n"
                 + "    <dcterms:format>text/plain</dcterms:format>\n"

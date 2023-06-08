@@ -127,7 +127,11 @@ public class FileElement extends Base {
             "mapprojection",
             "analytic_units");
 
-        var result = new HashMap<String, List<String>>();
+        var result = new HashMap<String, List<String>>(){
+            void addValue(String key, String value){
+                computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+            };
+        };
 
         // FIL002B
         for (var key : fixedKeys) {
@@ -154,18 +158,16 @@ public class FileElement extends Base {
                     .orElse(null);
 
                 if (key != null && value != null) {
-                    result.computeIfAbsent(key, k -> new ArrayList<>())
-                        .add(value);
+                    result.addValue(key, value);
                 }
             });
         if (isMigration) {
             // "archival_name" of EASY-I and "original_file" of EASY-II are mapped to titles
             // see easy-fedora-to-bag.FileItem[Spec]
-            getChildNodes(node, "title")
+            getChildNodes(node, "*[local-name() = 'title']")
                 .map(Node::getTextContent)
-                .filter(n -> StringUtils.equalsIgnoreCase(filename, n))
-                .forEach(n -> result.computeIfAbsent("title", k -> new ArrayList<>())
-                    .add(n));
+                .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))
+                .forEach(n -> result.addValue("title", n));
         } else {
             // keep only FIL004
             result.entrySet().removeIf(entry -> ! "description".equals(entry.getKey()));
@@ -173,7 +175,7 @@ public class FileElement extends Base {
 
         // FIL003
         if (originalFilePath != null) {
-            result.computeIfAbsent("original_filepath", k -> new ArrayList<>()).add(originalFilePath);
+            result.addValue( "original_filepath", originalFilePath);
         }
 
         return result;

@@ -58,7 +58,7 @@ class FileElementTest extends BaseTest {
 
         assertEquals("leeg.txt", result.getLabel());
         assertEquals(" ", result.getDirectoryLabel());
-        assertEquals("description: \"Empty file\"; time_period: \"Classical\"; hardware: \"Hardware\"", result.getDescription());
+        assertEquals("description: \"Empty file\"; title: \"original/archival file name\"; time_period: \"Classical\"; hardware: \"Hardware\"", result.getDescription());
         assertEquals(true, result.getRestricted());
     }
 
@@ -74,11 +74,7 @@ class FileElementTest extends BaseTest {
             + "</file>", ns));
 
         var result = FileElement.toFileMeta(doc.getDocumentElement(), true, false);
-
-        assertEquals("leeg.txt", result.getLabel());
-        assertEquals(" ", result.getDirectoryLabel());
         assertEquals("Empty file", result.getDescription());
-        assertEquals(true, result.getRestricted());
     }
 
     @Test

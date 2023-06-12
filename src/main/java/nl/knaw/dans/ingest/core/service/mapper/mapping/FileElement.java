@@ -116,7 +116,7 @@ public class FileElement extends Base {
             "notes",
             "case_quantity",
             "file_category",
-            "description", // FIL004
+            "description", // see also FIL004
             "othmat_codebook",
             "data_collector",
             "collection_date",
@@ -132,45 +132,36 @@ public class FileElement extends Base {
                 computeIfAbsent(key, k -> new ArrayList<>()).add(value);
             };
         };
-
-        // FIL002B
-        for (var key : fixedKeys) {
-            var child = getChildNodes(node, String.format("*[local-name() = '%s']", key))
-                .map(Node::getTextContent)
-                .collect(Collectors.toList());
-
-            log.trace("matches for key '{}': {}", key, result);
-
-            if (child.size() > 0) {
-                result.put(key, child);
-            }
-        }
-
-        // FIL002A
-        getChildNodes(node, "*[local-name() = 'keyvaluepair']")
-            .forEach(n -> {
-                var key = getChildNode(n, "*[local-name() = 'key']")
-                    .map(Node::getTextContent)
-                    .orElse(null);
-
-                var value = getChildNode(n, "*[local-name() = 'value']")
-                    .map(Node::getTextContent)
-                    .orElse(null);
-
-                if (key != null && value != null) {
-                    result.addValue(key, value);
-                }
-            });
         if (isMigration) {
-            // "archival_name" of EASY-I and "original_file" of EASY-II are mapped to titles
-            // see easy-fedora-to-bag.FileItem[Spec]
-            getChildNodes(node, "*[local-name() = 'title']")
-                .map(Node::getTextContent)
-                .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))
-                .forEach(n -> result.addValue("title", n));
-        } else {
-            // keep only FIL004
-            result.entrySet().removeIf(entry -> ! "description".equals(entry.getKey()));
+
+            // FIL002A
+            getChildNodes(node, "*[local-name() = 'keyvaluepair']")
+                .forEach(n -> {
+                    var key = getChildNode(n, "*[local-name() = 'key']")
+                        .map(Node::getTextContent)
+                        .orElse(null);
+
+                    var value = getChildNode(n, "*[local-name() = 'value']")
+                        .map(Node::getTextContent)
+                        .orElse(null);
+
+                    if (key != null && value != null) {
+                        result.addValue(key, value);
+                    }
+                });
+
+            // FIL002B
+            for (var key : fixedKeys) {
+                var child = getChildNodes(node, String.format("*[local-name() = '%s']", key))
+                    .map(Node::getTextContent)
+                    .collect(Collectors.toList());
+
+                log.trace("matches for key '{}': {}", key, result);
+
+                if (child.size() > 0) {
+                    result.put(key, child);
+                }
+            }
         }
 
         // FIL003
@@ -178,6 +169,22 @@ public class FileElement extends Base {
             result.addValue( "original_filepath", originalFilePath);
         }
 
+        if (isMigration) {
+            // "archival_name" of EASY-I and "original_file" of EASY-II are mapped to titles
+            // see easy-fedora-to-bag.FileItem[Spec]
+            getChildNodes(node, "*[local-name() = 'title']")
+                .map(Node::getTextContent)
+                .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))
+                .forEach(n -> result.addValue("title", n));
+        }
+
+        // FIL004 if none of FIL002A, FILE002B, FIL003
+        if(result.isEmpty()){
+            getChildNodes(node, "*[local-name() = 'description']")
+                .map(Node::getTextContent)
+                .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))
+                .forEach(n -> result.addValue("description", n));
+        }
         return result;
     }
 

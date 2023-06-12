@@ -78,6 +78,37 @@ class FileElementTest extends BaseTest {
     }
 
     @Test
+    void toFileMeta_should_ignore_description_in_favor_of_original_path_if_not_migration_and_forbidden_chracters() throws Exception {
+        var doc = readDocumentFromString(String.format(""
+            + "<file filepath='data/leeg#.txt' %s>\n"
+            + "    <dcterms:format>text/plain</dcterms:format>\n"
+            + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+            + "    <dcterms:description>Empty file</dcterms:description>\n"
+            + "    <dcterms:title>original/archival file name</dcterms:title>\n"
+            + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+            + "</file>", ns));
+
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, false);
+        assertEquals("original_filepath: \"leeg#.txt\"", result.getDescription());
+    }
+
+    @Test
+    void toFileMeta_should_include_description_if_migration() throws Exception {
+        // description in input is part of FIL002B
+        var doc = readDocumentFromString(String.format(""
+            + "<file filepath='data/leeg#.txt' %s>\n"
+            + "    <dcterms:format>text/plain</dcterms:format>\n"
+            + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+            + "    <dcterms:description>Empty file</dcterms:description>\n"
+            + "    <dcterms:title>original/archival file name</dcterms:title>\n"
+            + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+            + "</file>", ns));
+
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), true, true);
+        assertEquals("original_filepath: \"leeg#.txt\"; description: \"Empty file\"; title: \"original/archival file name\"; time_period: \"Classical\"; hardware: \"Hardware\"", result.getDescription());
+    }
+
+    @Test
     void toFileMeta_should_strip_data_prefix_from_path_to_get_directoryLabel() throws Exception {
         var doc = readDocumentFromString(String.format(""
             + "    <file filepath='data/this/is/the/directory/label/leeg.txt' %s>\n"

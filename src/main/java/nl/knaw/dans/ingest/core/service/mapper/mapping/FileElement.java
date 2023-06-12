@@ -89,6 +89,7 @@ public class FileElement extends Base {
     private static String getDescription(Map<String, List<String>> kv) {
         if (!kv.isEmpty()) {
             if (kv.keySet().size() == 1 && kv.containsKey("description")) {
+                // FIL004
                 return kv.get("description").stream().findFirst().orElse(null);
             }
             else {

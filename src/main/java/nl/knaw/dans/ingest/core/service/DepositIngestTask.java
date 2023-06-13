@@ -398,7 +398,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     Dataset getMetadata() {
         var date = getDateOfDeposit();
         var contact = getDatasetContact();
-        var mapper = newMapper(); // TODO: WHY IS THIS ALWAYS FALSE?
+        var mapper = newMapper();
         return mapper.toDataverseDataset(
             deposit.getDdm(),
             deposit.getOtherDoiId(),

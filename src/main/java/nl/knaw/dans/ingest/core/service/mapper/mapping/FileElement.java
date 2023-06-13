@@ -135,13 +135,13 @@ public class FileElement extends Base {
         if (isMigration) {
 
             // FIL002A
-            getChildNodes(node, "*[local-name() = 'keyvaluepair']")
+            getChildNodes(node, "//afm:keyvaluepair")
                 .forEach(n -> {
-                    var key = getChildNode(n, "*[local-name() = 'key']")
+                    var key = getChildNode(n, "afm:key")
                         .map(Node::getTextContent)
                         .orElse(null);
 
-                    var value = getChildNode(n, "*[local-name() = 'value']")
+                    var value = getChildNode(n, "afm:value")
                         .map(Node::getTextContent)
                         .orElse(null);
 
@@ -172,7 +172,7 @@ public class FileElement extends Base {
         if (isMigration) {
             // "archival_name" of EASY-I and "original_file" of EASY-II are mapped to titles
             // see easy-fedora-to-bag.FileItem[Spec]
-            getChildNodes(node, "*[local-name() = 'title']")
+            getChildNodes(node, "dcterms:title")
                 .map(Node::getTextContent)
                 .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))
                 .forEach(n -> result.addValue("title", n));
@@ -180,7 +180,7 @@ public class FileElement extends Base {
 
         // FIL004 if none of FIL002A, FILE002B, FIL003
         if(result.isEmpty()){
-            getChildNodes(node, "*[local-name() = 'description']")
+            getChildNodes(node, "dcterms:description")
                 .map(Node::getTextContent)
                 .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))
                 .forEach(n -> result.addValue("description", n));

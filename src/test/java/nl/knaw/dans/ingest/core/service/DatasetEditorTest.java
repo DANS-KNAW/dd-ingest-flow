@@ -48,6 +48,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class DatasetEditorTest extends BaseTest {
     private final Path testDir = new File("target/test/" + getClass().getSimpleName()).toPath();
+    String filesNS = String.format("xmlns='%s' xmlns:afm='%s' xmlns:dcterms='%s'",
+        XmlNamespaces.NAMESPACE_FILES_XML, XmlNamespaces.NAMESPACE_AFM_XML, XmlNamespaces.NAMESPACE_DCTERMS);
 
     @BeforeEach
     void clear() {
@@ -153,7 +155,7 @@ public class DatasetEditorTest extends BaseTest {
     @Test
     void FIL002A_FIL003() throws Exception {
         var filesXml = ""
-            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:afm='http://easy.dans.knaw.nl/schemas/bag/metadata/afm/'>"
+            + "<files " + filesNS + ">"
             + "    <file filepath='data/subdir/#.txt'>"
             + "        <afm:keyvaluepair>"
             + "            <afm:key>FOTONR</afm:key>"
@@ -196,7 +198,7 @@ public class DatasetEditorTest extends BaseTest {
     @Test
     void FIL004_FIL003() throws Exception {
         var filesXml = ""
-            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:dcterms='http://purl.org/dc/terms/'>"
+            + "<files " + filesNS + ">"
             + "    <file filepath='data/subdir/#.txt'>"
             + "        <dcterms:description>A file with a problematic name</dcterms:description>"
             + "    </file>"

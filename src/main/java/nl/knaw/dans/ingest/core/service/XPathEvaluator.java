@@ -49,6 +49,7 @@ public final class XPathEvaluator implements XmlNamespaces {
             namespaceMap.put("id-type", XmlNamespaces.NAMESPACE_ID_TYPE);
             namespaceMap.put("dcx-gml", XmlNamespaces.NAMESPACE_DCX_GML);
             namespaceMap.put("files", XmlNamespaces.NAMESPACE_FILES_XML);
+            namespaceMap.put("afm", XmlNamespaces.NAMESPACE_AFM_XML);
             namespaceMap.put("gml", XmlNamespaces.NAMESPACE_OPEN_GIS);
             namespaceMap.put("wfs", XmlNamespaces.NAMESPACE_EASY_WORKFLOW);
             namespaceMap.put("damd", XmlNamespaces.NAMESPACE_DAMD);

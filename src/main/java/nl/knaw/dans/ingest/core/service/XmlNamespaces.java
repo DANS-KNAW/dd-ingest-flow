@@ -25,6 +25,7 @@ public interface XmlNamespaces {
     String NAMESPACE_ID_TYPE = "http://easy.dans.knaw.nl/schemas/vocab/identifier-type/";
     String NAMESPACE_DCX_GML = "http://easy.dans.knaw.nl/schemas/dcx/gml/";
     String NAMESPACE_FILES_XML = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/";
+    String NAMESPACE_AFM_XML = "http://easy.dans.knaw.nl/schemas/bag/metadata/afm/";
     String NAMESPACE_OPEN_GIS = "http://www.opengis.net/gml";
     String NAMESPACE_EASY_WORKFLOW = "http://easy.dans.knaw.nl/easy/workflow/";
     String NAMESPACE_DAMD = "http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/";

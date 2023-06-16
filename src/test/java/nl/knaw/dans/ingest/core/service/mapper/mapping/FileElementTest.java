@@ -92,7 +92,7 @@ class FileElementTest extends BaseTest {
             + "</file>", ns));
 
         var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, noMigration);
-        assertEquals("original_filepath: \"leeg#.txt\"", result.getDescription());
+        assertEquals("original_filepath: \"leeg#.txt\"; description: \"Empty file\"", result.getDescription());
     }
 
     @Test

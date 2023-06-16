@@ -116,7 +116,7 @@ public class FileElement extends Base {
             "notes",
             "case_quantity",
             "file_category",
-            "description", // see also FIL004
+            "description",
             "othmat_codebook",
             "data_collector",
             "collection_date",
@@ -152,7 +152,7 @@ public class FileElement extends Base {
 
             // FIL002B
             for (var key : fixedKeys) {
-                var child = getChildNodes(node, String.format("*[local-name() = '%s']", key))
+                var child = getChildNodes(node, "dcterms:"+ key)
                     .map(Node::getTextContent)
                     .collect(Collectors.toList());
 
@@ -177,9 +177,8 @@ public class FileElement extends Base {
                 .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))
                 .forEach(n -> result.addValue("title", n));
         }
-
-        // FIL004 if none of FIL002A, FILE002B, FIL003
-        if(result.isEmpty()){
+        else {
+            // FIL004 in case of migration part of FIL002B
             getChildNodes(node, "dcterms:description")
                 .map(Node::getTextContent)
                 .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))

@@ -81,7 +81,7 @@ class FileElementTest extends BaseTest {
     }
 
     @Test
-    void toFileMeta_should_ignore_description_in_favor_of_original_path_if_not_migration_and_forbidden_chracters() throws Exception {
+    void toFileMeta_should_return_desccriotion_and_original_path_if_not_migration_and_forbidden_chracters() throws Exception {
         var doc = readDocumentFromString(String.format(""
             + "<file filepath='data/leeg#.txt' %s>\n"
             + "    <dcterms:format>text/plain</dcterms:format>\n"
@@ -153,7 +153,7 @@ class FileElementTest extends BaseTest {
         String filePath = "data/this/is/the/directory/label/leeg.txt";
         var doc = readDocumentFromString(String.format(""
             + "<file filepath='%s' %s>"
-            + "    <afm:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</afm:othmat_codebook>"
+            + "    <dcterms:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</dcterms:othmat_codebook>"
             + "    <afm:keyvaluepair>"
             + "        <afm:key>FOTONR</afm:key>"
             + "        <afm:value>3</afm:value>"

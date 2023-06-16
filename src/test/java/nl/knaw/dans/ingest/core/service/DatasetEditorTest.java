@@ -180,9 +180,9 @@ public class DatasetEditorTest extends BaseTest {
     @Test
     void FIL002B_FIL003() throws Exception {
         var filesXml = ""
-            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:afm='http://easy.dans.knaw.nl/schemas/bag/metadata/afm/'>"
+            + "<files " + filesNS + ">"
             + "    <file filepath='data/subdir/#.txt'>"
-            + "        <afm:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</afm:othmat_codebook>"
+            + "        <dcterms:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</dcterms:othmat_codebook>"
             + "    </file>"
             + "</files>";
         var deposit = createDeposit("", filesXml);

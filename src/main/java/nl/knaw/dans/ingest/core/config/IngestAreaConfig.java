@@ -22,6 +22,15 @@ public class IngestAreaConfig {
     private Path outbox;
     private String depositorRole;
     private DatasetAuthorizationConfig authorization;
+    private String apiKey;
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
 
     public Path getInbox() {
         return inbox;

@@ -18,7 +18,6 @@ package nl.knaw.dans.ingest;
 
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
-import nl.knaw.dans.ingest.core.config.DatasetAuthorizationConfig;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
 import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
@@ -67,6 +66,9 @@ public class DdIngestFlowConfiguration extends Configuration {
             if (StringUtils.isBlank(authorization.getDatasetUpdater())) {
                 authorization.setDatasetUpdater(defaultAuthorization.getDatasetUpdater());
             }
+        }
+        if (StringUtils.isBlank(ingestAreaConfig.getApiKey())) {
+            ingestAreaConfig.setApiKey(dataverse.getApiKey());
         }
     }
 

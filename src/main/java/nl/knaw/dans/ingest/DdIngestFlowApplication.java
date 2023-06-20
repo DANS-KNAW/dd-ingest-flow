@@ -247,7 +247,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
     private static DataverseClient getDataverseClient(DdIngestFlowConfiguration configuration, IngestAreaConfig ingestAreaConfig) {
         DataverseClientFactory dataverseClientFactory = configuration.getDataverse();
-        dataverseClientFactory.setApiKey(getOverridable(configuration.getDataverse().getApiKey(),ingestAreaConfig.getApiKey()));
+        dataverseClientFactory.setApiKey(getOverridable(ingestAreaConfig.getApiKey(), configuration.getDataverse().getApiKey()));
         return dataverseClientFactory.build();
     }
 
@@ -258,7 +258,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         return new DepositorAuthorizationValidatorImpl(datasetService, creator, updater);
     }
 
-    private static String getOverridable(String defaultValue, String value) {
+    private static String getOverridable(String value, String defaultValue) {
         // TODO like dataset-creator/updater-role this is another approach that for depositorRole,
         //  which convention is preferred?
         if (value != null) {

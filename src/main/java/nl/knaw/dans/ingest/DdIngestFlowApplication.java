@@ -105,7 +105,6 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         IngestFlowConfigReader.readIngestFlowConfiguration(ingestFlowConfig);
 
         final var xmlReader = new XmlReaderImpl();
-
         final var fileService = new FileServiceImpl();
         final var depositFileLister = new DepositFileListerImpl();
 
@@ -117,7 +116,6 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
         final var depositWriter = new DepositWriterImpl(bagDataManager);
         final var depositManager = new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);
-
         final var zipFileHandler = new ZipFileHandler(ingestFlowConfig.getZipWrappingTempDir());
 
         final var dansBagValidatorClient = new JerseyClientBuilder(environment)

@@ -24,16 +24,13 @@ ingestFlow:
 
 dataverse:
   apiKey: 'changeme4' # overridden per area
-  baseUrl: x # avoids a NullPointerException
 
-# the rest is also required to avoid a NullPointerException
+# the rest is required to avoid a NullPointerException
 
 dataverseExtra:
-  publishAwaitUnlockMaxRetries: 0
   publishAwaitUnlockWaitTimeMs: 0
 
 taskEventDatabase:
-  driverClass: x
   url: x
 
 validateDansBag:

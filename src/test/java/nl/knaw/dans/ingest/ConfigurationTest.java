@@ -54,7 +54,7 @@ public class ConfigurationTest {
 
     @Test
     public void debug_etc_does_not_throw() throws Exception {
-        final var config = factory.build(new ResourceConfigurationSourceProvider(), "debug-etc/config.yml");
+        final var config = factory.build(FileInputStream::new, "src/test/resources/debug-etc/config.yml");
         readIngestFlowConfiguration(config.getIngestFlow());
     }
 

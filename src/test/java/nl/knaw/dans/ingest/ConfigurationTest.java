@@ -47,9 +47,9 @@ public class ConfigurationTest {
 
     @Test
     public void assembly_dist_cfg_does_not_throw() throws Exception {
-        final var dir = "src/main/assembly/dist/cfg/";
-        final var config = factory.build(FileInputStream::new, dir + "config.yml");
-        config.getIngestFlow().setMappingDefsDir(Paths.get("src/main/assembly/dist/cfg"));
+        final var dir = "src/main/assembly/dist/cfg";
+        final var config = factory.build(FileInputStream::new, dir + "/config.yml");
+        config.getIngestFlow().setMappingDefsDir(Paths.get(dir));
         readIngestFlowConfiguration(config.getIngestFlow());
     }
 

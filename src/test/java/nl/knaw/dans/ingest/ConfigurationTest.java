@@ -76,6 +76,7 @@ public class ConfigurationTest {
 
     @Test
     public void amended_unit_test_config_yml_produces_default_values() throws IOException, ConfigurationException {
+
         final var linesToRemove = "^.* # custom value\n";
         final var s = Pattern.compile(linesToRemove, Pattern.MULTILINE)
             .matcher(readFileToString(new File("src/test/resources/unit-test-config.yml"), UTF_8))

@@ -21,8 +21,7 @@ public class DepositIngestTaskFactoryBuilderTest {
         final var factory = new YamlConfigurationFactory<>(DdIngestFlowConfiguration.class, Validators.newValidator(), mapper, "dw");
         final var dir = "src/test/resources/debug-etc";
         final var config = factory.build(FileInputStream::new, dir + "/config.yml");
-        config.getIngestFlow().setMappingDefsDir(Paths.get(dir));
-        IngestAreaConfig areaConfig = config.getIngestFlow().getAutoIngest();
+        final var areaConfig = config.getIngestFlow().getAutoIngest();
 
         assertDoesNotThrow(() -> new DepositIngestTaskFactoryBuilder(config, null, null)
             .createTaskFactory(areaConfig, null, false));

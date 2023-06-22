@@ -4,17 +4,19 @@ ingestFlow:
     depositorRole: importer
     authorization:
       datasetUpdater: importupdater
+      # datasetCreator replaced by default
 
   migration:
     apiKey: 'changeme2'
     depositorRole: migrator
     authorization:
       datasetCreator: migrationcreator
+      # datasetUpdater replaced by default
 
   autoIngest:
     apiKey: 'changeme3'
     depositorRole: swordupdater
-    outbox: x # or inbox avoids a NullPointerException
+    authorization: # returns initially null, replaced by default
 
   # defaults for the areas above
   depositorRole: contributor
@@ -23,7 +25,7 @@ ingestFlow:
     datasetUpdater: contributorplus
 
 dataverse:
-  apiKey: 'changeme4' # overridden per area
+  apiKey: 'changeme4' # default for the areas above
 
 # the rest is required to avoid a NullPointerException
 

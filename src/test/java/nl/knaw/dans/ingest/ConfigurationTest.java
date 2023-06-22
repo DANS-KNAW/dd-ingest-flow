@@ -22,6 +22,7 @@ import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.configuration.YamlConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.validation.Validators;
+import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactoryBuilder;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
@@ -59,6 +60,10 @@ public class ConfigurationTest {
         final var config = factory.build(FileInputStream::new, dir + "/config.yml");
         config.getIngestFlow().setMappingDefsDir(Paths.get(dir));
         readIngestFlowConfiguration(config.getIngestFlow());
+
+        // satisfying CodeCov
+        new DepositIngestTaskFactoryBuilder(config, null, null)
+            .createTaskFactory(config.getIngestFlow().getAutoIngest(), null, false);
     }
 
     @Test

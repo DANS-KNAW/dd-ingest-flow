@@ -1,21 +1,21 @@
 ingestFlow:
   import:
-    apiKey: 'changeme1'
-    depositorRole: importer
+    apiKey: 'changeme1' # custom value
+    depositorRole: importer # custom value
     authorization:
       datasetUpdater: importupdater
       # datasetCreator replaced by default
 
   migration:
-    apiKey: 'changeme2'
-    depositorRole: migrator
+    apiKey: 'changeme2' # custom value
+    depositorRole: migrator # custom value
     authorization:
       datasetCreator: migrationcreator
       # datasetUpdater replaced by default
 
   autoIngest:
-    apiKey: 'changeme3'
-    depositorRole: swordupdater
+    apiKey: 'changeme3' # custom value
+    depositorRole: swordupdater # custom value
     authorization: # returns initially null, replaced by default
 
   # defaults for the areas above
@@ -27,7 +27,7 @@ ingestFlow:
 dataverse:
   apiKey: 'changeme4' # default for the areas above
 
-# the rest is required to avoid a NullPointerException
+# the following values are required to avoid a NullPointerException
 
 dataverseExtra:
   publishAwaitUnlockWaitTimeMs: 0

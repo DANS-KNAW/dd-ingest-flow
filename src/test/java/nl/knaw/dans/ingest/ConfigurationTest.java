@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static nl.knaw.dans.ingest.IngestFlowConfigReader.readIngestFlowConfiguration;
+import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConfigurationTest {
@@ -75,15 +76,13 @@ public class ConfigurationTest {
 
     @Test
     public void amended_unit_test_config_yml_produces_default_values() throws IOException, ConfigurationException {
-        final var s = FileUtils.readFileToString(new File("src/test/resources/unit-test-config.yml"), UTF_8)
-            .replace("depositorRole: migrator", "")
-            .replace("depositorRole: importer", "")
-            .replace("depositorRole: swordupdater", "")
-            .replace("apiKey: 'changeme1'", "")
-            .replace("apiKey: 'changeme2'", "")
-            .replace("apiKey: 'changeme3'", "");
+        final var linesToRemove = "^.* # custom value\n";
+        final var s = Pattern.compile(linesToRemove, Pattern.MULTILINE)
+            .matcher(readFileToString(new File("src/test/resources/unit-test-config.yml"), UTF_8))
+            .replaceAll("");
         final var testFile = new File("target/test/" + this.getClass().getSimpleName() + "/config.yml");
         FileUtils.write(testFile, s, UTF_8);
+
         final var ingestFlowConfig = factory.build(FileInputStream::new, testFile.toString()).getIngestFlow();
 
         assertThat(ingestFlowConfig.getMigration().getAuthorization().getDatasetUpdater()).isEqualTo("contributorplus");

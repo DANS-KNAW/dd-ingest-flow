@@ -22,6 +22,7 @@ import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapper;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.service.mapper.mapping.Amd;
 import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
@@ -35,7 +36,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -89,6 +89,10 @@ public class DepositMigrationTask extends DepositIngestTask {
                 "Not enough Data Vault Metadata for import deposit, missing: %s", msg
             ));
         }
+    }
+
+    DepositToDvDatasetMetadataMapper newMapper() {
+        return datasetMetadataMapperFactory.createMapper(false, true);
     }
 
     @Override

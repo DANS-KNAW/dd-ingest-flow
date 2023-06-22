@@ -92,17 +92,17 @@ public class MappingTestHelper {
     }
 
     static Dataset mapDdmToDataset(Document ddm, boolean restrictedFilesPresent) {
-        return createMapper().toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent, null);
+        return createMapper(true).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent, null);
     }
 
-    static DepositToDvDatasetMetadataMapper createMapper() {
+    static DepositToDvDatasetMetadataMapper createMapper(boolean isMigration) {
         return new DepositToDvDatasetMetadataMapper(
             true,
             Set.of("citation", "dansRights", "dansRelationMetadata", "dansArchaeologyMetadata", "dansTemporalSpatial", "dansDataVaultMetadata"),
             config.getIso1ToDataverseLanguage(),
             config.getIso2ToDataverseLanguage(),
-            config.getSpatialCoverageCountryTerms()
-        );
+            config.getSpatialCoverageCountryTerms(),
+            isMigration);
     }
 
     public static Document ddmWithCustomProfileContent(String content) throws ParserConfigurationException, IOException, SAXException {

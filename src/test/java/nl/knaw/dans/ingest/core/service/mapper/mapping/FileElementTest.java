@@ -32,6 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FileElementTest extends BaseTest {
     private final Path testDir = new File("target/test/" + getClass().getSimpleName()).toPath();
+    private final boolean defaultRestrict = true;
+    private final boolean isMigration = true;
+    private final boolean noMigration = false;
 
     private final String ns = ""
         + "xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' "
@@ -50,15 +53,62 @@ class FileElementTest extends BaseTest {
             + "    <dcterms:format>text/plain</dcterms:format>\n"
             + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
             + "    <dcterms:description>Empty file</dcterms:description>\n"
+            + "    <dcterms:title>original/archival file name</dcterms:title>\n"
             + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
             + "</file>", ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
 
         assertEquals("leeg.txt", result.getLabel());
         assertEquals(" ", result.getDirectoryLabel());
-        assertEquals("description: \"Empty file\"; time_period: \"Classical\"; hardware: \"Hardware\"", result.getDescription());
+        assertEquals("description: \"Empty file\"; title: \"original/archival file name\"; time_period: \"Classical\"; hardware: \"Hardware\"", result.getDescription());
         assertEquals(true, result.getRestricted());
+    }
+
+    @Test
+    void toFileMeta_should_include_only_description_if_not_migration() throws Exception {
+        var doc = readDocumentFromString(String.format(""
+            + "<file filepath='data/leeg.txt' %s>\n"
+            + "    <dcterms:format>text/plain</dcterms:format>\n"
+            + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+            + "    <dcterms:description>Empty file</dcterms:description>\n"
+            + "    <dcterms:title>original/archival file name</dcterms:title>\n"
+            + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+            + "</file>", ns));
+
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, noMigration);
+        assertEquals("Empty file", result.getDescription());
+    }
+
+    @Test
+    void toFileMeta_should_return_desccriotion_and_original_path_if_not_migration_and_forbidden_chracters() throws Exception {
+        var doc = readDocumentFromString(String.format(""
+            + "<file filepath='data/leeg#.txt' %s>\n"
+            + "    <dcterms:format>text/plain</dcterms:format>\n"
+            + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+            + "    <dcterms:description>Empty file</dcterms:description>\n"
+            + "    <dcterms:title>original/archival file name</dcterms:title>\n"
+            + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+            + "</file>", ns));
+
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, noMigration);
+        assertEquals("original_filepath: \"leeg#.txt\"; description: \"Empty file\"", result.getDescription());
+    }
+
+    @Test
+    void toFileMeta_should_include_description_if_migration() throws Exception {
+        // description in input is part of FIL002B
+        var doc = readDocumentFromString(String.format(""
+            + "<file filepath='data/leeg#.txt' %s>\n"
+            + "    <dcterms:format>text/plain</dcterms:format>\n"
+            + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+            + "    <dcterms:description>Empty file</dcterms:description>\n"
+            + "    <dcterms:title>original/archival file name</dcterms:title>\n"
+            + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+            + "</file>", ns));
+
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
+        assertEquals("original_filepath: \"leeg#.txt\"; description: \"Empty file\"; title: \"original/archival file name\"; time_period: \"Classical\"; hardware: \"Hardware\"", result.getDescription());
     }
 
     @Test
@@ -67,7 +117,7 @@ class FileElementTest extends BaseTest {
             + "    <file filepath='data/this/is/the/directory/label/leeg.txt' %s>\n"
             + "    </file>", ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
         assertEquals("leeg.txt", result.getLabel());
         assertEquals("this/is/the/directory/label", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -79,7 +129,7 @@ class FileElementTest extends BaseTest {
             + "    <file filepath='/this/is/the/directory/label/leeg.txt' %s>"
             + "    </file>", ns));
 
-        assertThatThrownBy(() -> FileElement.toFileMeta(doc.getDocumentElement(), true))
+        assertThatThrownBy(() -> FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration))
             .isInstanceOf(RuntimeException.class) // TODO shouldn't this be something like InvalidPathException?
             .hasMessage("file outside data folder: /this/is/the/directory/label/leeg.txt");
     }
@@ -91,7 +141,7 @@ class FileElementTest extends BaseTest {
             + "         <dcterms:description>Empty file</dcterms:description>\n"
             + "    </file>", ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
         assertEquals("leeg.txt", result.getLabel());
         assertEquals("this/is/the/directory/label", result.getDirectoryLabel());
         assertEquals("Empty file", result.getDescription());
@@ -103,7 +153,7 @@ class FileElementTest extends BaseTest {
         String filePath = "data/this/is/the/directory/label/leeg.txt";
         var doc = readDocumentFromString(String.format(""
             + "<file filepath='%s' %s>"
-            + "    <afm:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</afm:othmat_codebook>"
+            + "    <dcterms:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</dcterms:othmat_codebook>"
             + "    <afm:keyvaluepair>"
             + "        <afm:key>FOTONR</afm:key>"
             + "        <afm:value>3</afm:value>"
@@ -111,7 +161,7 @@ class FileElementTest extends BaseTest {
             + "</file>", filePath, ns)
         );
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
         assertEquals("leeg.txt", result.getLabel());
         assertEquals("this/is/the/directory/label", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -124,7 +174,7 @@ class FileElementTest extends BaseTest {
         String s = String.format("<file filepath=\"%s\" %s></file>", filePath, ns);
         var doc = readDocumentFromString(s);
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
         assertEquals("strange_filename_.txt", result.getLabel());
         assertEquals("directory/path/with/_for_bidden_/_chars_", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -136,7 +186,7 @@ class FileElementTest extends BaseTest {
         String filePath = "data/directory/path/with/all/legal/chars/normal_filename.txt";
         var doc = readDocumentFromString(String.format(
             "<file filepath='%s' %s></file>", filePath, ns));
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
         assertEquals("normal_filename.txt", result.getLabel());
         assertEquals("directory/path/with/all/legal/chars", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -149,7 +199,7 @@ class FileElementTest extends BaseTest {
         var doc = readDocumentFromString(String.format(
             "<file filepath='%s' %s></file>", originalFilePath, ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
         assertEquals("n\u00f8rmal_filename.txt", result.getLabel());
         assertEquals("directory/path/with/all/leg_l/chars", result.getDirectoryLabel());
         assertTrue(result.getRestricted());
@@ -176,7 +226,7 @@ class FileElementTest extends BaseTest {
         var doc = readDocumentFromString(String.format(
             "<file filepath='%s' %s></file>", filePath, ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
         assertEquals("directory/path/with/all/leg_l/chars", result.getDirectoryLabel());
         assertEquals("test_______.txt", result.getLabel());
     }
@@ -196,7 +246,7 @@ class FileElementTest extends BaseTest {
         var doc = readDocumentFromString(String.format(
             "<file filepath='data/%s/fil^e.txt' %s></file>", filename, ns));
 
-        var result = FileElement.toFileMeta(doc.getDocumentElement(), true);
+        var result = FileElement.toFileMeta(doc.getDocumentElement(), defaultRestrict, isMigration);
         assertEquals("dir__   ___/xyz/\\a.b-c", result.getDirectoryLabel());
         assertEquals("fil^e.txt", result.getLabel());
     }
@@ -221,7 +271,31 @@ class FileElementTest extends BaseTest {
 
         deposit.setDdm(readDocumentFromString("<root></root>"));
 
-        var result = FileElement.pathToFileInfo(deposit);
+        var result = FileElement.pathToFileInfo(deposit, true);
+        assertEquals(result.get(filePath).getPath(), result.get(filePath).getPhysicalPath());
+    }
+
+    @Test
+    void pathToFileInfo_should_return_same_path_for_physical_and_normal_not_migration() throws Exception {
+        var doc = readDocumentFromString(
+            "<file filepath=\"data/path/to/file1.txt\" xmlns=\"http://easy.dans.knaw.nl/schemas/bag/metadata/files/\" xmlns:dcterms=\"http://purl.org/dc/terms/\">\n"
+                + "    <dcterms:format>text/plain</dcterms:format>\n"
+                + "    <dcterms:hardware>Hardware</dcterms:hardware>\n"
+                + "    <dcterms:description>Empty file</dcterms:description>\n"
+                + "    <dcterms:time_period>Classical</dcterms:time_period>\n"
+                + "</file>");
+
+        var filePath = Path.of("data/path/to/file1.txt");
+        var deposit = new Deposit();
+        deposit.setBagDir(Path.of("bagdir"));
+        deposit.setFiles(List.of(
+                new DepositFile(filePath, null, "check1", doc.getDocumentElement())
+            )
+        );
+
+        deposit.setDdm(readDocumentFromString("<root></root>"));
+
+        var result = FileElement.pathToFileInfo(deposit, true);
         assertEquals(result.get(filePath).getPath(), result.get(filePath).getPhysicalPath());
     }
 
@@ -245,7 +319,7 @@ class FileElementTest extends BaseTest {
 
         deposit.setDdm(readDocumentFromString("<root></root>"));
 
-        var result = FileElement.pathToFileInfo(deposit);
+        var result = FileElement.pathToFileInfo(deposit, true);
         assertEquals(Path.of("bagdir/data/new-file-name"), result.get(filePath).getPhysicalPath());
     }
 }

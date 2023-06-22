@@ -22,12 +22,15 @@ import lombok.NoArgsConstructor;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static nl.knaw.dans.ingest.core.service.XmlNamespaces.NAMESPACE_XSI;
 
 @Data
 @NoArgsConstructor
@@ -70,7 +73,12 @@ public class Deposit {
     private List<DepositFile> files;
 
     public VaultMetadata getVaultMetadata() {
-        return new VaultMetadata(getDataversePid(), getDataverseBagId(), getDataverseNbn(), getDataverseOtherId(), getOtherIdVersion(), getDataverseSwordToken());
+        return new VaultMetadata(getDataversePid(), getDataverseBagId(), getDataverseNbn(), getOtherId(), getOtherIdVersion(), getDataverseSwordToken());
+    }
+
+    private static boolean hasTypeDoi(Node n) {
+        Node type = n.getAttributes().getNamedItemNS(NAMESPACE_XSI, "type");
+        return type != null && type.getTextContent().contains("DOI");
     }
 
     public String getDataversePid() {

@@ -48,6 +48,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class DatasetEditorTest extends BaseTest {
     private final Path testDir = new File("target/test/" + getClass().getSimpleName()).toPath();
+    String filesNS = String.format("xmlns='%s' xmlns:afm='%s' xmlns:dcterms='%s'",
+        XmlNamespaces.NAMESPACE_FILES_XML, XmlNamespaces.NAMESPACE_AFM_XML, XmlNamespaces.NAMESPACE_DCTERMS);
 
     @BeforeEach
     void clear() {
@@ -118,7 +120,7 @@ public class DatasetEditorTest extends BaseTest {
         var deposit = createDeposit("", filesXml);
         deposit.setDdm(readDocumentFromString("<ddm:DDM xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'/>"));
 
-        var fileInfoMap = FileElement.pathToFileInfo(deposit);
+        var fileInfoMap = FileElement.pathToFileInfo(deposit, true);
         var filteredFileInfoMap = createDatasetEditor(deposit, true, Pattern.compile(".*file2.*"), null)
             .getFileInfo();
 
@@ -153,7 +155,7 @@ public class DatasetEditorTest extends BaseTest {
     @Test
     void FIL002A_FIL003() throws Exception {
         var filesXml = ""
-            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:afm='http://easy.dans.knaw.nl/schemas/bag/metadata/afm/'>"
+            + "<files " + filesNS + ">"
             + "    <file filepath='data/subdir/#.txt'>"
             + "        <afm:keyvaluepair>"
             + "            <afm:key>FOTONR</afm:key>"
@@ -178,9 +180,9 @@ public class DatasetEditorTest extends BaseTest {
     @Test
     void FIL002B_FIL003() throws Exception {
         var filesXml = ""
-            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:afm='http://easy.dans.knaw.nl/schemas/bag/metadata/afm/'>"
+            + "<files " + filesNS + ">"
             + "    <file filepath='data/subdir/#.txt'>"
-            + "        <afm:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</afm:othmat_codebook>"
+            + "        <dcterms:othmat_codebook>FOTOBEST.csv; FOTOLST.csv</dcterms:othmat_codebook>"
             + "    </file>"
             + "</files>";
         var deposit = createDeposit("", filesXml);
@@ -196,7 +198,7 @@ public class DatasetEditorTest extends BaseTest {
     @Test
     void FIL004_FIL003() throws Exception {
         var filesXml = ""
-            + "<files xmlns='http://easy.dans.knaw.nl/schemas/bag/metadata/files/' xmlns:dcterms='http://purl.org/dc/terms/'>"
+            + "<files " + filesNS + ">"
             + "    <file filepath='data/subdir/#.txt'>"
             + "        <dcterms:description>A file with a problematic name</dcterms:description>"
             + "    </file>"

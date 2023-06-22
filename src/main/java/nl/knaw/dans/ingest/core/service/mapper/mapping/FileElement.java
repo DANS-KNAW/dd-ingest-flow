@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class FileElement extends Base {
@@ -44,7 +43,7 @@ public class FileElement extends Base {
         "ANONYMOUS", false
     );
 
-    public static FileMeta toFileMeta(Node node, boolean defaultRestrict) {
+    public static FileMeta toFileMeta(Node node, boolean defaultRestrict, boolean isMigration) {
         var filepathAttribute = getAttribute(node, "filepath")
             .map(Node::getTextContent)
             .orElseThrow(() -> new RuntimeException("File node without a filepath attribute"));
@@ -74,7 +73,7 @@ public class FileElement extends Base {
             ? pathInDataset.toString()
             : null;
 
-        var kv = getKeyValuePairs(node, filename, originalFilePath);
+        var kv = getKeyValuePairs(node, filename, originalFilePath, isMigration);
 
         var description = getDescription(kv);
 
@@ -109,8 +108,7 @@ public class FileElement extends Base {
             .collect(Collectors.joining("; "));
     }
 
-    // FIL002AB, FIL003
-    private static Map<String, List<String>> getKeyValuePairs(Node node, String filename, String originalFilePath) {
+    private static Map<String, List<String>> getKeyValuePairs(Node node, String filename, String originalFilePath, boolean isMigration) {
         var fixedKeys = List.of(
             "hardware",
             "original_OS",
@@ -129,46 +127,63 @@ public class FileElement extends Base {
             "mapprojection",
             "analytic_units");
 
-        var result = new HashMap<String, List<String>>();
+        var result = new HashMap<String, List<String>>(){
+            void addValue(String key, String value){
+                computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+            };
+        };
+        if (isMigration) {
 
-        for (var key : fixedKeys) {
-            var child = getChildNodes(node, String.format("*[local-name() = '%s']", key))
-                .map(Node::getTextContent)
-                .collect(Collectors.toList());
+            // FIL002A
+            getChildNodes(node, "//afm:keyvaluepair")
+                .forEach(n -> {
+                    var key = getChildNode(n, "afm:key")
+                        .map(Node::getTextContent)
+                        .orElse(null);
 
-            log.trace("matches for key '{}': {}", key, result);
+                    var value = getChildNode(n, "afm:value")
+                        .map(Node::getTextContent)
+                        .orElse(null);
 
-            if (child.size() > 0) {
-                result.put(key, child);
+                    if (key != null && value != null) {
+                        result.addValue(key, value);
+                    }
+                });
+
+            // FIL002B
+            for (var key : fixedKeys) {
+                var child = getChildNodes(node, "dcterms:"+ key)
+                    .map(Node::getTextContent)
+                    .collect(Collectors.toList());
+
+                log.trace("matches for key '{}': {}", key, result);
+
+                if (child.size() > 0) {
+                    result.put(key, child);
+                }
             }
         }
 
-        getChildNodes(node, "*[local-name() = 'keyvaluepair']")
-            .forEach(n -> {
-                var key = getChildNode(n, "*[local-name() = 'key']")
-                    .map(Node::getTextContent)
-                    .orElse(null);
-
-                var value = getChildNode(n, "*[local-name() = 'value']")
-                    .map(Node::getTextContent)
-                    .orElse(null);
-
-                if (key != null && value != null) {
-                    result.computeIfAbsent(key, k -> new ArrayList<>())
-                        .add(value);
-                }
-            });
-
-        getChildNodes(node, "title")
-            .map(Node::getTextContent)
-            .filter(n -> StringUtils.equalsIgnoreCase(filename, n))
-            .forEach(n -> result.computeIfAbsent("title", k -> new ArrayList<>())
-                .add(n));
-
+        // FIL003
         if (originalFilePath != null) {
-            result.computeIfAbsent("original_filepath", k -> new ArrayList<>()).add(originalFilePath);
+            result.addValue( "original_filepath", originalFilePath);
         }
 
+        if (isMigration) {
+            // "archival_name" of EASY-I and "original_file" of EASY-II are mapped to titles
+            // see easy-fedora-to-bag.FileItem[Spec]
+            getChildNodes(node, "dcterms:title")
+                .map(Node::getTextContent)
+                .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))
+                .forEach(n -> result.addValue("title", n));
+        }
+        else {
+            // FIL004 in case of migration part of FIL002B
+            getChildNodes(node, "dcterms:description")
+                .map(Node::getTextContent)
+                .filter(n -> !StringUtils.equalsIgnoreCase(filename, n))
+                .forEach(n -> result.addValue("description", n));
+        }
         return result;
     }
 
@@ -186,7 +201,7 @@ public class FileElement extends Base {
         return filenameForbidden.matcher(filename).replaceAll("_");
     }
 
-    public static Map<Path, FileInfo> pathToFileInfo(Deposit deposit) {
+    public static Map<Path, FileInfo> pathToFileInfo(Deposit deposit, boolean isMigration) {
         // FIL006
         var defaultRestrict = XPathEvaluator.nodes(deposit.getDdm(), "/ddm:DDM/ddm:profile/ddm:accessRights")
             .map(AccessRights::toDefaultRestrict)
@@ -201,7 +216,7 @@ public class FileElement extends Base {
                 bagDir.resolve(depositFile.getPath()),
                 bagDir.resolve(depositFile.getPhysicalPath()),
                 depositFile.getChecksum(),
-                toFileMeta(depositFile.getXmlNode(), defaultRestrict))
+                toFileMeta(depositFile.getXmlNode(), defaultRestrict, isMigration))
             );
         });
 

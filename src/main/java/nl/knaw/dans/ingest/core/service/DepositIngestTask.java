@@ -32,6 +32,7 @@ import nl.knaw.dans.ingest.core.exception.InvalidDepositorRoleException;
 import nl.knaw.dans.ingest.core.exception.RejectedDepositException;
 import nl.knaw.dans.ingest.core.exception.TargetBlockedException;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTask;
+import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapper;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.lib.dataverse.DataverseException;
@@ -386,6 +387,10 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         );
     }
 
+    DepositToDvDatasetMetadataMapper newMapper() {
+        return datasetMetadataMapperFactory.createMapper(false, false);
+    }
+
     DatasetEditor newDatasetCreator(Dataset dataset, String depositorRole) {
         return newDatasetCreator(dataset, depositorRole, false);
     }
@@ -393,7 +398,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     Dataset getMetadata() {
         var date = getDateOfDeposit();
         var contact = getDatasetContact();
-        var mapper = datasetMetadataMapperFactory.createMapper(false); // TODO: WHY IS THIS ALWAYS FALSE?
+        var mapper = newMapper();
         return mapper.toDataverseDataset(
             deposit.getDdm(),
             deposit.getOtherDoiId(),

@@ -99,6 +99,10 @@ public class Identifier extends Base {
             .orElse("");
     }
 
+    public static boolean hasXsiTypeDoi(Node node) {
+        return hasXsiType(node, "DOI");
+    }
+
     public static boolean isArchisZaakId(Node node) {
         return hasXsiType(node, "ARCHIS-ZAAK-IDENTIFICATIE");
     }
@@ -111,8 +115,12 @@ public class Identifier extends Base {
         return node.getTextContent();
     }
 
-    public static boolean canBeMappedToOtherId(Node node) {
-        return hasXsiType(node, "EASY2") || !hasAttribute(node, NAMESPACE_XSI, "type");
+    public static boolean hasNoXsiType(Node node) {
+        return !hasAttribute(node, NAMESPACE_XSI, "type");
+    }
+
+    public static boolean hasXsiTypeEasy2(Node node) {
+        return hasXsiType(node, "EASY2");
     }
 
     public static boolean isArchisNumber(Node node) {

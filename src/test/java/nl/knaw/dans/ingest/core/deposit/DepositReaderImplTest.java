@@ -17,22 +17,41 @@ package nl.knaw.dans.ingest.core.deposit;
 
 import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.domain.Metadata;
+import gov.loc.repository.bagit.reader.BagReader;
 import nl.knaw.dans.ingest.core.domain.DepositFile;
+import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.io.BagDataManager;
+import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
 import nl.knaw.dans.ingest.core.io.FileService;
+import nl.knaw.dans.ingest.core.io.FileServiceImpl;
 import nl.knaw.dans.ingest.core.service.XmlReader;
+import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import org.apache.commons.configuration2.BaseConfiguration;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DepositReaderImplTest {
+    private final Path testDir = new File("target/test/" + getClass().getSimpleName()).toPath();
+
+    @BeforeEach
+    void clear() {
+        FileUtils.deleteQuietly(testDir.toFile());
+    }
 
     private DepositFileLister getDepositFileLister() {
         return deposit -> List.of(

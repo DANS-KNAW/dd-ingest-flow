@@ -17,11 +17,7 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundSingleValueField;
-import nl.knaw.dans.lib.dataverse.model.dataset.SingleValueField;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ALTERNATIVE_TITLE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR;
@@ -67,6 +63,7 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimi
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveSingleValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedContact;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mockedVaultMetadata;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
@@ -104,7 +101,7 @@ public class CitationMetadataFromDcmiTest {
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("")
             + "</ddm:DDM>");
-        var result = createMapper().toDataverseDataset(doc, null, null, null, mockedVaultMetadata, true, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, null, null, mockedVaultMetadata, true, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -115,12 +112,24 @@ public class CitationMetadataFromDcmiTest {
     }
 
     @Test
+    void CIT002A_vault_metadata_other_id_is_ignored_when_not_migration() throws Exception {
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">"
+            + minimalDdmProfile() + dcmi("")
+            + "</ddm:DDM>");
+        var result = createMapper(false).toDataverseDataset(doc, null, null, null, mockedVaultMetadata, true, null);
+        var field = getCompoundMultiValueField("citation", OTHER_ID, result);
+
+        assertThat(field).isNull();
+    }
+
+    @Test
     void CIT00X_vault_metadata_other_id_maps_to_other_id() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("")
             + "</ddm:DDM>");
-        var result = createMapper().toDataverseDataset(doc, "otherId:something", null, null, new VaultMetadata(), true, null);
+        var result = createMapper(true).toDataverseDataset(doc, "otherId:something", null, null, new VaultMetadata(), true, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -137,7 +146,7 @@ public class CitationMetadataFromDcmiTest {
             + minimalDdmProfile() + dcmi(""
             + "<dct:identifier xsi:type='id-type:EASY2'>easy-dataset:123</dct:identifier>")
             + "</ddm:DDM>");
-        var result = createMapper().toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -148,13 +157,26 @@ public class CitationMetadataFromDcmiTest {
     }
 
     @Test
+    void CIT002B_dct_identifier_type_easy2_is_ignored_when_not_migration() throws Exception {
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">"
+            + minimalDdmProfile() + dcmi(""
+            + "<dct:identifier xsi:type='id-type:EASY2'>easy-dataset:123</dct:identifier>")
+            + "</ddm:DDM>");
+        var result = createMapper(false).toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null);
+        var field = getCompoundMultiValueField("citation", OTHER_ID, result);
+
+        assertThat(field).isNull();
+    }
+
+    @Test
     void CIT004_typeless_dct_identifier_maps_to_other_id() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi(""
             + "<dct:identifier>typeless:123</dct:identifier>")
             + "</ddm:DDM>");
-        var result = createMapper().toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -314,6 +336,30 @@ public class CitationMetadataFromDcmiTest {
     }
 
     @Test
+    void CIT012A_dct_accessRights_is_ignored_when_not_migration() throws Exception {
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">"
+            + "    <ddm:profile>"
+            + "        <dc:title>Title of the dataset</dc:title>"
+            + "        <dc:description>Lorem ipsum.</dc:description>"
+            + "        <ddm:audience>D24000</ddm:audience>"
+            + "    </ddm:profile>"
+            + dcmi("<dct:accessRights>Some story</dct:accessRights>")
+            + "</ddm:DDM>");
+
+        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var str = toPrettyJsonString(result);
+
+        assertThat(str).doesNotContain("<p>Some story</p>");
+
+
+        var field = getCompoundMultiValueField("citation", DESCRIPTION, result);
+        assertThat(field).extracting(DESCRIPTION_VALUE).extracting("value")
+            .containsOnly( "<p>Lorem ipsum.</p>");
+        assertThat(result.getDatasetVersion().getTermsOfAccess()).isEqualTo("");
+    }
+
+    @Test
     void CIT014_subject_maps_to_keyword() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"
@@ -422,7 +468,7 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<dct:provenance>copied xml to csv</dct:provenance>")
             + "</ddm:DDM>");
 
-        var result = mapDdmToDataset(doc, false);
+        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
         var str = toPrettyJsonString(result);
 
         assertThat(str).containsOnlyOnce("copied xml to csv");
@@ -430,6 +476,24 @@ public class CitationMetadataFromDcmiTest {
 
         assertThat(getPrimitiveSingleValueField("citation", NOTES_TEXT, result))
             .isEqualTo("copied xml to csv");
+    }
+
+    @Test
+    void CIT017A_dct_provenance_maps_is_is_ignored_when_not_migration() throws Exception {
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">"
+            + minimalDdmProfile()
+            + dcmi("<dct:provenance>copied xml to csv</dct:provenance>")
+            + "</ddm:DDM>");
+
+        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var str = toPrettyJsonString(result);
+
+        assertThat(str).doesNotContain("copied xml to csv");
+        assertThat(str).doesNotContain("<p>copied xml to csv</p>");
+
+        assertThat(getPrimitiveSingleValueField("citation", NOTES_TEXT, result))
+            .isNull();
     }
 
     @Test
@@ -555,13 +619,29 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<ddm:description descriptionType='Other'>Author from description other</ddm:description>")
             + "</ddm:DDM>");
 
-        var result = mapDdmToDataset(doc, false);
+        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
         var field = getCompoundMultiValueField("citation", CONTRIBUTOR, result);
         var expected = "Author from description other";
         assertThat(field).extracting(CONTRIBUTOR_NAME).extracting("value")
             .containsOnly(expected);
         // not as description and author
         assertThat(toPrettyJsonString(result)).containsOnlyOnce(expected);
+    }
+
+    @Test
+    void CIT021A_description_type_other_is_ignored_when_not_migration() throws Exception {
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">"
+            + minimalDdmProfile()
+            + dcmi("<ddm:description descriptionType='Other'>Author from description other</ddm:description>")
+            + "</ddm:DDM>");
+
+        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var field = getCompoundMultiValueField("citation", CONTRIBUTOR, result);
+        var expected = "Author from description other";
+        assertThat(field).isNull();
+        // not as description and author
+        assertThat(toPrettyJsonString(result)).doesNotContain(expected);
     }
 
     @Test

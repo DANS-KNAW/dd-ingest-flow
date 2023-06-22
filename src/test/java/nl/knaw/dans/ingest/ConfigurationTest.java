@@ -22,7 +22,6 @@ import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.configuration.YamlConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.validation.Validators;
-import nl.knaw.dans.ingest.core.service.DepositIngestTaskFactoryBuilder;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
@@ -36,6 +35,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static nl.knaw.dans.ingest.IngestFlowConfigReader.readIngestFlowConfiguration;
 import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class ConfigurationTest {
 
@@ -47,23 +47,19 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void assembly_dist_cfg_does_not_throw() throws Exception {
+    public void assembly_dist_cfg_does_not_throw() {
         final var dir = "src/main/assembly/dist/cfg";
-        final var config = factory.build(FileInputStream::new, dir + "/config.yml");
+        final var config = assertDoesNotThrow(() -> factory.build(FileInputStream::new, dir + "/config.yml"));
         config.getIngestFlow().setMappingDefsDir(Paths.get(dir));
-        readIngestFlowConfiguration(config.getIngestFlow());
+        assertDoesNotThrow(() -> readIngestFlowConfiguration(config.getIngestFlow()));
     }
 
     @Test
-    public void debug_etc_does_not_throw() throws Exception {
+    public void debug_etc_does_not_throw() {
         final var dir = "src/test/resources/debug-etc";
-        final var config = factory.build(FileInputStream::new, dir + "/config.yml");
+        final var config = assertDoesNotThrow(() -> factory.build(FileInputStream::new, dir + "/config.yml"));
         config.getIngestFlow().setMappingDefsDir(Paths.get(dir));
-        readIngestFlowConfiguration(config.getIngestFlow());
-
-        // satisfying CodeCov
-        new DepositIngestTaskFactoryBuilder(config, null, null)
-            .createTaskFactory(config.getIngestFlow().getAutoIngest(), null, false);
+        assertDoesNotThrow(() -> readIngestFlowConfiguration(config.getIngestFlow()));
     }
 
     @Test

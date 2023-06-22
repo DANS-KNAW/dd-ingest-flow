@@ -67,7 +67,6 @@ public class DepositIngestTaskFactoryBuilder {
         this.blockedTargetService = blockedTargetService;
     }
 
-    // TODO this should really be refactored so that we don't need a task factory builder, we just create ingest task factories for each importarea with the proper config
     public DepositIngestTaskFactory createTaskFactory(IngestAreaConfig ingestAreaConfig, DataverseClient dataverseClient, boolean isMigration) throws IOException, URISyntaxException {
         final var ingestFlowConfig = configuration.getIngestFlow();
         final var mapperFactory = new DepositToDvDatasetMetadataMapperFactory(

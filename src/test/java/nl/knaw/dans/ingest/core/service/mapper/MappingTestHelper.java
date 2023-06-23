@@ -65,7 +65,8 @@ public class MappingTestHelper {
         "urn:nbn:nl:ui:13-c7c5a4b2-539e-4b0c-831d-fe31eb197950",
         "otherId:something",
         "1.0",
-        "swordToken");
+        "swordToken",
+        "USER001");
     public static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
         + "         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"
         + "         xmlns:dc='http://purl.org/dc/elements/1.1/'\n"

@@ -85,7 +85,7 @@ class DepositToDvDatasetMetadataMapperTest {
         var mapper = getMigrationMapper();
         var doc = readDocument("dataset.xml");
 
-        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken");
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken", "USER001");
 
         var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
         var str = new ObjectMapper()
@@ -99,7 +99,7 @@ class DepositToDvDatasetMetadataMapperTest {
         var mapper = getMigrationMapper();
         var doc = readDocument("dataset-simple-with-doi.xml");
 
-        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "otherIdVersion", "swordToken");
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "otherIdVersion", "swordToken", "USER001");
 
         var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
         var str = new ObjectMapper()
@@ -116,7 +116,7 @@ class DepositToDvDatasetMetadataMapperTest {
         var mapper = getNonMigrationMapper();
         var doc = readDocument("dataset-simple-with-doi.xml");
 
-        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "otherIdVersion", "swordToken");
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "otherIdVersion", "swordToken", "testuser");
 
         var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
         var str = new ObjectMapper()
@@ -133,7 +133,7 @@ class DepositToDvDatasetMetadataMapperTest {
         var mapper = getMigrationMapper();
         var doc = readDocument("dataset-simple.xml");
 
-        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", null, "otherIdVersion", "swordToken");
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", null, "otherIdVersion", "swordToken", "USER001");
 
         var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
         var str = new ObjectMapper()

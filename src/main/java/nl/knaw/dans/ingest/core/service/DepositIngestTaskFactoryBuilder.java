@@ -18,8 +18,6 @@ package nl.knaw.dans.ingest.core.service;
 import gov.loc.repository.bagit.reader.BagReader;
 import nl.knaw.dans.ingest.DdIngestFlowConfiguration;
 import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
-import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
-import nl.knaw.dans.ingest.core.dataverse.DatasetService;
 import nl.knaw.dans.ingest.core.dataverse.DataverseServiceImpl;
 import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositFileListerImpl;
@@ -31,7 +29,6 @@ import nl.knaw.dans.ingest.core.deposit.DepositWriterImpl;
 import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
 import nl.knaw.dans.ingest.core.io.FileServiceImpl;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
-import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
 import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidatorImpl;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 

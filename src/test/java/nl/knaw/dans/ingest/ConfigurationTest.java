@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class ConfigurationTest {
 
+    private final String testDir = "target/test/" + this.getClass().getSimpleName();
     private final YamlConfigurationFactory<DdIngestFlowConfiguration> factory;
 
     {
@@ -82,11 +83,11 @@ public class ConfigurationTest {
     public void amended_unit_test_config_yml_produces_default_values() throws IOException, ConfigurationException {
 
         final var linesToRemove = "^.* # custom value\n";
-        final var s = Pattern.compile(linesToRemove, Pattern.MULTILINE)
+        final var remainingLines = Pattern.compile(linesToRemove, Pattern.MULTILINE)
             .matcher(readFileToString(new File("src/test/resources/unit-test-config.yml"), UTF_8))
             .replaceAll("");
-        final var testFile = new File("target/test/" + this.getClass().getSimpleName() + "/config.yml");
-        FileUtils.write(testFile, s, UTF_8);
+        final var testFile = new File(testDir + "/config.yml");
+        FileUtils.write(testFile, remainingLines, UTF_8);
 
         final var ingestFlowConfig = factory.build(FileInputStream::new, testFile.toString()).getIngestFlow();
 

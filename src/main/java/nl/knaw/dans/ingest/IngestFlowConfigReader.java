@@ -35,6 +35,7 @@ public class IngestFlowConfigReader {
         config.setIso1ToDataverseLanguage(getMap(config, "iso639-1-to-dv.csv", "ISO639-1", "Dataverse-language"));
         config.setIso2ToDataverseLanguage(getMap(config, "iso639-2-to-dv.csv", "ISO639-2", "Dataverse-language"));
         config.setReportIdToTerm(getMap(config, "ABR-reports.csv", "URI-suffix", "Term"));
+        config.setUserMap(getMap(config, "users.csv", "EASY-user-account", "dv-user-account"));
         config.setSpatialCoverageCountryTerms(FileUtils.readLines(config.getMappingDefsDir().resolve("spatial-coverage-country-terms.txt").toFile(), StandardCharsets.UTF_8));
     }
 

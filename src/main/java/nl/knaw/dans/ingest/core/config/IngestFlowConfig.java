@@ -69,6 +69,7 @@ public class IngestFlowConfig {
     private Map<String, String> iso2ToDataverseLanguage;
     private Map<String, String> reportIdToTerm;
     private List<String> spatialCoverageCountryTerms;
+    private Map<String, String> userMap;
 
     public IngestAreaConfig getImportConfig() {
         return importConfig;
@@ -180,5 +181,13 @@ public class IngestFlowConfig {
 
     public void setAuthorization(DatasetAuthorizationConfig authorization) {
         this.authorization = authorization;
+    }
+
+    public void setUserMap(Map<String,String> userMap) {
+        this.userMap = userMap;
+    }
+
+    public Map<String,String> getUserMap() {
+        return userMap;
     }
 }

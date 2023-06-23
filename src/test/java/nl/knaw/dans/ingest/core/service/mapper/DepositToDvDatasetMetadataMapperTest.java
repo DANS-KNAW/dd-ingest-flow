@@ -31,7 +31,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +48,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     private final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
     private final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
+    private final Map<String, String> userMap = new HashMap<>();
     private final List<String> spatialCoverageCountryTerms = List.of("Netherlands", "United Kingdom", "Belgium", "Germany");
 
     Document readDocument(String name) throws ParserConfigurationException, IOException, SAXException {
@@ -63,12 +63,12 @@ class DepositToDvDatasetMetadataMapperTest {
 
     DepositToDvDatasetMetadataMapper getMigrationMapper() {
         return new DepositToDvDatasetMetadataMapper(
-            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage, spatialCoverageCountryTerms, true);
+            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage, spatialCoverageCountryTerms, userMap, true);
     }
 
     DepositToDvDatasetMetadataMapper getNonMigrationMapper() {
         return new DepositToDvDatasetMetadataMapper(
-            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage, spatialCoverageCountryTerms, false);
+            true, activeMetadataBlocks, iso1ToDataverseLanguage, iso2ToDataverseLanguage, spatialCoverageCountryTerms, userMap, false);
     }
 
     @BeforeEach
@@ -159,7 +159,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
     @Test
     void processMetadataBlock_should_deduplicate_items_for_PrimitiveFieldBuilder() throws Exception {
-        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), Map.of(), Map.of(), spatialCoverageCountryTerms, true);
+        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), iso1ToDataverseLanguage, iso2ToDataverseLanguage, spatialCoverageCountryTerms, userMap, true);
         var fields = new HashMap<String, MetadataBlock>();
         var builder = new ArchaeologyFieldBuilder();
         builder.addArchisZaakId(Stream.of(
@@ -180,7 +180,7 @@ class DepositToDvDatasetMetadataMapperTest {
     @Test
     void processMetadataBlock_should_deduplicate_items_for_CompoundFieldBuilder() throws Exception {
         var fields = new HashMap<String, MetadataBlock>();
-        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), Map.of(), Map.of(), spatialCoverageCountryTerms, true);
+        var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), iso1ToDataverseLanguage, iso2ToDataverseLanguage, spatialCoverageCountryTerms, userMap, true);
         var builder = new ArchaeologyFieldBuilder();
         builder.addArchisZaakId(Stream.of(
             "TEST",

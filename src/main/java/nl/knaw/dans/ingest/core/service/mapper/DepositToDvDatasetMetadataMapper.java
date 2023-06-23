@@ -18,7 +18,6 @@ package nl.knaw.dans.ingest.core.service.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.exception.MissingRequiredFieldException;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
@@ -79,7 +78,6 @@ import java.util.stream.Stream;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_HOLDER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
-import static nl.knaw.dans.ingest.core.service.XmlNamespaces.NAMESPACE_XSI;
 
 @Slf4j
 public class DepositToDvDatasetMetadataMapper {
@@ -96,16 +94,18 @@ public class DepositToDvDatasetMetadataMapper {
     private final Map<String, String> iso1ToDataverseLanguage;
     private final Map<String, String> iso2ToDataverseLanguage;
     private final List<String> spatialCoverageCountryTerms;
+    private final Map<String, String> userMap;
     private final boolean isMigration;
     private final boolean deduplicate;
 
     DepositToDvDatasetMetadataMapper(boolean deduplicate, Set<String> activeMetadataBlocks, Map<String, String> iso1ToDataverseLanguage,
-        Map<String, String> iso2ToDataverseLanguage, List<String> spatialCoverageCountryTerms, boolean isMigration) {
+        Map<String, String> iso2ToDataverseLanguage, List<String> spatialCoverageCountryTerms, Map<String, String> userMap, boolean isMigration) {
         this.deduplicate = deduplicate;
         this.activeMetadataBlocks = activeMetadataBlocks;
         this.iso1ToDataverseLanguage = iso1ToDataverseLanguage;
         this.iso2ToDataverseLanguage = iso2ToDataverseLanguage;
         this.spatialCoverageCountryTerms = spatialCoverageCountryTerms;
+        this.userMap = userMap;
         this.isMigration = isMigration;
     }
 
@@ -240,12 +240,13 @@ public class DepositToDvDatasetMetadataMapper {
             dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn()); // VLT004A
             if (null != otherId) // Vault service only
                 dataVaultFieldBuilder.addDansOtherId(otherId); // VLT005A
-            dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken()); // VLT007A
+            dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken()); // VLT007
         }
         else {
             dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId()); // VLT005
             dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion()); // VLT006
         }
+        dataVaultFieldBuilder.addDataSupplier(userMap.getOrDefault(vaultMetadata.getUserId(),vaultMetadata.getUserId())); // VLT008
 
         return assembleDataverseDataset(termsOfAccess);
     }

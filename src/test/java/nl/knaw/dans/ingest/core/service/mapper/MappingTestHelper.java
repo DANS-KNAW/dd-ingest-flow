@@ -103,6 +103,7 @@ public class MappingTestHelper {
             config.getIso1ToDataverseLanguage(),
             config.getIso2ToDataverseLanguage(),
             config.getSpatialCoverageCountryTerms(),
+            config.getUserMap(),
             isMigration);
     }
 

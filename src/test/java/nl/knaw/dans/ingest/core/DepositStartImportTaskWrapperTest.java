@@ -70,11 +70,11 @@ public class DepositStartImportTaskWrapperTest {
         deposit3_2created     -> ERROR 2 created timestamps
 
      */
-    private final Set<String> activeMetadataBlocks = Set.of("citation", "dansRights", "dansRelationalMetadata", "dansArchaeologyMetadata", "dansTemporalSpation", "dansDataVaultMetadata");
     private final XmlReader xmlReader = new XmlReaderImpl();
 
     private final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
     private final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
+    private final Map<String, String> userMap = new HashMap<>();
 
     private DepositIngestTask createTaskWrapper(String depositName, String created) {
         var client = Mockito.mock(DataverseClient.class);
@@ -127,6 +127,7 @@ public class DepositStartImportTaskWrapperTest {
         return new DepositToDvDatasetMetadataMapperFactory(
             iso1ToDataverseLanguage, iso2ToDataverseLanguage,
             List.of("Netherlands", "United Kingdom", "Belgium", "Germany"),
+            userMap,
             Mockito.mock(DataverseClient.class)
         );
     }

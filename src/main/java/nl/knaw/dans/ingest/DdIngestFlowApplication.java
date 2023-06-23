@@ -121,6 +121,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
             configuration.getIngestFlow().getIso1ToDataverseLanguage(),
             configuration.getIngestFlow().getIso2ToDataverseLanguage(),
             configuration.getIngestFlow().getSpatialCoverageCountryTerms(),
+            configuration.getIngestFlow().getUserMap(),
             dataverseClient
         );
 

@@ -89,7 +89,7 @@ Assuming `dans-datastation-tools` and `dd-ingest-flow` are in the same directory
 
 ```commandline
 cd ~/git/service/data-station/dans-datastation-tools
-poetry run ingest-flow-start-migration -s ../dd-ingest-flow/data/migration/inbox/<SOME-DIR>/<UUID>
+poetry run ingest-flow start-migration -s ../dd-ingest-flow/data/migration/inbox/<SOME-DIR>/<UUID>
 ```
 
 

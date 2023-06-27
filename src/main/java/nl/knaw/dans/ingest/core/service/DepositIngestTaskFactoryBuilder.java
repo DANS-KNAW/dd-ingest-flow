@@ -70,6 +70,7 @@ public class DepositIngestTaskFactoryBuilder {
             ingestFlowConfig.getIso1ToDataverseLanguage(),
             ingestFlowConfig.getIso2ToDataverseLanguage(),
             ingestFlowConfig.getSpatialCoverageCountryTerms(),
+            ingestFlowConfig.getUserMap(),
             dataverseClient
         );
         final var datasetService = new DataverseServiceImpl(

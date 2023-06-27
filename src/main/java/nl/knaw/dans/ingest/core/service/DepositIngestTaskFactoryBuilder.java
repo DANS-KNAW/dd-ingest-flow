@@ -15,54 +15,82 @@
  */
 package nl.knaw.dans.ingest.core.service;
 
-import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
-import nl.knaw.dans.ingest.core.dataverse.DatasetService;
+import gov.loc.repository.bagit.reader.BagReader;
+import nl.knaw.dans.ingest.DdIngestFlowConfiguration;
+import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
+import nl.knaw.dans.ingest.core.dataverse.DataverseServiceImpl;
+import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositFileListerImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
 import nl.knaw.dans.ingest.core.deposit.DepositManager;
+import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositReaderImpl;
+import nl.knaw.dans.ingest.core.deposit.DepositWriterImpl;
+import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
+import nl.knaw.dans.ingest.core.io.FileServiceImpl;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
-import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
+import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidatorImpl;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
 public class DepositIngestTaskFactoryBuilder {
+
+    private final DdIngestFlowConfiguration configuration;
     private final DansBagValidator dansBagValidator;
-    private final IngestFlowConfig ingestFlowConfig;
     private final DepositManager depositManager;
-    private final DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory;
     private final ZipFileHandler zipFileHandler;
-    private final DatasetService datasetService;
     private final BlockedTargetService blockedTargetService;
 
-    public DepositIngestTaskFactoryBuilder(
-        DansBagValidator dansBagValidator,
-        IngestFlowConfig ingestFlowConfig,
-        DepositManager depositManager,
-        DepositToDvDatasetMetadataMapperFactory depositToDvDatasetMetadataMapperFactory,
-        ZipFileHandler zipFileHandler,
-        DatasetService datasetService,
-        BlockedTargetService blockedTargetService) {
+    public DepositIngestTaskFactoryBuilder(DdIngestFlowConfiguration configuration, DansBagValidator dansBagValidator, BlockedTargetService blockedTargetService) {
+
+        final var xmlReader = new XmlReaderImpl();
+        final var fileService = new FileServiceImpl();
+        final var depositFileLister = new DepositFileListerImpl();
+
+        // the parts responsible for reading and writing deposits to disk
+        final var bagReader = new BagReader();
+        final var bagDataManager = new BagDataManagerImpl(bagReader);
+        final var bagDirResolver = new BagDirResolverImpl(fileService);
+        final var depositReader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister);
+        final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
+        final var depositWriter = new DepositWriterImpl(bagDataManager);
+
+        this.configuration = configuration;
         this.dansBagValidator = dansBagValidator;
-        this.ingestFlowConfig = ingestFlowConfig;
-        this.depositManager = depositManager;
-        this.depositToDvDatasetMetadataMapperFactory = depositToDvDatasetMetadataMapperFactory;
-        this.zipFileHandler = zipFileHandler;
-        this.datasetService = datasetService;
+        this.depositManager =  new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);
+        this.zipFileHandler = new ZipFileHandler(configuration.getIngestFlow().getZipWrappingTempDir());
         this.blockedTargetService = blockedTargetService;
     }
 
-    // TODO this should really be refactored so that we don't need a task factory builder, we just create ingest task factories for each importarea with the proper config
-    public DepositIngestTaskFactory createTaskFactory(boolean isMigration, String depositorRole, DepositorAuthorizationValidator depositorAuthorizationValidator) throws IOException, URISyntaxException {
+    public DepositIngestTaskFactory createTaskFactory(IngestAreaConfig ingestAreaConfig, DataverseClient dataverseClient, boolean isMigration) throws IOException, URISyntaxException {
+        final var ingestFlowConfig = configuration.getIngestFlow();
+        final var mapperFactory = new DepositToDvDatasetMetadataMapperFactory(
+            ingestFlowConfig.getIso1ToDataverseLanguage(),
+            ingestFlowConfig.getIso2ToDataverseLanguage(),
+            ingestFlowConfig.getSpatialCoverageCountryTerms(),
+            dataverseClient
+        );
+        final var datasetService = new DataverseServiceImpl(
+            dataverseClient,
+            configuration.getDataverseExtra().getPublishAwaitUnlockWaitTimeMs(),
+            configuration.getDataverseExtra().getPublishAwaitUnlockMaxRetries()
+        );
+        final var authorization = ingestAreaConfig.getAuthorization();
+        final var creator = authorization.getDatasetCreator();
+        final var updater = authorization.getDatasetUpdater();
         return new DepositIngestTaskFactory(
             isMigration,
-            depositorRole,
+            ingestAreaConfig.getDepositorRole(),
             dansBagValidator,
             ingestFlowConfig,
             depositManager,
-            depositToDvDatasetMetadataMapperFactory,
+            mapperFactory,
             zipFileHandler,
             datasetService,
             blockedTargetService,
-            depositorAuthorizationValidator
+            new DepositorAuthorizationValidatorImpl(datasetService, creator, updater)
         );
     }
 }

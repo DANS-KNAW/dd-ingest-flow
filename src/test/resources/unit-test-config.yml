@@ -1,116 +1,39 @@
-#
-# Http-interfaces
-#
-server:
-  applicationContextPath: /
-  adminContextPath: /
-  applicationConnectors:
-    - type: http
-      port: 20300
-  adminConnectors:
-    - type: http
-      port: 20301
-
 ingestFlow:
   import:
-    inbox: target/test/any-test-class/import/inbox
-    outbox: target/test/any-test-class/import/outbox
-    depositorRole: importer
+    apiKey: 'changeme1' # custom value
+    depositorRole: importer # custom value
+    authorization:
+      datasetUpdater: importupdater
+      # datasetCreator replaced by default
 
   migration:
-    inbox: target/test/any-test-class/migration/deposits
-    outbox: target/test/any-test-class/migration/out
-    depositorRole: migrator
+    apiKey: 'changeme2' # custom value
+    depositorRole: migrator # custom value
+    authorization:
+      datasetCreator: migrationcreator
+      # datasetUpdater replaced by default
 
   autoIngest:
-    inbox: target/test/any-test-class/auto-ingest/inbox
-    outbox: target/test/any-test-class/auto-ingest/outbox
-    depositorRole: swordupdater
+    apiKey: 'changeme3' # custom value
+    depositorRole: swordupdater # custom value
+    authorization: # returns initially null, replaced by default
 
-  #
-  # Filtering. Files with a path matching the pattern will not be added to the dataset. Renaming/moving files is not affected.
-  #
-  fileExclusionPattern: ^$
-  #
-  # The role that the depositor account will be assigned on its datasets.
-  #
+  # defaults for the areas above
   depositorRole: contributor
-  deduplicate: true
-  zipWrappingTempDir: target/test/any-test-class/tmp
-  mappingDefsDir: etc
-  taskQueue:
-    nameFormat: "ingest-worker-%d"
-    maxQueueSize: 5000
-    # Number of threads will be increased when maxQueueSize is exceeded.
-    minThreads: 2
-    # No more than maxThreads will be created though
-    maxThreads: 5
-    # Threads will die after 60 seconds of idleness
-    keepAliveTime: 60 seconds
+  authorization:
+    datasetCreator: dsContributor
+    datasetUpdater: contributorplus
 
-#
-# Parameters related to communication with the Dataverse instance
-#
 dataverse:
-  baseUrl: 'http://dar.dans.knaw.nl:8080'
-  apiKey: 'changeme'
-  unblockKey: 's3kretKey'
-  awaitLockStateMaxNumberOfRetries: 30
-  awaitLockStateMillisecondsBetweenRetries: 500
-  # TODO: add to dans-dataverse-client-lib
-  #  connectionTimeoutMs: 10000
-  #  readTimeoutMs: 30000
+  apiKey: 'changeme4' # default for the areas above
+
+# the following values are required to avoid a NullPointerException
 
 dataverseExtra:
-  publishAwaitUnlockMaxRetries: 900
-  publishAwaitUnlockWaitTimeMs: 3000
-
+  publishAwaitUnlockWaitTimeMs: 0
 
 taskEventDatabase:
-  driverClass: org.hsqldb.jdbcDriver
-  url: jdbc:hsqldb:hsql://localhost:9001/dd-ingest-flow
-  logValidationErrors: true
-  # See: https://stackoverflow.com/questions/10684244/dbcp-validationquery-for-different-databases
-  validationQuery: SELECT * FROM INFORMATION_SCHEMA.SYSTEM_TABLES
-  properties:
-    hibernate.dialect: 'org.hibernate.dialect.HSQLDialect'
-    hibernate.hbm2ddl.auto: update
+  url: x
 
 validateDansBag:
-  baseUrl: 'http://localhost:20330'
-  pingUrl: 'http://localhost:20331/ping'
-  httpClient:
-    timeout: 5min
-    connectionTimeout: 1min
-    chunkedEncodingEnabled: false
-    timeToLive: 1h
-    cookiesEnabled: false
-    maxConnections: 128
-    maxConnectionsPerRoute: 128
-    keepAlive: 0ms
-    retries: 0
-    userAgent: dd-ingest-flow
-#
-# See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
-#
-logging:
-  level: INFO
-  loggers:
-    "nl.knaw.dans.ingest":
-      level: TRACE
-    "nl.knaw.dans.ingest.core.sequencing.DepositSequenceManager":
-      level: TRACE
-      additive: true
-    "nl.knaw.dans.ingest.core.service.UnboundedDepositsImportTaskIterator":
-      level: INFO
-    "nl.knaw.dans.easy.dd2d":
-      level: TRACE
-    "nl.knaw.dans.dataverse.DatasetApi":
-      level: TRACE
-  appenders:
-    - type: console
-      logFormat: "%-5p [%d{ISO8601}] [%t] %c: %m%n%rEx"
-
-    - type: file
-      archive: false
-      currentLogFilename: target/test/any-test-class/dd-ingest-flow.log
+  baseUrl: x

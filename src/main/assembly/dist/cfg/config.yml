@@ -81,7 +81,7 @@ ingestFlow:
 #
 dataverse:
   baseUrl: 'http://localhost:8080'
-  apiKey: 'changeme'
+  apiKey: 'changeme' # define override value per ingest area
   unblockKey: 'changeme'
   awaitLockStateMaxNumberOfRetries: 30
   awaitLockStateMillisecondsBetweenRetries: 500

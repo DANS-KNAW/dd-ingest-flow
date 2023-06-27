@@ -16,7 +16,6 @@
 
 package nl.knaw.dans.ingest;
 
-import gov.loc.repository.bagit.reader.BagReader;
 import io.dropwizard.Application;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.db.PooledDataSourceFactory;
@@ -31,17 +30,6 @@ import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
 import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
-import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
-import nl.knaw.dans.ingest.core.dataverse.DatasetService;
-import nl.knaw.dans.ingest.core.dataverse.DataverseServiceImpl;
-import nl.knaw.dans.ingest.core.deposit.BagDirResolverImpl;
-import nl.knaw.dans.ingest.core.deposit.DepositFileListerImpl;
-import nl.knaw.dans.ingest.core.deposit.DepositLocationReaderImpl;
-import nl.knaw.dans.ingest.core.deposit.DepositManagerImpl;
-import nl.knaw.dans.ingest.core.deposit.DepositReaderImpl;
-import nl.knaw.dans.ingest.core.deposit.DepositWriterImpl;
-import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
-import nl.knaw.dans.ingest.core.io.FileServiceImpl;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.BlockedTargetService;
 import nl.knaw.dans.ingest.core.service.BlockedTargetServiceImpl;
@@ -52,11 +40,6 @@ import nl.knaw.dans.ingest.core.service.EnqueuingService;
 import nl.knaw.dans.ingest.core.service.EnqueuingServiceImpl;
 import nl.knaw.dans.ingest.core.service.TaskEventService;
 import nl.knaw.dans.ingest.core.service.TaskEventServiceImpl;
-import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
-import nl.knaw.dans.ingest.core.service.ZipFileHandler;
-import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
-import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidator;
-import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidatorImpl;
 import nl.knaw.dans.ingest.db.BlockedTargetDAO;
 import nl.knaw.dans.ingest.db.TaskEventDAO;
 import nl.knaw.dans.ingest.health.DansBagValidatorHealthCheck;
@@ -65,6 +48,7 @@ import nl.knaw.dans.ingest.resources.BlockedTargetsResource;
 import nl.knaw.dans.ingest.resources.EventsResource;
 import nl.knaw.dans.ingest.resources.ImportsResource;
 import nl.knaw.dans.ingest.resources.MigrationsResource;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import java.io.IOException;
@@ -97,120 +81,68 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
 
     @Override
     public void run(final DdIngestFlowConfiguration configuration, final Environment environment) throws IOException, URISyntaxException {
-        final var taskExecutor = configuration.getIngestFlow().getTaskQueue().build(environment);
+        final var ingestFlowConfig = configuration.getIngestFlow();
+        final var taskExecutor = ingestFlowConfig.getTaskQueue().build(environment);
         final var targetedTaskSequenceManager = new TargetedTaskSequenceManager(taskExecutor);
-        final var dataverseClient = configuration.getDataverse().build();
 
-        IngestFlowConfigReader.readIngestFlowConfiguration(configuration.getIngestFlow());
-
-        final var xmlReader = new XmlReaderImpl();
-
-        final var fileService = new FileServiceImpl();
-        final var depositFileLister = new DepositFileListerImpl();
-
-        // the parts responsible for reading and writing deposits to disk
-        final var bagReader = new BagReader();
-        final var bagDataManager = new BagDataManagerImpl(bagReader);
-        final var bagDirResolver = new BagDirResolverImpl(fileService);
-        final var depositReader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister);
-        final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
-        final var depositWriter = new DepositWriterImpl(bagDataManager);
-        final var depositManager = new DepositManagerImpl(depositReader, depositLocationReader, depositWriter);
-
-        final var depositToDvDatasetMetadataMapperFactory = new DepositToDvDatasetMetadataMapperFactory(
-            configuration.getIngestFlow().getIso1ToDataverseLanguage(),
-            configuration.getIngestFlow().getIso2ToDataverseLanguage(),
-            configuration.getIngestFlow().getSpatialCoverageCountryTerms(),
-            configuration.getIngestFlow().getUserMap(),
-            dataverseClient
-        );
-
-        final var zipFileHandler = new ZipFileHandler(configuration.getIngestFlow().getZipWrappingTempDir());
+        IngestFlowConfigReader.readIngestFlowConfiguration(ingestFlowConfig);
 
         final var dansBagValidatorClient = new JerseyClientBuilder(environment)
             .withProvider(MultiPartFeature.class)
             .using(configuration.getValidateDansBag().getHttpClient())
             .build(getName());
 
-        final DansBagValidator validator = new DansBagValidatorImpl(
+        final DansBagValidator dansBagValidator = new DansBagValidatorImpl(
             dansBagValidatorClient,
             configuration.getValidateDansBag().getBaseUrl(),
             configuration.getValidateDansBag().getPingUrl());
-
-        final DatasetService datasetService = new DataverseServiceImpl(
-            dataverseClient,
-            configuration.getDataverseExtra().getPublishAwaitUnlockWaitTimeMs(),
-            configuration.getDataverseExtra().getPublishAwaitUnlockMaxRetries()
-        );
 
         final BlockedTargetDAO blockedTargetDAO = new BlockedTargetDAO(hibernateBundle.getSessionFactory());
         final BlockedTargetService blockedTargetService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
             .create(BlockedTargetServiceImpl.class, BlockedTargetDAO.class, blockedTargetDAO);
 
         // validate depositors
-        final DepositorAuthorizationValidator importValidator = buildDepositorAuthorizationValidator(
-            datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getImportConfig());
-
-        final DepositorAuthorizationValidator migrationValidator = buildDepositorAuthorizationValidator(
-            datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getMigration());
-
-        final DepositorAuthorizationValidator autoIngestValidator = buildDepositorAuthorizationValidator(
-            datasetService, configuration.getIngestFlow(), configuration.getIngestFlow().getAutoIngest());
-
-        final DepositIngestTaskFactoryBuilder builder = new DepositIngestTaskFactoryBuilder(
-            validator,
-            configuration.getIngestFlow(),
-            depositManager,
-            depositToDvDatasetMetadataMapperFactory,
-            zipFileHandler,
-            datasetService,
-            blockedTargetService
-        );
-
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
 
-        final IngestAreaConfig importConfig = configuration.getIngestFlow().getImportConfig();
+        final var importAreaConfig = ingestFlowConfig.getImportConfig();
+        final var migrationAreaConfig = ingestFlowConfig.getMigration();
+        final var autoIngestAreaConfig = ingestFlowConfig.getAutoIngest();
+
+        final var dataverseClientImportArea = getDataverseClient(configuration, importAreaConfig);
+        final var dataverseClientMigrationArea = getDataverseClient(configuration, migrationAreaConfig);
+        final var dataverseClientAutoIngestArea = getDataverseClient(configuration, autoIngestAreaConfig);
+
+        final var taskFactoryBuilder = new DepositIngestTaskFactoryBuilder(configuration, dansBagValidator, blockedTargetService);
+
         final ImportArea importArea = new ImportArea(
-            importConfig.getInbox(),
-            importConfig.getOutbox(),
-            builder.createTaskFactory(
-                false,
-                importConfig.getDepositorRole(),
-                importValidator
-            ),
+            importAreaConfig.getInbox(),
+            importAreaConfig.getOutbox(),
+            taskFactoryBuilder.createTaskFactory(importAreaConfig, dataverseClientImportArea, false),
             taskEventService,
             enqueuingService);
 
         // Can be phased out after migration.
-        final IngestAreaConfig migrationConfig = configuration.getIngestFlow().getMigration();
         final ImportArea migrationArea = new ImportArea(
-            migrationConfig.getInbox(),
-            migrationConfig.getOutbox(),
-            builder.createTaskFactory(
-                true,
-                migrationConfig.getDepositorRole(),
-                migrationValidator
-            ),
+            migrationAreaConfig.getInbox(),
+            migrationAreaConfig.getOutbox(),
+            taskFactoryBuilder.createTaskFactory(migrationAreaConfig, dataverseClientMigrationArea, true),
             taskEventService,
             enqueuingService);
 
-        final IngestAreaConfig autoIngestConfig = configuration.getIngestFlow().getAutoIngest();
         final AutoIngestArea autoIngestArea = new AutoIngestArea(
-            autoIngestConfig.getInbox(),
-            autoIngestConfig.getOutbox(),
-            builder.createTaskFactory(
-                false,
-                autoIngestConfig.getDepositorRole(),
-                autoIngestValidator
-            ),
+            autoIngestAreaConfig.getInbox(),
+            autoIngestAreaConfig.getOutbox(),
+            taskFactoryBuilder.createTaskFactory(autoIngestAreaConfig, dataverseClientAutoIngestArea, false),
             taskEventService,
             enqueuingService
         );
 
-        environment.healthChecks().register("Dataverse", new DataverseHealthCheck(dataverseClient));
-        environment.healthChecks().register("DansBagValidator", new DansBagValidatorHealthCheck(validator));
+        environment.healthChecks().register("DataverseAutoIngestArea", new DataverseHealthCheck(dataverseClientAutoIngestArea));
+        environment.healthChecks().register("DataverseMigrationArea", new DataverseHealthCheck(dataverseClientMigrationArea));
+        environment.healthChecks().register("DataverseImportArea", new DataverseHealthCheck(dataverseClientImportArea));
+        environment.healthChecks().register("DansBagValidator", new DansBagValidatorHealthCheck(dansBagValidator));
 
         environment.lifecycle().manage(autoIngestArea);
         environment.jersey().register(new ImportsResource(importArea));
@@ -220,26 +152,9 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         environment.jersey().register(new CsvMessageBodyWriter());
     }
 
-    DepositorAuthorizationValidator buildDepositorAuthorizationValidator(DatasetService datasetService, IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {
-        var creator = getDatasetCreatorRole(ingestFlowConfig, ingestAreaConfig);
-        var updater = getDatasetUpdaterRole(ingestFlowConfig, ingestAreaConfig);
-
-        return new DepositorAuthorizationValidatorImpl(datasetService, creator, updater);
-    }
-
-    String getDatasetCreatorRole(IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {
-        if (ingestAreaConfig.getAuthorization() != null && ingestAreaConfig.getAuthorization().getDatasetCreator() != null) {
-            return ingestAreaConfig.getAuthorization().getDatasetCreator();
-        }
-
-        return ingestFlowConfig.getAuthorization().getDatasetCreator();
-    }
-
-    String getDatasetUpdaterRole(IngestFlowConfig ingestFlowConfig, IngestAreaConfig ingestAreaConfig) {
-        if (ingestAreaConfig.getAuthorization() != null && ingestAreaConfig.getAuthorization().getDatasetUpdater() != null) {
-            return ingestAreaConfig.getAuthorization().getDatasetUpdater();
-        }
-
-        return ingestFlowConfig.getAuthorization().getDatasetUpdater();
+    private static DataverseClient getDataverseClient(DdIngestFlowConfiguration configuration, IngestAreaConfig ingestAreaConfig) {
+        final var dataverseClientFactory = configuration.getDataverse();
+        dataverseClientFactory.setApiKey(ingestAreaConfig.getApiKey());
+        return dataverseClientFactory.build();
     }
 }

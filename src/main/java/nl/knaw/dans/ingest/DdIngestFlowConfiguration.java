@@ -19,6 +19,7 @@ package nl.knaw.dans.ingest;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 import nl.knaw.dans.ingest.core.config.DataverseExtra;
+import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
 import nl.knaw.dans.ingest.core.config.IngestFlowConfig;
 import nl.knaw.dans.ingest.core.config.ValidateDansBagConfig;
 import nl.knaw.dans.lib.util.DataverseClientFactory;
@@ -44,16 +45,31 @@ public class DdIngestFlowConfiguration extends Configuration {
     private DataSourceFactory taskEventDatabase;
 
     public IngestFlowConfig getIngestFlow() {
-        if (StringUtils.isBlank(ingestFlow.getAutoIngest().getDepositorRole())) {
-            ingestFlow.getAutoIngest().setDepositorRole(ingestFlow.getDepositorRole());
-        }
-        if (StringUtils.isBlank(ingestFlow.getImportConfig().getDepositorRole())) {
-            ingestFlow.getImportConfig().setDepositorRole(ingestFlow.getDepositorRole());
-        }
-        if (StringUtils.isBlank(ingestFlow.getMigration().getDepositorRole())) {
-            ingestFlow.getMigration().setDepositorRole(ingestFlow.getDepositorRole());
-        }
+        applyDefaults(ingestFlow.getAutoIngest());
+        applyDefaults(ingestFlow.getImportConfig());
+        applyDefaults(ingestFlow.getMigration());
         return ingestFlow;
+    }
+
+    private void applyDefaults(IngestAreaConfig ingestAreaConfig) {
+        if (StringUtils.isBlank(ingestAreaConfig.getDepositorRole())) {
+            ingestAreaConfig.setDepositorRole(ingestFlow.getDepositorRole());
+        }
+        var defaultAuthorization = ingestFlow.getAuthorization();
+        if (ingestAreaConfig.getAuthorization() == null) {
+            ingestAreaConfig.setAuthorization(defaultAuthorization);
+        } else {
+            var authorization = ingestAreaConfig.getAuthorization();
+            if (StringUtils.isBlank(authorization.getDatasetCreator())) {
+                authorization.setDatasetCreator(defaultAuthorization.getDatasetCreator());
+            }
+            if (StringUtils.isBlank(authorization.getDatasetUpdater())) {
+                authorization.setDatasetUpdater(defaultAuthorization.getDatasetUpdater());
+            }
+        }
+        if (StringUtils.isBlank(ingestAreaConfig.getApiKey())) {
+            ingestAreaConfig.setApiKey(dataverse.getApiKey());
+        }
     }
 
     public void setIngestFlow(IngestFlowConfig ingestFlow) {

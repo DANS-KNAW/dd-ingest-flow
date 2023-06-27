@@ -95,7 +95,7 @@ class DepositToDvDatasetMetadataMapperTest {
     }
 
     @Test
-    void toDataverseDataset_should_include_otherId_from_ddm() throws Exception {
+    void toDataverseDataset_should_include_otherId_from_vault_metadata() throws Exception {
         var mapper = getMigrationMapper();
         var doc = readDocument("dataset-simple-with-doi.xml");
 
@@ -107,8 +107,8 @@ class DepositToDvDatasetMetadataMapperTest {
             .withDefaultPrettyPrinter()
             .writeValueAsString(result);
 
-        assertThat(str).doesNotContain("doi:a/b");
-        assertThat(str).contains("10.17026/easy-dans-doi");
+        assertThat(str).contains("doi:a/b");
+        assertThat(str).doesNotContain("10.17026/easy-dans-doi");
     }
 
     @Test
@@ -158,7 +158,7 @@ class DepositToDvDatasetMetadataMapperTest {
     }
 
     @Test
-    void processMetadataBlock_should_deduplicate_items_for_PrimitiveFieldBuilder() throws Exception {
+    void processMetadataBlock_should_deduplicate_items_for_PrimitiveFieldBuilder() {
         var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), iso1ToDataverseLanguage, iso2ToDataverseLanguage, spatialCoverageCountryTerms, userMap, true);
         var fields = new HashMap<String, MetadataBlock>();
         var builder = new ArchaeologyFieldBuilder();
@@ -178,7 +178,7 @@ class DepositToDvDatasetMetadataMapperTest {
     }
 
     @Test
-    void processMetadataBlock_should_deduplicate_items_for_CompoundFieldBuilder() throws Exception {
+    void processMetadataBlock_should_deduplicate_items_for_CompoundFieldBuilder() {
         var fields = new HashMap<String, MetadataBlock>();
         var mapper = new DepositToDvDatasetMetadataMapper(true, Set.of("citation"), iso1ToDataverseLanguage, iso2ToDataverseLanguage, spatialCoverageCountryTerms, userMap, true);
         var builder = new ArchaeologyFieldBuilder();

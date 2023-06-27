@@ -17,17 +17,12 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import org.junit.jupiter.api.Test;
-import org.w3c.dom.Document;
 
 import java.util.Set;
 
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.ddmWithCustomProfileContent;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getIngestFlowConfig;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveSingleValueField;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DansDataVaultMetadataTest {
@@ -57,19 +52,5 @@ public class DansDataVaultMetadataTest {
         var result = mapper.toDataverseDataset(ddmWithCustomProfileContent(""), null, null, null, vaultMetadata, false, null);
         assertThat(getPrimitiveSingleValueField("dansDataVaultMetadata", "dansDataSupplier", result))
             .isEqualTo("xxx");
-    }
-
-    @Test
-    public void VLT005A_dataSupplier_should_default_to_userId() throws Exception {
-        var vaultMetadata = new VaultMetadata("", "", "", "", "", "", "");
-        String xml
-            = "<ddm:DDM " + rootAttributes + ">"
-            + minimalDdmProfile()
-            + dcmi("<dct:identifier xsi:type='DOI'>10.17026/dans-x3g-jtm3</dct:identifier>")
-            + "</ddm:DDM>";
-        Document ddm = readDocumentFromString(xml);
-        var result = mapper.toDataverseDataset(ddm, null, null, null, vaultMetadata, false, null);
-        assertThat(getPrimitiveSingleValueField("dansDataVaultMetadata", "dansOtherId", result))
-            .isEqualTo("10.17026/dans-x3g-jtm3");
     }
 }

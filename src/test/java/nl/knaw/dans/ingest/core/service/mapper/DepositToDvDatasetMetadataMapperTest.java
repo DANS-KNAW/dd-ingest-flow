@@ -107,8 +107,8 @@ class DepositToDvDatasetMetadataMapperTest {
             .withDefaultPrettyPrinter()
             .writeValueAsString(result);
 
-        assertThat(str).doesNotContain("doi:a/b");
-        assertThat(str).contains("10.17026/easy-dans-doi");
+        assertThat(str).contains("doi:a/b");
+        assertThat(str).doesNotContain("10.17026/easy-dans-doi");
     }
 
     @Test

@@ -230,16 +230,10 @@ public class DepositToDvDatasetMetadataMapper {
         }
 
         if (isMigration) {
-            var otherId = getIdentifiers(ddm)
-                .filter(Identifier::hasXsiTypeDoi)
-                .findFirst()
-                .map(Node::getTextContent)
-                .orElse(null);
-
             dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId()); // VLT003A
             dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn()); // VLT004A
-            if (null != otherId) // Vault service only
-                dataVaultFieldBuilder.addDansOtherId(otherId); // VLT005A
+            dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId()); // VLT005
+            dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion()); // VLT006
             dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken()); // VLT007A
         }
         else {

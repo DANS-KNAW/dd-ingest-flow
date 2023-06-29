@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.BAG_ID;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DANS_OTHER_ID;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DANS_OTHER_ID_VERSION;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATA_SUPPLIER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.NBN;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SWORD_TOKEN;
 
@@ -43,5 +44,9 @@ public class DataVaultFieldBuilder extends FieldBuilder {
 
     public void addSwordToken(String value) {
         addSingleString(SWORD_TOKEN, Stream.ofNullable(value));
+    }
+
+    public void addDataSupplier(String value) {
+        addSingleString(DATA_SUPPLIER, Stream.ofNullable(value));
     }
 }

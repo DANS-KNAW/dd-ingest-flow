@@ -73,7 +73,7 @@ public class MappingTestHelper {
         + "         xmlns:dct='http://purl.org/dc/terms/'\n";
     public static final IngestFlowConfig config = getIngestFlowConfig();
 
-    private static IngestFlowConfig getIngestFlowConfig() {
+    public static IngestFlowConfig getIngestFlowConfig() {
         IngestFlowConfig config;
         try {
             config = new YamlConfigurationFactory<>(DdIngestFlowConfiguration.class, Validators.newValidator(), Jackson.newObjectMapper(), "dw")
@@ -103,6 +103,7 @@ public class MappingTestHelper {
             config.getIso1ToDataverseLanguage(),
             config.getIso2ToDataverseLanguage(),
             config.getSpatialCoverageCountryTerms(),
+            config.getMigration().getDataSuppliers(),
             isMigration);
     }
 

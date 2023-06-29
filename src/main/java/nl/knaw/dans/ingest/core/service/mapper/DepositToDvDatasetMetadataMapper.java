@@ -18,7 +18,6 @@ package nl.knaw.dans.ingest.core.service.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.exception.MissingRequiredFieldException;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
@@ -62,6 +61,7 @@ import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.w3c.dom.Document;
@@ -79,7 +79,6 @@ import java.util.stream.Stream;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.RIGHTS_HOLDER;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
-import static nl.knaw.dans.ingest.core.service.XmlNamespaces.NAMESPACE_XSI;
 
 @Slf4j
 public class DepositToDvDatasetMetadataMapper {
@@ -96,16 +95,18 @@ public class DepositToDvDatasetMetadataMapper {
     private final Map<String, String> iso1ToDataverseLanguage;
     private final Map<String, String> iso2ToDataverseLanguage;
     private final List<String> spatialCoverageCountryTerms;
+    private final Map<String, String> dataSuppliers;
     private final boolean isMigration;
     private final boolean deduplicate;
 
     DepositToDvDatasetMetadataMapper(boolean deduplicate, Set<String> activeMetadataBlocks, Map<String, String> iso1ToDataverseLanguage,
-        Map<String, String> iso2ToDataverseLanguage, List<String> spatialCoverageCountryTerms, boolean isMigration) {
+        Map<String, String> iso2ToDataverseLanguage, List<String> spatialCoverageCountryTerms, Map<String, String> dataSuppliers, boolean isMigration) {
         this.deduplicate = deduplicate;
         this.activeMetadataBlocks = activeMetadataBlocks;
         this.iso1ToDataverseLanguage = iso1ToDataverseLanguage;
         this.iso2ToDataverseLanguage = iso2ToDataverseLanguage;
         this.spatialCoverageCountryTerms = spatialCoverageCountryTerms;
+        this.dataSuppliers = dataSuppliers;
         this.isMigration = isMigration;
     }
 
@@ -245,6 +246,15 @@ public class DepositToDvDatasetMetadataMapper {
         else {
             dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId()); // VLT005
             dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion()); // VLT006
+        }
+
+        // VLT008
+        var userId = vaultMetadata.getUserId();
+        if (!StringUtils.isBlank(userId)) {
+            var dataSupplier = dataSuppliers.get(userId);
+            if (!StringUtils.isBlank(dataSupplier)) {
+                dataVaultFieldBuilder.addDataSupplier(dataSupplier);
+            }
         }
 
         return assembleDataverseDataset(termsOfAccess);

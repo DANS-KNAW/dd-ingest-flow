@@ -15,10 +15,14 @@ ingestFlow:
   import:
     inbox: data/import/inbox
     outbox: data/import/outbox
+    dataSuppliers:
+      someUserAccount123: The Organization Name
 
   migration:
     inbox: data/migration/deposits
     outbox: data/migration/out
+    dataSuppliers:
+      USER001: The Organization Name
 
   autoIngest:
     inbox: data/auto-ingest/inbox
@@ -26,6 +30,8 @@ ingestFlow:
     authorization:
       datasetCreator: swordcreator
       datasetUpdater: swordupdater
+    dataSuppliers:
+      someUserAccount123: The Organization Name
 
   authorization:
     # Required role on the dataverse for the depositor.userId to create a dataset

@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.config;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 public class IngestAreaConfig {
     private Path inbox;
@@ -23,6 +24,7 @@ public class IngestAreaConfig {
     private String depositorRole;
     private DatasetAuthorizationConfig authorization;
     private String apiKey;
+    private Map<String, String> dataSuppliers = Map.of();
 
     public String getApiKey() {
         return apiKey;
@@ -62,5 +64,13 @@ public class IngestAreaConfig {
 
     public void setAuthorization(DatasetAuthorizationConfig authorization) {
         this.authorization = authorization;
+    }
+
+    public Map<String, String> getDataSuppliers() {
+        return dataSuppliers;
+    }
+
+    public void setDataSuppliers(Map<String, String> dataSuppliers) {
+        this.dataSuppliers = dataSuppliers;
     }
 }

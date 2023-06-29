@@ -70,14 +70,12 @@ public class DepositStartImportTaskWrapperTest {
         deposit3_2created     -> ERROR 2 created timestamps
 
      */
-    private final Set<String> activeMetadataBlocks = Set.of("citation", "dansRights", "dansRelationalMetadata", "dansArchaeologyMetadata", "dansTemporalSpation", "dansDataVaultMetadata");
     private final XmlReader xmlReader = new XmlReaderImpl();
 
     private final Map<String, String> iso1ToDataverseLanguage = new HashMap<>();
     private final Map<String, String> iso2ToDataverseLanguage = new HashMap<>();
 
     private DepositIngestTask createTaskWrapper(String depositName, String created) {
-        var client = Mockito.mock(DataverseClient.class);
         var mapper = getMapperFactory();
         var validator = Mockito.mock(DansBagValidator.class);
         var depositFileLister = Mockito.mock(DepositFileLister.class);
@@ -127,12 +125,13 @@ public class DepositStartImportTaskWrapperTest {
         return new DepositToDvDatasetMetadataMapperFactory(
             iso1ToDataverseLanguage, iso2ToDataverseLanguage,
             List.of("Netherlands", "United Kingdom", "Belgium", "Germany"),
+            Map.of(),
             Mockito.mock(DataverseClient.class)
         );
     }
 
     @Test
-    void deposits_should_be_ordered_by_created_timestamp() throws Throwable {
+    void deposits_should_be_ordered_by_created_timestamp() {
         List<DepositIngestTask> sorted = Stream.of(
             createTaskWrapper("deposit2_a", "2020-02-15T11:04:00.345+03:00"),
             createTaskWrapper("deposit1_b", "2020-02-15T09:03:00.345+01:00"),

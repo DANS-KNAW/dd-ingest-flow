@@ -32,13 +32,15 @@ public class DepositToDvDatasetMetadataMapperFactory {
     private final Map<String, String> iso1ToDataverseLanguage;
     private final Map<String, String> iso2ToDataverseLanguage;
     private final List<String> spatialCoverageCountryTerms;
+    private final Map<String, String> dataSuppliers;
     private final DataverseClient dataverseClient;
 
     public DepositToDvDatasetMetadataMapperFactory(Map<String, String> iso1ToDataverseLanguage, Map<String, String> iso2ToDataverseLanguage,
-        List<String> spatialCoverageCountryTerms, DataverseClient dataverseClient) {
+        List<String> spatialCoverageCountryTerms, Map<String, String> dataSuppliers, DataverseClient dataverseClient) {
         this.iso1ToDataverseLanguage = iso1ToDataverseLanguage;
         this.iso2ToDataverseLanguage = iso2ToDataverseLanguage;
         this.spatialCoverageCountryTerms = spatialCoverageCountryTerms;
+        this.dataSuppliers = dataSuppliers;
         this.dataverseClient = dataverseClient;
     }
 
@@ -49,6 +51,7 @@ public class DepositToDvDatasetMetadataMapperFactory {
             iso1ToDataverseLanguage,
             iso2ToDataverseLanguage,
             spatialCoverageCountryTerms,
+            dataSuppliers,
             isMigration
         );
     }

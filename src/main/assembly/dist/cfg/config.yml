@@ -34,6 +34,8 @@ ingestFlow:
   migration:
     inbox: /var/opt/dans.knaw.nl/tmp/migration/deposits
     outbox: /var/opt/dans.knaw.nl/tmp/migration/out
+    dataSuppliers:
+      USER001: The Organization Name
 
   autoIngest:
     inbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/inbox

@@ -13,14 +13,17 @@ server:
 
 ingestFlow:
   import:
+    apiKey: 'changeme' # overrides the default
     inbox: data/import/inbox
     outbox: data/import/outbox
 
   migration:
+    apiKey: 'changeme' # overrides the default
     inbox: data/migration/deposits
     outbox: data/migration/out
 
   autoIngest:
+    apiKey: 'changeme' # overrides the default
     inbox: data/auto-ingest/inbox
     outbox: data/auto-ingest/outbox
     authorization:
@@ -60,7 +63,7 @@ ingestFlow:
 #
 dataverse:
   baseUrl: 'http://dar.dans.knaw.nl:8080'
-  apiKey: 'changeme'
+  apiKey: 'changeme' # define override value per ingest area
   unblockKey: 's3kretKey'
   awaitLockStateMaxNumberOfRetries: 30
   awaitLockStateMillisecondsBetweenRetries: 500

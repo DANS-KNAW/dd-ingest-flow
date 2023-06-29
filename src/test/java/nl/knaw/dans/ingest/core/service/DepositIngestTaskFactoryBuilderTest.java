@@ -20,11 +20,9 @@ import io.dropwizard.configuration.YamlConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.validation.Validators;
 import nl.knaw.dans.ingest.DdIngestFlowConfiguration;
-import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
-import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -39,6 +37,6 @@ public class DepositIngestTaskFactoryBuilderTest {
         final var areaConfig = config.getIngestFlow().getAutoIngest();
 
         assertDoesNotThrow(() -> new DepositIngestTaskFactoryBuilder(config, null, null)
-            .createTaskFactory(areaConfig, null, false));
+            .createTaskFactory(areaConfig, false));
     }
 }

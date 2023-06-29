@@ -30,7 +30,6 @@ import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
 import nl.knaw.dans.ingest.core.io.FileServiceImpl;
 import nl.knaw.dans.ingest.core.service.mapper.DepositToDvDatasetMetadataMapperFactory;
 import nl.knaw.dans.ingest.core.validation.DepositorAuthorizationValidatorImpl;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -64,7 +63,12 @@ public class DepositIngestTaskFactoryBuilder {
         this.blockedTargetService = blockedTargetService;
     }
 
-    public DepositIngestTaskFactory createTaskFactory(IngestAreaConfig ingestAreaConfig, DataverseClient dataverseClient, boolean isMigration) throws IOException, URISyntaxException {
+    public DepositIngestTaskFactory createTaskFactory(IngestAreaConfig ingestAreaConfig, boolean isMigration) throws IOException, URISyntaxException {
+        final var dataverseClientFactory = configuration.getDataverse();
+        if (ingestAreaConfig.getApiKey() != null) {
+            dataverseClientFactory.setApiKey(ingestAreaConfig.getApiKey());
+        }
+        final var dataverseClient = dataverseClientFactory.build();
         final var ingestFlowConfig = configuration.getIngestFlow();
         final var mapperFactory = new DepositToDvDatasetMetadataMapperFactory(
             ingestFlowConfig.getIso1ToDataverseLanguage(),

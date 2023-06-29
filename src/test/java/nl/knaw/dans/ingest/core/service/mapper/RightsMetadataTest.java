@@ -72,7 +72,7 @@ class RightsMetadataTest {
     @Test
     void RIG000A_organizations_with_role_rightsHolder_map_to_rights_holder() {
 
-        var result = createMapper(true).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var result = createMapper(true).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null, null);
         assertThat(getPrimitiveMultiValueField("dansRights", RIGHTS_HOLDER, result))
             .containsOnly("Some org", "Some other org", "Mr. Rights");
     }
@@ -80,7 +80,7 @@ class RightsMetadataTest {
     @Test
     void RIG000A_organizations_with_role_rightsHolder_is_ignored_when_not_migration() {
 
-        var result = createMapper(false).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var result = createMapper(false).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null, null);
         assertThat(getPrimitiveMultiValueField("dansRights", RIGHTS_HOLDER, result))
             .containsOnly("Mr. Rights");
     }

@@ -101,7 +101,7 @@ public class CitationMetadataFromDcmiTest {
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("")
             + "</ddm:DDM>");
-        var result = createMapper(true).toDataverseDataset(doc, null, null, null, mockedVaultMetadata, true, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, null, null, mockedVaultMetadata, true, null, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -117,7 +117,7 @@ public class CitationMetadataFromDcmiTest {
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("")
             + "</ddm:DDM>");
-        var result = createMapper(false).toDataverseDataset(doc, null, null, null, mockedVaultMetadata, true, null);
+        var result = createMapper(false).toDataverseDataset(doc, null, null, null, mockedVaultMetadata, true, null, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).isNull();
@@ -129,7 +129,7 @@ public class CitationMetadataFromDcmiTest {
             + "<ddm:DDM " + rootAttributes + ">"
             + minimalDdmProfile() + dcmi("")
             + "</ddm:DDM>");
-        var result = createMapper(true).toDataverseDataset(doc, "otherId:something", null, null, new VaultMetadata(), true, null);
+        var result = createMapper(true).toDataverseDataset(doc, "otherId:something", null, null, new VaultMetadata(), true, null, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -146,7 +146,7 @@ public class CitationMetadataFromDcmiTest {
             + minimalDdmProfile() + dcmi(""
             + "<dct:identifier xsi:type='id-type:EASY2'>easy-dataset:123</dct:identifier>")
             + "</ddm:DDM>");
-        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -163,7 +163,7 @@ public class CitationMetadataFromDcmiTest {
             + minimalDdmProfile() + dcmi(""
             + "<dct:identifier xsi:type='id-type:EASY2'>easy-dataset:123</dct:identifier>")
             + "</ddm:DDM>");
-        var result = createMapper(false).toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null);
+        var result = createMapper(false).toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).isNull();
@@ -176,7 +176,7 @@ public class CitationMetadataFromDcmiTest {
             + minimalDdmProfile() + dcmi(""
             + "<dct:identifier>typeless:123</dct:identifier>")
             + "</ddm:DDM>");
-        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), true, null, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -347,7 +347,7 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<dct:accessRights>Some story</dct:accessRights>")
             + "</ddm:DDM>");
 
-        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null, null);
         var str = toPrettyJsonString(result);
 
         assertThat(str).doesNotContain("<p>Some story</p>");
@@ -468,7 +468,7 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<dct:provenance>copied xml to csv</dct:provenance>")
             + "</ddm:DDM>");
 
-        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null, null);
         var str = toPrettyJsonString(result);
 
         assertThat(str).containsOnlyOnce("copied xml to csv");
@@ -486,7 +486,7 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<dct:provenance>copied xml to csv</dct:provenance>")
             + "</ddm:DDM>");
 
-        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null, null);
         var str = toPrettyJsonString(result);
 
         assertThat(str).doesNotContain("copied xml to csv");
@@ -619,7 +619,7 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<ddm:description descriptionType='Other'>Author from description other</ddm:description>")
             + "</ddm:DDM>");
 
-        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null, null);
         var field = getCompoundMultiValueField("citation", CONTRIBUTOR, result);
         var expected = "Author from description other";
         assertThat(field).extracting(CONTRIBUTOR_NAME).extracting("value")
@@ -636,7 +636,7 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<ddm:description descriptionType='Other'>Author from description other</ddm:description>")
             + "</ddm:DDM>");
 
-        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null);
+        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, false, null, null);
         var field = getCompoundMultiValueField("citation", CONTRIBUTOR, result);
         var expected = "Author from description other";
         assertThat(field).isNull();

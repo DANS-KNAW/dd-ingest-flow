@@ -64,7 +64,6 @@ public class MappingTestHelper {
         "urn:uuid:ced0be49-f863-4477-9473-23010526abf3",
         "urn:nbn:nl:ui:13-c7c5a4b2-539e-4b0c-831d-fe31eb197950",
         "otherId:something",
-        "1.0",
         "swordToken");
     public static final String rootAttributes = "xmlns:ddm='http://schemas.dans.knaw.nl/dataset/ddm-v2/'\n"
         + "         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"
@@ -92,7 +91,7 @@ public class MappingTestHelper {
     }
 
     static Dataset mapDdmToDataset(Document ddm, boolean restrictedFilesPresent) {
-        return createMapper(true).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent, null);
+        return createMapper(true).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata, restrictedFilesPresent, null, null);
     }
 
     static DepositToDvDatasetMetadataMapper createMapper(boolean isMigration) {

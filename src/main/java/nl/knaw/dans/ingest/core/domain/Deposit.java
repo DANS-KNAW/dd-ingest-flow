@@ -45,7 +45,7 @@ public class Deposit {
     private String dataverseDoi;
     private String depositorUserId;
     private String otherId;
-    private String otherIdVersion;
+//    private String otherIdVersion;
     private OffsetDateTime created;
     private DepositState state;
     private String stateDescription;
@@ -60,6 +60,7 @@ public class Deposit {
     private String dataverseOtherIdVersion;
     private String dataverseSwordToken;
     private String hasOrganizationalIdentifier;
+    private String hasOrganizationalIdentifierVersion;
 
     private String isVersionOf;
 
@@ -73,7 +74,7 @@ public class Deposit {
     private List<DepositFile> files;
 
     public VaultMetadata getVaultMetadata() {
-        return new VaultMetadata(getDataversePid(), getDataverseBagId(), getDataverseNbn(), getOtherId(), getOtherIdVersion(), getDataverseSwordToken());
+        return new VaultMetadata(getDataversePid(), getDataverseBagId(), getDataverseNbn(), getOtherId(), getDataverseSwordToken());
     }
 
     private static boolean hasTypeDoi(Node n) {

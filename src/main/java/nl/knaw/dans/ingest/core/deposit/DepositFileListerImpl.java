@@ -18,7 +18,7 @@ package nl.knaw.dans.ingest.core.deposit;
 import nl.knaw.dans.ingest.core.domain.Deposit;
 import nl.knaw.dans.ingest.core.domain.DepositFile;
 import nl.knaw.dans.ingest.core.domain.OriginalFilePathMapping;
-import nl.knaw.dans.ingest.core.service.ManifestHelper;
+import nl.knaw.dans.ingest.core.service.ManifestHelperImpl;
 import nl.knaw.dans.ingest.core.service.XPathEvaluator;
 import org.w3c.dom.Node;
 
@@ -36,7 +36,7 @@ public class DepositFileListerImpl implements DepositFileLister {
     public List<DepositFile> getDepositFiles(Deposit deposit) throws IOException {
         var bag = deposit.getBag();
         var bagDir = bag.getRootDir();
-        var filePathToSha1 = ManifestHelper.getFilePathToSha1(bag);
+        var filePathToSha1 = ManifestHelperImpl.getFilePathToSha1(bag);
         var originalFilePathMappings = getOriginalFilePathMapping(bagDir);
 
         return XPathEvaluator.nodes(deposit.getFilesXml(), "/files:files/files:file")

@@ -17,15 +17,11 @@ package nl.knaw.dans.ingest.core.deposit;
 
 import gov.loc.repository.bagit.domain.Bag;
 import gov.loc.repository.bagit.domain.Metadata;
-import gov.loc.repository.bagit.reader.BagReader;
 import nl.knaw.dans.ingest.core.domain.DepositFile;
-import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.io.BagDataManager;
-import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
 import nl.knaw.dans.ingest.core.io.FileService;
-import nl.knaw.dans.ingest.core.io.FileServiceImpl;
+import nl.knaw.dans.ingest.core.service.ManifestHelper;
 import nl.knaw.dans.ingest.core.service.XmlReader;
-import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,9 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -66,6 +60,7 @@ class DepositReaderImplTest {
         var xmlReader = Mockito.mock(XmlReader.class);
         var fileService = Mockito.mock(FileService.class);
         var depositFileLister = getDepositFileLister();
+        var manifestHelper = Mockito.mock(ManifestHelper.class);
 
         var bagDirResolver = Mockito.mock(BagDirResolver.class);
         Mockito.doReturn(basePath.resolve("bagdir"))
@@ -86,7 +81,10 @@ class DepositReaderImplTest {
         Mockito.doReturn(config)
             .when(bagDataManager).readDepositProperties(Mockito.any());
 
-        var reader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister);
+        Mockito.doNothing()
+            .when(manifestHelper).ensureSha1ManifestPresent(Mockito.any());
+
+        var reader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister, manifestHelper);
         var result = reader.readDeposit(basePath);
 
         // check if the bagDataManager is called with the correct paths
@@ -103,8 +101,9 @@ class DepositReaderImplTest {
         var fileService = Mockito.mock(FileService.class);
         var bagDataManager = Mockito.mock(BagDataManager.class);
         var depositFileLister = getDepositFileLister();
+        var manifestHelper = Mockito.mock(ManifestHelper.class);
 
-        var reader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister);
+        var reader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister, manifestHelper);
         var config = new BaseConfiguration();
         config.setProperty("dataverse.sword-token", "token");
         config.setProperty("identifier.doi", "doi");
@@ -127,8 +126,9 @@ class DepositReaderImplTest {
         var fileService = Mockito.mock(FileService.class);
         var bagDataManager = Mockito.mock(BagDataManager.class);
         var depositFileLister = getDepositFileLister();
+        var manifestHelper = Mockito.mock(ManifestHelper.class);
 
-        var reader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister);
+        var reader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister, manifestHelper);
         var config = new BaseConfiguration();
         config.setProperty("dataverse.sword-token", "token");
         config.setProperty("identifier.doi", "doi");

@@ -19,6 +19,7 @@ import gov.loc.repository.bagit.reader.BagReader;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.io.BagDataManagerImpl;
 import nl.knaw.dans.ingest.core.io.FileServiceImpl;
+import nl.knaw.dans.ingest.core.service.ManifestHelperImpl;
 import nl.knaw.dans.ingest.core.service.XmlReaderImpl;
 import org.junit.jupiter.api.Test;
 
@@ -34,11 +35,12 @@ class DepositFileListerImplIntegrationTest {
         var lister = new DepositFileListerImpl();
         var fileService = new FileServiceImpl();
         var depositReader = new DepositReaderImpl(
-            new XmlReaderImpl(),
-            new BagDirResolverImpl(fileService),
-            fileService,
-            new BagDataManagerImpl(new BagReader()),
-            lister
+                new XmlReaderImpl(),
+                new BagDirResolverImpl(fileService),
+                fileService,
+                new BagDataManagerImpl(new BagReader()),
+                lister,
+                new ManifestHelperImpl()
         );
 
         var path = Path.of(getClass().getResource("/examples/valid-with-original-filepaths").toURI().getPath());
@@ -47,19 +49,19 @@ class DepositFileListerImplIntegrationTest {
         var files = deposit.getFiles();
 
         assertThat(files).extracting("path")
-            .containsOnly(
-                Path.of("data/random images/image01.png"),
-                Path.of("data/random images/image02.jpeg"),
-                Path.of("data/random images/image03.jpeg"),
-                Path.of("data/a/deeper/path/With some file.txt")
-            );
+                .containsOnly(
+                        Path.of("data/random images/image01.png"),
+                        Path.of("data/random images/image02.jpeg"),
+                        Path.of("data/random images/image03.jpeg"),
+                        Path.of("data/a/deeper/path/With some file.txt")
+                );
 
         assertThat(files).extracting("physicalPath")
-            .containsOnly(
-                Path.of("data/aa2345ab-bff5-49c9-b224-f8d3df0fd37a"),
-                Path.of("data/57f6f2f8-8d87-43ec-ac0e-68bdac21223e"),
-                Path.of("data/79c713b0-b232-4aaa-80cc-9bc34111acf7"),
-                Path.of("data/26e30e9b-64a8-4a2f-8c70-a4653219c984")
-            );
+                .containsOnly(
+                        Path.of("data/aa2345ab-bff5-49c9-b224-f8d3df0fd37a"),
+                        Path.of("data/57f6f2f8-8d87-43ec-ac0e-68bdac21223e"),
+                        Path.of("data/79c713b0-b232-4aaa-80cc-9bc34111acf7"),
+                        Path.of("data/26e30e9b-64a8-4a2f-8c70-a4653219c984")
+                );
     }
 }

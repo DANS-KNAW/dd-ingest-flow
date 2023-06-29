@@ -66,14 +66,14 @@ public class DepositIngestTaskTest {
     DepositIngestTask getDepositIngestTask(String doi, String depositId, String isVersionOf) throws Throwable {
 
         Mockito.when(depositManager.readDeposit(Mockito.any()))
-            .thenReturn(new Deposit());
+                .thenReturn(new Deposit());
 
         var path = Path.of("path/to/", depositId);
         var depositLocation = new DepositLocation(
-            path,
-            doi != null ? doi : isVersionOf,
-            depositId,
-            OffsetDateTime.now()
+                path,
+                doi != null ? doi : isVersionOf,
+                depositId,
+                OffsetDateTime.now()
         );
         var deposit = new Deposit();
         deposit.setDataverseDoi(doi);
@@ -86,25 +86,25 @@ public class DepositIngestTaskTest {
         validateOk.setRuleViolations(List.of());
 
         Mockito.when(dansBagValidator.validateBag(Mockito.any(), Mockito.any(), Mockito.anyInt()))
-            .thenReturn(validateOk);
+                .thenReturn(validateOk);
 
         Mockito.when(depositManager.readDeposit(Mockito.eq(depositLocation)))
-            .thenReturn(deposit);
+                .thenReturn(deposit);
 
         return new DepositIngestTask(
-            depositToDvDatasetMetadataMapperFactory,
-            depositLocation,
-            "dummy",
-            null,
-            zipFileHandler,
-            List.of(),
-            dansBagValidator,
-            Path.of("outbox"),
-            eventWriter,
-            depositManager,
-            datasetService,
-            blockedTargetService,
-            depositorAuthorizationValidator
+                depositToDvDatasetMetadataMapperFactory,
+                depositLocation,
+                "dummy",
+                null,
+                zipFileHandler,
+                List.of(),
+                dansBagValidator,
+                Path.of("outbox"),
+                eventWriter,
+                depositManager,
+                datasetService,
+                blockedTargetService,
+                depositorAuthorizationValidator
         );
     }
 
@@ -114,34 +114,29 @@ public class DepositIngestTaskTest {
         var task = getDepositIngestTask("doi:id", depositId.toString(), "version1");
 
         Mockito.doReturn(true)
-            .when(blockedTargetService)
-            .isBlocked(Mockito.anyString());
+                .when(blockedTargetService)
+                .isBlocked(Mockito.anyString());
 
-        try (var manifestHelpers = Mockito.mockStatic(ManifestHelper.class)) {
-            manifestHelpers.when(() -> ManifestHelper.ensureSha1ManifestPresent(Mockito.any()))
-                .thenAnswer(invocationOnMock -> invocationOnMock);
+        var spiedTask = Mockito.spy(task);
 
-            var spiedTask = Mockito.spy(task);
-
-            Mockito.doNothing()
+        Mockito.doNothing()
                 .when(spiedTask)
                 .createOrUpdateDataset(Mockito.anyBoolean());
 
-            Mockito.doNothing()
+        Mockito.doNothing()
                 .when(spiedTask)
                 .validateDepositorRoles();
-            Mockito.doReturn("doi:id")
+        Mockito.doReturn("doi:id")
                 .when(spiedTask).resolveDoi(Mockito.any());
 
-            spiedTask.run();
+        spiedTask.run();
 
-            var deposit = spiedTask.getDeposit();
-            assertEquals(DepositState.FAILED, deposit.getState());
-            assertEquals("Deposit with id 4466a9d0-b835-4bff-81e2-ef104f8195d0 and target doi:id is blocked by a previous deposit", deposit.getStateDescription());
-        }
+        var deposit = spiedTask.getDeposit();
+        assertEquals(DepositState.FAILED, deposit.getState());
+        assertEquals("Deposit with id 4466a9d0-b835-4bff-81e2-ef104f8195d0 and target doi:id is blocked by a previous deposit", deposit.getStateDescription());
 
         Mockito.verify(eventWriter)
-            .write(depositId, EventType.END_PROCESSING, Result.FAILED, "Deposit with id 4466a9d0-b835-4bff-81e2-ef104f8195d0 and target doi:id is blocked by a previous deposit");
+                .write(depositId, EventType.END_PROCESSING, Result.FAILED, "Deposit with id 4466a9d0-b835-4bff-81e2-ef104f8195d0 and target doi:id is blocked by a previous deposit");
 
         Mockito.verify(blockedTargetService).isBlocked("doi:id");
         Mockito.verifyNoMoreInteractions(blockedTargetService);
@@ -154,18 +149,18 @@ public class DepositIngestTaskTest {
 
         var spiedTask = Mockito.spy(task);
         Mockito.doThrow(RejectedDepositException.class)
-            .when(spiedTask).validateDeposit();
+                .when(spiedTask).validateDeposit();
 
         Mockito.doNothing()
-            .when(spiedTask)
-            .createOrUpdateDataset(Mockito.anyBoolean());
+                .when(spiedTask)
+                .createOrUpdateDataset(Mockito.anyBoolean());
 
         Mockito.doNothing()
-            .when(spiedTask)
-            .validateDepositorRoles();
+                .when(spiedTask)
+                .validateDepositorRoles();
 
         Mockito.doReturn("doi:id")
-            .when(spiedTask).resolveDoi(Mockito.any());
+                .when(spiedTask).resolveDoi(Mockito.any());
 
         spiedTask.run();
 
@@ -182,24 +177,24 @@ public class DepositIngestTaskTest {
 
         var spiedTask = Mockito.spy(task);
         Mockito.doThrow(RejectedDepositException.class)
-            .when(spiedTask).validateDeposit();
+                .when(spiedTask).validateDeposit();
 
         Mockito.doNothing()
-            .when(spiedTask)
-            .validateDepositorRoles();
+                .when(spiedTask)
+                .validateDepositorRoles();
 
         Mockito.doNothing()
-            .when(spiedTask)
-            .createOrUpdateDataset(Mockito.anyBoolean());
+                .when(spiedTask)
+                .createOrUpdateDataset(Mockito.anyBoolean());
 
         Mockito.doReturn("doi:id")
-            .when(spiedTask).resolveDoi(Mockito.any());
+                .when(spiedTask).resolveDoi(Mockito.any());
 
         spiedTask.run();
 
         // it was rejected
         Mockito.verify(eventWriter)
-            .write(depositId, EventType.END_PROCESSING, Result.REJECTED, null);
+                .write(depositId, EventType.END_PROCESSING, Result.REJECTED, null);
 
         // but blockedTargetService was never invoked
         Mockito.verifyNoInteractions(blockedTargetService);
@@ -214,30 +209,25 @@ public class DepositIngestTaskTest {
         var spiedTask = Mockito.spy(task);
 
         Mockito.doNothing()
-            .when(spiedTask)
-            .createOrUpdateDataset(Mockito.anyBoolean());
+                .when(spiedTask)
+                .createOrUpdateDataset(Mockito.anyBoolean());
 
         Mockito.doNothing()
-            .when(spiedTask)
-            .validateDepositorRoles();
+                .when(spiedTask)
+                .validateDepositorRoles();
 
         Mockito.doNothing()
-            .when(spiedTask)
-            .validateDeposit();
+                .when(spiedTask)
+                .validateDeposit();
 
         Mockito.doReturn("doi:id")
-            .when(spiedTask).resolveDoi(Mockito.any());
+                .when(spiedTask).resolveDoi(Mockito.any());
 
-        try (var manifestHelpers = Mockito.mockStatic(ManifestHelper.class)) {
-            manifestHelpers.when(() -> ManifestHelper.ensureSha1ManifestPresent(Mockito.any()))
-                .thenAnswer(invocationOnMock -> invocationOnMock);
-
-            spiedTask.run();
-        }
+        spiedTask.run();
 
         // it was successful
         Mockito.verify(eventWriter)
-            .write(depositId, EventType.END_PROCESSING, Result.OK, null);
+                .write(depositId, EventType.END_PROCESSING, Result.OK, null);
 
         // and blockedTargetService was never invoked
         Mockito.verifyNoInteractions(blockedTargetService);

@@ -29,7 +29,6 @@ public class VaultMetadata {
     private String bagId;
     private String nbn;
     private String otherId;
-    private String otherIdVersion;
     private String swordToken;
     private String userId;
 }

@@ -117,7 +117,8 @@ public class DepositToDvDatasetMetadataMapper {
         @Nullable AuthenticatedUser contactData,
         @NonNull VaultMetadata vaultMetadata,
         boolean restrictedFilesPresent,
-        String hasOrganizationalIdentifier
+        String hasOrganizationalIdentifier,
+        String hasOrganizationalIdentifierVersion
     ) throws MissingRequiredFieldException {
         var termsOfAccess = "";
 
@@ -230,23 +231,14 @@ public class DepositToDvDatasetMetadataMapper {
             throw new IllegalStateException("dansDataVaultMetadata must always be active");
         }
 
-        if (isMigration) {
-            var otherId = getIdentifiers(ddm)
-                .filter(Identifier::hasXsiTypeDoi)
-                .findFirst()
-                .map(Node::getTextContent)
-                .orElse(null);
+        dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId()); // VLT003
 
-            dataVaultFieldBuilder.addBagId(vaultMetadata.getBagId()); // VLT003A
+        if (isMigration) {
             dataVaultFieldBuilder.addNbn(vaultMetadata.getNbn()); // VLT004A
-            if (null != otherId) // Vault service only
-                dataVaultFieldBuilder.addDansOtherId(otherId); // VLT005A
-            dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken()); // VLT007A
         }
-        else {
-            dataVaultFieldBuilder.addDansOtherId(vaultMetadata.getOtherId()); // VLT005
-            dataVaultFieldBuilder.addDansOtherIdVersion(vaultMetadata.getOtherIdVersion()); // VLT006
-        }
+        dataVaultFieldBuilder.addDansOtherId(hasOrganizationalIdentifier); // VLT005
+        dataVaultFieldBuilder.addDansOtherIdVersion(hasOrganizationalIdentifierVersion); // VLT006
+        dataVaultFieldBuilder.addSwordToken(vaultMetadata.getSwordToken()); // VLT007
 
         // VLT008
         var userId = vaultMetadata.getUserId();

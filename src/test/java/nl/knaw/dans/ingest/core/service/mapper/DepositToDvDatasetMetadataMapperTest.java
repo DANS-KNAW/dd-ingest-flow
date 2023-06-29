@@ -85,9 +85,9 @@ class DepositToDvDatasetMetadataMapperTest {
         var mapper = getMigrationMapper();
         var doc = readDocument("dataset.xml");
 
-        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "otherIdVersion", "swordToken", "USER001");
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "swordToken", "USER001");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null, null);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
@@ -116,15 +116,15 @@ class DepositToDvDatasetMetadataMapperTest {
         var mapper = getNonMigrationMapper();
         var doc = readDocument("dataset-simple-with-doi.xml");
 
-        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "otherIdVersion", "swordToken", "testuser");
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "swordToken", "testuser");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, "org-id", null);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
             .writeValueAsString(result);
 
-        assertThat(str).contains("doi:a/b");
+        assertThat(str).contains("org-id");
         assertThat(str).doesNotContain("10.17026/easy-dans-doi");
     }
 
@@ -133,9 +133,9 @@ class DepositToDvDatasetMetadataMapperTest {
         var mapper = getMigrationMapper();
         var doc = readDocument("dataset-simple.xml");
 
-        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", null, "otherIdVersion", "swordToken", "USER001");
+        var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", null, "swordToken", "USER001");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, false, null, null);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()

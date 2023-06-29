@@ -74,19 +74,19 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     protected Deposit deposit;
 
     public DepositIngestTask(
-        DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
-        DepositLocation depositLocation,
-        String depositorRole,
-        Pattern fileExclusionPattern,
-        ZipFileHandler zipFileHandler,
-        List<URI> supportedLicenses,
-        DansBagValidator dansBagValidator,
-        Path outboxDir,
-        EventWriter eventWriter,
-        DepositManager depositManager,
-        DatasetService datasetService,
-        BlockedTargetService blockedTargetService,
-        DepositorAuthorizationValidator depositorAuthorizationValidator
+            DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
+            DepositLocation depositLocation,
+            String depositorRole,
+            Pattern fileExclusionPattern,
+            ZipFileHandler zipFileHandler,
+            List<URI> supportedLicenses,
+            DansBagValidator dansBagValidator,
+            Path outboxDir,
+            EventWriter eventWriter,
+            DepositManager depositManager,
+            DatasetService datasetService,
+            BlockedTargetService blockedTargetService,
+            DepositorAuthorizationValidator depositorAuthorizationValidator
     ) {
         this.datasetMetadataMapperFactory = datasetMetadataMapperFactory;
         this.depositorRole = depositorRole;
@@ -116,13 +116,11 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         try {
             this.deposit = depositManager.readDeposit(depositLocation);
             log.info("Deposit {} is update: {}", deposit.getDepositId(), deposit.isUpdate());
-        }
-        catch (InvalidDepositException e) {
+        } catch (InvalidDepositException e) {
             try {
                 updateDepositFromResult(DepositState.FAILED, e.getMessage());
                 moveDepositToOutbox(depositLocation.getDir(), OutboxSubDir.FAILED);
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 log.error("Unable to move deposit directory to 'failed' outbox", ex);
             }
 
@@ -135,19 +133,16 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             updateDepositFromResult(DepositState.PUBLISHED, "The deposit was successfully ingested in the Data Station and will be automatically archived");
             log.info("END processing (SUCCESS) deposit {}", deposit.getDepositId());
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.OK, null);
-        }
-        catch (RejectedDepositException e) {
+        } catch (RejectedDepositException e) {
             log.error("Deposit was rejected", e);
             updateDepositFromResult(DepositState.REJECTED, e.getMessage());
             blockTarget(e.getMessage(), DepositState.REJECTED);
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.REJECTED, e.getMessage());
-        }
-        catch (TargetBlockedException e) {
+        } catch (TargetBlockedException e) {
             log.error("Deposit was rejected because a previous deposit with the same target failed", e);
             updateDepositFromResult(DepositState.FAILED, e.getMessage());
             writeEvent(TaskEvent.EventType.END_PROCESSING, TaskEvent.Result.FAILED, e.getMessage());
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             log.error("Deposit failed", e);
             updateDepositFromResult(DepositState.FAILED, e.getMessage());
             blockTarget(e.getMessage(), DepositState.FAILED);
@@ -166,11 +161,9 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
         try {
             depositManager.updateAndMoveDeposit(deposit, getTargetPath(depositState));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             log.error("Unable to move directory for deposit {}", deposit.getDir(), e);
-        }
-        catch (InvalidDepositException e) {
+        } catch (InvalidDepositException e) {
             log.error("Unable to save deposit for deposit {}", deposit.getDir(), e);
         }
     }
@@ -185,8 +178,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
                 return this.outboxDir.resolve(OutboxSubDir.FAILED.getValue());
             default:
                 throw new IllegalArgumentException(String.format(
-                    "Unexpected deposit state '%s' found; not sure where to move it",
-                    depositState
+                        "Unexpected deposit state '%s' found; not sure where to move it",
+                        depositState
                 ));
 
         }
@@ -237,8 +230,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         // get metadata
         var dataverseDataset = getMetadata();
         var persistentId = isUpdate
-            ? newDatasetUpdater(dataverseDataset).performEdit()
-            : newDatasetCreator(dataverseDataset, depositorRole).performEdit();
+                ? newDatasetUpdater(dataverseDataset).performEdit()
+                : newDatasetCreator(dataverseDataset, depositorRole).performEdit();
 
         publishDataset(persistentId);
         postPublication(persistentId);
@@ -247,11 +240,9 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     void validateDepositorRoles() {
         try {
             depositorAuthorizationValidator.validateDepositorAuthorization(deposit);
-        }
-        catch (InvalidDepositorRoleException e) {
+        } catch (InvalidDepositorRoleException e) {
             throw new RejectedDepositException(deposit, e.getMessage());
-        }
-        catch (DepositorValidatorException e) {
+        } catch (DepositorValidatorException e) {
             throw new FailedDepositException(deposit, e.getMessage());
         }
     }
@@ -269,7 +260,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
         if (blockedTargetService.isBlocked(target)) {
             throw new TargetBlockedException(String.format(
-                "Deposit with id %s and target %s is blocked by a previous deposit", depositId, target
+                    "Deposit with id %s and target %s is blocked by a previous deposit", depositId, target
             ));
         }
     }
@@ -285,13 +276,12 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
         try {
             blockedTargetService.blockTarget(
-                deposit.getDepositId(),
-                target,
-                depositState.toString(),
-                message
+                    deposit.getDepositId(),
+                    target,
+                    depositState.toString(),
+                    message
             );
-        }
-        catch (TargetBlockedException e) {
+        } catch (TargetBlockedException e) {
             log.warn("Target {} is already blocked", target);
         }
     }
@@ -306,16 +296,16 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
     void validateDeposit() {
         var result = dansBagValidator.validateBag(
-            deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
+                deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
 
         if (!result.getIsCompliant()) {
             var violations = result.getRuleViolations().stream()
-                .map(r -> String.format("- [%s] %s", r.getRule(), r.getViolation()))
-                .collect(Collectors.joining("\n"));
+                    .map(r -> String.format("- [%s] %s", r.getRule(), r.getViolation()))
+                    .collect(Collectors.joining("\n"));
 
             throw new RejectedDepositException(deposit, String.format(
-                "Bag was not valid according to Profile Version %s. Violations: %s",
-                result.getProfileVersion(), violations)
+                    "Bag was not valid according to Profile Version %s. Violations: %s",
+                    result.getProfileVersion(), violations)
             );
         }
     }
@@ -324,15 +314,14 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         try {
             datasetService.waitForState(persistentId, "RELEASED");
             savePersistentIdentifiersInDepositProperties(persistentId);
-        }
-        catch (InvalidDatasetStateException e) {
+        } catch (InvalidDatasetStateException e) {
             throw new FailedDepositException(deposit, e.getMessage());
         }
     }
 
     void savePersistentIdentifiersInDepositProperties(String persistentId) throws IOException, DataverseException {
         var urn = datasetService.getDatasetUrnNbn(persistentId)
-            .orElseThrow(() -> new IllegalStateException(String.format("Dataset %s did not obtain a URN:NBN", persistentId)));
+                .orElseThrow(() -> new IllegalStateException(String.format("Dataset %s did not obtain a URN:NBN", persistentId)));
 
         deposit.setDoi(persistentId);
         deposit.setUrn(urn);
@@ -341,8 +330,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     void publishDataset(String persistentId) throws Exception {
         try {
             datasetService.publishDataset(persistentId);
-        }
-        catch (IOException | DataverseException e) {
+        } catch (IOException | DataverseException e) {
             log.error("Unable to publish dataset", e);
             throw e;
         }
@@ -350,14 +338,14 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
     DatasetEditor newDatasetUpdater(Dataset dataset, boolean isMigration) {
         return new DatasetUpdater(
-            isMigration,
-            dataset,
-            deposit,
-            supportedLicenses,
-            fileExclusionPattern,
-            zipFileHandler,
-            new ObjectMapper(),
-            datasetService
+                isMigration,
+                dataset,
+                deposit,
+                supportedLicenses,
+                fileExclusionPattern,
+                zipFileHandler,
+                new ObjectMapper(),
+                datasetService
         );
     }
 
@@ -367,15 +355,15 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
     DatasetEditor newDatasetCreator(Dataset dataset, String depositorRole, boolean isMigration) {
         return new DatasetCreator(
-            isMigration,
-            dataset,
-            deposit,
-            new ObjectMapper(),
-            supportedLicenses,
-            fileExclusionPattern,
-            zipFileHandler,
-            depositorRole,
-            datasetService
+                isMigration,
+                dataset,
+                deposit,
+                new ObjectMapper(),
+                supportedLicenses,
+                fileExclusionPattern,
+                zipFileHandler,
+                depositorRole,
+                datasetService
         );
     }
 
@@ -392,14 +380,15 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         var contact = getDatasetContact();
         var mapper = newMapper();
         return mapper.toDataverseDataset(
-            deposit.getDdm(),
-            deposit.getOtherDoiId(),
-            date.orElse(null),
-            contact.orElse(null),
-            deposit.getVaultMetadata(),
-            deposit.restrictedFilesPresent(),
-            deposit.getHasOrganizationalIdentifier()
-      );
+                deposit.getDdm(),
+                deposit.getOtherDoiId(),
+                date.orElse(null),
+                contact.orElse(null),
+                deposit.getVaultMetadata(),
+                deposit.restrictedFilesPresent(),
+                deposit.getHasOrganizationalIdentifier(),
+                deposit.getHasOrganizationalIdentifierVersion()
+        );
     }
 
     Optional<String> getDateOfDeposit() {
@@ -408,9 +397,9 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
     Optional<AuthenticatedUser> getDatasetContact() {
         return Optional.ofNullable(deposit.getDepositorUserId())
-            .filter(StringUtils::isNotBlank)
-            .map(userId -> datasetService.getUserById(userId)
-                .orElseThrow(() -> new RuntimeException("Unable to fetch user with id " + userId)));
+                .filter(StringUtils::isNotBlank)
+                .map(userId -> datasetService.getUserById(userId)
+                        .orElseThrow(() -> new RuntimeException("Unable to fetch user with id " + userId)));
     }
 
     @Override
@@ -431,7 +420,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
 
         if (items.size() != 1) {
             throw new FailedDepositException(deposit, String.format(
-                "Deposit is update of %s datasets; should always be 1!", items.size()
+                    "Deposit is update of %s datasets; should always be 1!", items.size()
             ), null);
         }
 

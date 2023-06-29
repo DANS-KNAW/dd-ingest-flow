@@ -21,6 +21,8 @@ import nl.knaw.dans.ingest.core.domain.DepositLocation;
 import nl.knaw.dans.ingest.core.exception.InvalidDepositException;
 import nl.knaw.dans.ingest.core.io.BagDataManager;
 import nl.knaw.dans.ingest.core.io.FileService;
+import nl.knaw.dans.ingest.core.service.ManifestHelper;
+import nl.knaw.dans.ingest.core.service.ManifestHelperImpl;
 import nl.knaw.dans.ingest.core.service.XmlReader;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.StringUtils;
@@ -41,12 +43,15 @@ public class DepositReaderImpl implements DepositReader {
     private final BagDataManager bagDataManager;
     private final DepositFileLister depositFileLister;
 
-    public DepositReaderImpl(XmlReader xmlReader, BagDirResolver bagDirResolver, FileService fileService, BagDataManager bagDataManager, DepositFileLister depositFileLister) {
+    private final ManifestHelper manifestHelper;
+
+    public DepositReaderImpl(XmlReader xmlReader, BagDirResolver bagDirResolver, FileService fileService, BagDataManager bagDataManager, DepositFileLister depositFileLister, ManifestHelper manifestHelper) {
         this.xmlReader = xmlReader;
         this.bagDirResolver = bagDirResolver;
         this.fileService = fileService;
         this.bagDataManager = bagDataManager;
         this.depositFileLister = depositFileLister;
+        this.manifestHelper = manifestHelper;
     }
 
     @Override
@@ -60,11 +65,12 @@ public class DepositReaderImpl implements DepositReader {
             var bagDir = bagDirResolver.getBagDir(depositDir);
 
             var config = bagDataManager.readDepositProperties(depositDir);
-            var bagInfo = bagDataManager.readBag(bagDir);
+            var bag = bagDataManager.readBag(bagDir);
+            manifestHelper.ensureSha1ManifestPresent(bag);
 
-            var deposit = mapToDeposit(depositDir, bagDir, config, bagInfo);
+            var deposit = mapToDeposit(depositDir, bagDir, config, bag);
 
-            deposit.setBag(bagInfo);
+            deposit.setBag(bag);
             deposit.setDdm(readOptionalXmlFile(deposit.getDdmPath()));
             deposit.setFilesXml(readOptionalXmlFile(deposit.getFilesXmlPath()));
             deposit.setAmd(readOptionalXmlFile(deposit.getAmdPath()));

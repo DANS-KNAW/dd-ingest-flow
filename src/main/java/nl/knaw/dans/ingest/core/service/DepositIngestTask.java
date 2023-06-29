@@ -119,6 +119,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         }
         catch (InvalidDepositException e) {
             try {
+                updateDepositFromResult(DepositState.FAILED, e.getMessage());
                 moveDepositToOutbox(depositLocation.getDir(), OutboxSubDir.FAILED);
             }
             catch (IOException ex) {
@@ -307,16 +308,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         var result = dansBagValidator.validateBag(
             deposit.getBagDir(), ValidateCommand.PackageTypeEnum.DEPOSIT, 1);
 
-        if (result.getIsCompliant()) {
-            try {
-                ManifestHelper.ensureSha1ManifestPresent(deposit.getBag());
-            }
-            catch (Exception e) {
-                log.error("could not add SHA1 manifest", e);
-                throw new FailedDepositException(deposit, e.getMessage());
-            }
-        }
-        else {
+        if (!result.getIsCompliant()) {
             var violations = result.getRuleViolations().stream()
                 .map(r -> String.format("- [%s] %s", r.getRule(), r.getViolation()))
                 .collect(Collectors.joining("\n"));

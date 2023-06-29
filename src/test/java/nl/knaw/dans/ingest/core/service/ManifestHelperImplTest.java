@@ -26,7 +26,7 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ManifestHelperTest {
+public class ManifestHelperImplTest {
     Path testDir = new File("target/test/" + getClass().getSimpleName()).toPath();
 
     @BeforeEach
@@ -41,7 +41,7 @@ public class ManifestHelperTest {
         deposit.setBagDir(bagDir);
         deposit.setBag(new BagReader().read(bagDir));
 
-        var result = ManifestHelper.getFilePathToSha1(deposit.getBag());
+        var result = ManifestHelperImpl.getFilePathToSha1(deposit.getBag());
         assertThat(result).hasSize(5);
     }
 
@@ -53,7 +53,7 @@ public class ManifestHelperTest {
         FileUtils.copyDirectory(new File(originalBag), bagDir.toFile());
         FileUtils.deleteQuietly(sha1File);
 
-        ManifestHelper.ensureSha1ManifestPresent(new BagReader().read(bagDir));
+        new ManifestHelperImpl().ensureSha1ManifestPresent(new BagReader().read(bagDir));
         assertThat(sha1File).exists();
     }
 }

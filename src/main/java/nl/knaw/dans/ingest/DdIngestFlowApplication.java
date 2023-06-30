@@ -29,7 +29,6 @@ import nl.knaw.dans.ingest.core.BlockedTarget;
 import nl.knaw.dans.ingest.core.CsvMessageBodyWriter;
 import nl.knaw.dans.ingest.core.ImportArea;
 import nl.knaw.dans.ingest.core.TaskEvent;
-import nl.knaw.dans.ingest.core.config.IngestAreaConfig;
 import nl.knaw.dans.ingest.core.sequencing.TargetedTaskSequenceManager;
 import nl.knaw.dans.ingest.core.service.BlockedTargetService;
 import nl.knaw.dans.ingest.core.service.BlockedTargetServiceImpl;
@@ -48,7 +47,6 @@ import nl.knaw.dans.ingest.resources.BlockedTargetsResource;
 import nl.knaw.dans.ingest.resources.EventsResource;
 import nl.knaw.dans.ingest.resources.ImportsResource;
 import nl.knaw.dans.ingest.resources.MigrationsResource;
-import nl.knaw.dans.lib.dataverse.DataverseClient;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import java.io.IOException;
@@ -101,25 +99,19 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final BlockedTargetService blockedTargetService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
             .create(BlockedTargetServiceImpl.class, BlockedTargetDAO.class, blockedTargetDAO);
 
-        // validate depositors
         final EnqueuingService enqueuingService = new EnqueuingServiceImpl(targetedTaskSequenceManager, 3 /* Must support importArea, migrationArea and autoIngestArea */);
         final TaskEventDAO taskEventDAO = new TaskEventDAO(hibernateBundle.getSessionFactory());
         final TaskEventService taskEventService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TaskEventServiceImpl.class, TaskEventDAO.class, taskEventDAO);
+        final var taskFactoryBuilder = new DepositIngestTaskFactoryBuilder(configuration, dansBagValidator, blockedTargetService);
 
         final var importAreaConfig = ingestFlowConfig.getImportConfig();
         final var migrationAreaConfig = ingestFlowConfig.getMigration();
         final var autoIngestAreaConfig = ingestFlowConfig.getAutoIngest();
 
-        final var dataverseClientImportArea = getDataverseClient(configuration, importAreaConfig);
-        final var dataverseClientMigrationArea = getDataverseClient(configuration, migrationAreaConfig);
-        final var dataverseClientAutoIngestArea = getDataverseClient(configuration, autoIngestAreaConfig);
-
-        final var taskFactoryBuilder = new DepositIngestTaskFactoryBuilder(configuration, dansBagValidator, blockedTargetService);
-
         final ImportArea importArea = new ImportArea(
             importAreaConfig.getInbox(),
             importAreaConfig.getOutbox(),
-            taskFactoryBuilder.createTaskFactory(importAreaConfig, dataverseClientImportArea, false),
+            taskFactoryBuilder.createTaskFactory(importAreaConfig, false),
             taskEventService,
             enqueuingService);
 
@@ -127,14 +119,14 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final ImportArea migrationArea = new ImportArea(
             migrationAreaConfig.getInbox(),
             migrationAreaConfig.getOutbox(),
-            taskFactoryBuilder.createTaskFactory(migrationAreaConfig, dataverseClientMigrationArea, true),
+            taskFactoryBuilder.createTaskFactory(migrationAreaConfig, true),
             taskEventService,
             enqueuingService);
 
         final AutoIngestArea autoIngestArea = new AutoIngestArea(
             autoIngestAreaConfig.getInbox(),
             autoIngestAreaConfig.getOutbox(),
-            taskFactoryBuilder.createTaskFactory(autoIngestAreaConfig, dataverseClientAutoIngestArea, false),
+            taskFactoryBuilder.createTaskFactory(autoIngestAreaConfig, false),
             taskEventService,
             enqueuingService
         );
@@ -149,13 +141,5 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         environment.jersey().register(new EventsResource(taskEventDAO));
         environment.jersey().register(new BlockedTargetsResource(blockedTargetService));
         environment.jersey().register(new CsvMessageBodyWriter());
-    }
-
-    private static DataverseClient getDataverseClient(DdIngestFlowConfiguration configuration, IngestAreaConfig ingestAreaConfig) {
-        final var dataverseClientFactory = configuration.getDataverse();
-        if (ingestAreaConfig.getApiKey() != null) {
-            dataverseClientFactory.setApiKey(ingestAreaConfig.getApiKey());
-        }
-        return dataverseClientFactory.build();
     }
 }

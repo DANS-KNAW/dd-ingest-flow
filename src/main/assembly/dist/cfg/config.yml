@@ -28,16 +28,19 @@ server:
 
 ingestFlow:
   import:
+    apiKey: 'changeme' # overrides the default
     inbox: /var/opt/dans.knaw.nl/tmp/import/inbox
     outbox: /var/opt/dans.knaw.nl/tmp/import/outbox
 
   migration:
+    apiKey: 'changeme' # overrides the default
     inbox: /var/opt/dans.knaw.nl/tmp/migration/deposits
     outbox: /var/opt/dans.knaw.nl/tmp/migration/out
     dataSuppliers:
       USER001: The Organization Name
 
   autoIngest:
+    apiKey: 'changeme' # overrides the default
     inbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/inbox
     outbox: /var/opt/dans.knaw.nl/tmp/auto-ingest/outbox
     depositorRole: swordupdater

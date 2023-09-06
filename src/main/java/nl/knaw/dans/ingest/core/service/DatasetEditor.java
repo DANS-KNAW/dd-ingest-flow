@@ -70,6 +70,8 @@ public abstract class DatasetEditor {
     protected final ObjectMapper objectMapper;
     protected final DatasetService datasetService;
 
+    protected final String vaultMetadataKey;
+
     protected DatasetEditor(boolean isMigration,
         Dataset dataset,
         Deposit deposit,
@@ -77,7 +79,8 @@ public abstract class DatasetEditor {
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
         ObjectMapper objectMapper,
-        DatasetService datasetService) {
+        DatasetService datasetService,
+        String vaultMetadataKey) {
         this.dataverseClient = datasetService._getClient();
         this.isMigration = isMigration;
         this.dataset = dataset;
@@ -87,6 +90,7 @@ public abstract class DatasetEditor {
         this.zipFileHandler = zipFileHandler;
         this.objectMapper = objectMapper;
         this.datasetService = datasetService;
+        this.vaultMetadataKey = vaultMetadataKey;
     }
 
     private static Instant parseDate(String value) {

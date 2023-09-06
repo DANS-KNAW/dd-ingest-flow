@@ -55,12 +55,13 @@ public class DepositMigrationTask extends DepositIngestTask {
         DepositManager depositManager,
         DatasetService datasetService,
         BlockedTargetService blockedTargetService,
-        DepositorAuthorizationValidator depositorAuthorizationValidator
+        DepositorAuthorizationValidator depositorAuthorizationValidator,
+        String vaultMetadataKey
     ) {
         super(
             datasetMetadataMapperFactory, depositLocation, depositorRole, fileExclusionPattern, zipFileHandler, supportedLicenses,
             dansBagValidator,
-            outboxDir, eventWriter, depositManager, datasetService, blockedTargetService, depositorAuthorizationValidator);
+            outboxDir, eventWriter, depositManager, datasetService, blockedTargetService, depositorAuthorizationValidator,vaultMetadataKey);
     }
 
     @Override

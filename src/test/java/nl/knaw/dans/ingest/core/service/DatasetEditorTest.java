@@ -59,7 +59,7 @@ public class DatasetEditorTest extends BaseTest {
     private DatasetEditor createDatasetEditor(Deposit deposit, final boolean isMigration, final Pattern fileExclusionPattern, final List<URI> supportedLicenses) {
         var dataverseService = new DataverseServiceImpl(Mockito.mock(DataverseClient.class), 1, 1);
         var zipFileHandler = new ZipFileHandler(testDir.resolve("tmp"));
-        return new DatasetEditor(isMigration, null, deposit, supportedLicenses, fileExclusionPattern, zipFileHandler, null, dataverseService) {
+        return new DatasetEditor(isMigration, null, deposit, supportedLicenses, fileExclusionPattern, zipFileHandler, null, dataverseService, null) {
 
             @Override
             public String performEdit() {

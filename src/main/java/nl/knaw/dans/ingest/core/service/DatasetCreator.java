@@ -31,9 +31,12 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import static java.util.Collections.singletonMap;
 
 @Slf4j
 public class DatasetCreator extends DatasetEditor {
@@ -49,7 +52,8 @@ public class DatasetCreator extends DatasetEditor {
         Pattern fileExclusionPattern,
         ZipFileHandler zipFileHandler,
         String depositorRole,
-        DatasetService datasetService
+        DatasetService datasetService,
+        String vaultMetadataKey
     ) {
         super(
             isMigration,
@@ -57,7 +61,8 @@ public class DatasetCreator extends DatasetEditor {
             deposit,
             supportedLicenses,
             fileExclusionPattern,
-            zipFileHandler, objectMapper, datasetService);
+            zipFileHandler, objectMapper, datasetService,
+            vaultMetadataKey);
 
         this.depositorRole = depositorRole;
     }
@@ -88,7 +93,8 @@ public class DatasetCreator extends DatasetEditor {
         if (!deposit.allowAccessRequests() && StringUtils.isBlank(version.getTermsOfAccess())) {
             version.setTermsOfAccess("N/a");
         }
-        api.updateMetadata(version);
+        var keyMap = new HashMap<String, String>(singletonMap("dansDataVaultMetadata", vaultMetadataKey));
+        api.updateMetadata(version, keyMap);
         api.awaitUnlock();
 
         // license stuff

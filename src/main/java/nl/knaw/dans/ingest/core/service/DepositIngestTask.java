@@ -73,6 +73,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     private final DepositorAuthorizationValidator depositorAuthorizationValidator;
     protected Deposit deposit;
 
+    private final String vaultMetadataKey;
+
     public DepositIngestTask(
             DepositToDvDatasetMetadataMapperFactory datasetMetadataMapperFactory,
             DepositLocation depositLocation,
@@ -86,7 +88,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             DepositManager depositManager,
             DatasetService datasetService,
             BlockedTargetService blockedTargetService,
-            DepositorAuthorizationValidator depositorAuthorizationValidator
+            DepositorAuthorizationValidator depositorAuthorizationValidator,
+            String vaultMetadataKey
     ) {
         this.datasetMetadataMapperFactory = datasetMetadataMapperFactory;
         this.depositorRole = depositorRole;
@@ -101,6 +104,7 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         this.depositLocation = depositLocation;
         this.datasetService = datasetService;
         this.depositorAuthorizationValidator = depositorAuthorizationValidator;
+        this.vaultMetadataKey = vaultMetadataKey;
     }
 
     public Deposit getDeposit() {
@@ -345,7 +349,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
                 fileExclusionPattern,
                 zipFileHandler,
                 new ObjectMapper(),
-                datasetService
+                datasetService,
+                vaultMetadataKey
         );
     }
 
@@ -363,7 +368,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
                 fileExclusionPattern,
                 zipFileHandler,
                 depositorRole,
-                datasetService
+                datasetService,
+                vaultMetadataKey
         );
     }
 

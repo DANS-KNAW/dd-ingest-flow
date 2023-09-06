@@ -46,16 +46,18 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Collections.singletonMap;
+
 @Slf4j
 public class DatasetUpdater extends DatasetEditor {
 
     protected DatasetUpdater(boolean isMigration, Dataset dataset,
         Deposit deposit, List<URI> supportedLicenses,
         Pattern fileExclusionPattern, ZipFileHandler zipFileHandler,
-        ObjectMapper objectMapper, DatasetService datasetService) {
+        ObjectMapper objectMapper, DatasetService datasetService, String vaultMetadataKey) {
         super(isMigration, dataset, deposit, supportedLicenses,
             fileExclusionPattern,
-            zipFileHandler, objectMapper, datasetService);
+            zipFileHandler, objectMapper, datasetService, vaultMetadataKey);
     }
 
     @Override
@@ -95,7 +97,8 @@ public class DatasetUpdater extends DatasetEditor {
                         // if fileAccessRequest ends up false, Dataverse requires termsOfAccess to be filled in.
                         (fileAccessRequest ? "" : "N/a"));
                 }
-                api.updateMetadata(datasetVersion);
+                var keyMap = new HashMap<String, String>(singletonMap("dansDataVaultMetadata", vaultMetadataKey));
+                api.updateMetadata(datasetVersion, keyMap);
                 api.awaitUnlock();
 
                 var license = toJson(Map.of("http://schema.org/license", getLicense(deposit.getDdm())));

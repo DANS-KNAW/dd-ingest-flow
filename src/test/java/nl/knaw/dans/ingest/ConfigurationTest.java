@@ -77,6 +77,8 @@ public class ConfigurationTest {
 
         assertThat(ingestFlowConfig.getMigration().getAuthorization().getDatasetCreator()).isEqualTo("migrationcreator");
         assertThat(ingestFlowConfig.getImportConfig().getAuthorization().getDatasetUpdater()).isEqualTo("importupdater");
+
+        assertThat(ingestFlowConfig.getVaultMetadataKey()).isEqualTo("somesecret");
     }
 
     @Test

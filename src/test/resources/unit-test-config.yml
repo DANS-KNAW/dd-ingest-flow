@@ -24,6 +24,8 @@ ingestFlow:
     datasetCreator: dsContributor
     datasetUpdater: contributorplus
 
+  vaultMetadataKey: 'somesecret'
+
 dataverse:
   apiKey: 'changeme4' # default for the areas above
 

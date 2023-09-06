@@ -76,6 +76,9 @@ public class IngestFlowConfig {
     @NotNull
     private Map<String, String> dataSuppliers;
 
+    @NotNull
+    @Valid
+    private String vaultMetadataKey;
 
     public IngestAreaConfig getImportConfig() {
         return importConfig;
@@ -203,5 +206,13 @@ public class IngestFlowConfig {
 
     public void setSkipFields(List<String> skipFields) {
         this.skipFields = skipFields;
+    }
+
+    public String getVaultMetadataKey() {
+        return vaultMetadataKey;
+    }
+
+    public void setVaultMetadataKey(String vaultMetadataKey) {
+        this.vaultMetadataKey = vaultMetadataKey;
     }
 }

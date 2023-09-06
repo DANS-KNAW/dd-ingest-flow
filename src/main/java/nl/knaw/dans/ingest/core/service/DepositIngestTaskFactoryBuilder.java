@@ -95,7 +95,8 @@ public class DepositIngestTaskFactoryBuilder {
             zipFileHandler,
             datasetService,
             blockedTargetService,
-            new DepositorAuthorizationValidatorImpl(datasetService, creator, updater)
+            new DepositorAuthorizationValidatorImpl(datasetService, creator, updater),
+            configuration.getIngestFlow().getVaultMetadataKey()
         );
     }
 }

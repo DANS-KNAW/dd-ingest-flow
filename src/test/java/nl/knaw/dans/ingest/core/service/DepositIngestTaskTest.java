@@ -104,7 +104,8 @@ public class DepositIngestTaskTest {
                 depositManager,
                 datasetService,
                 blockedTargetService,
-                depositorAuthorizationValidator
+                depositorAuthorizationValidator,
+                "dummy"
         );
     }
 

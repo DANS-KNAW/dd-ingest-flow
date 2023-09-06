@@ -98,6 +98,7 @@ public class DepositStartImportTaskWrapperTest {
         var depositLocation = new DepositLocation(testDepositsBasedir.resolve(depositName), depositName, UUID.randomUUID().toString(), date);
         var datasetService = Mockito.mock(DatasetService.class);
         var depositorAuthorizationValidator = Mockito.mock(DepositorAuthorizationValidatorImpl.class);
+        var vaultMetadataKey = "dummy";
 
         return new DepositMigrationTask(
             mapper,
@@ -112,7 +113,8 @@ public class DepositStartImportTaskWrapperTest {
             depositManager,
             datasetService,
             blockedTargetService,
-            depositorAuthorizationValidator
+            depositorAuthorizationValidator,
+            vaultMetadataKey
         );
     }
 

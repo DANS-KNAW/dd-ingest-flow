@@ -45,6 +45,7 @@ public class DepositIngestTaskFactory {
     private final DatasetService datasetService;
     private final BlockedTargetService blockedTargetService;
     private final DepositorAuthorizationValidator depositorAuthorizationValidator;
+    private final String vaultMetadataKey;
 
     public DepositIngestTaskFactory(
         boolean isMigration,
@@ -56,7 +57,8 @@ public class DepositIngestTaskFactory {
         ZipFileHandler zipFileHandler,
         DatasetService datasetService,
         BlockedTargetService blockedTargetService,
-        DepositorAuthorizationValidator depositorAuthorizationValidator) throws IOException, URISyntaxException {
+        DepositorAuthorizationValidator depositorAuthorizationValidator,
+        String vaultMetadataKey) throws IOException, URISyntaxException {
         this.isMigration = isMigration;
         this.depositorRole = depositorRole;
         this.dansBagValidator = dansBagValidator;
@@ -67,6 +69,7 @@ public class DepositIngestTaskFactory {
         this.datasetService = datasetService;
         this.blockedTargetService = blockedTargetService;
         this.depositorAuthorizationValidator = depositorAuthorizationValidator;
+        this.vaultMetadataKey = vaultMetadataKey;
     }
 
     public DepositIngestTask createIngestTask(Path depositDir, Path outboxDir, EventWriter eventWriter) throws InvalidDepositException, IOException {
@@ -125,7 +128,8 @@ public class DepositIngestTaskFactory {
                 depositManager,
                 datasetService,
                 blockedTargetService,
-                depositorAuthorizationValidator
+                depositorAuthorizationValidator,
+                vaultMetadataKey
             );
         }
         else {
@@ -142,7 +146,8 @@ public class DepositIngestTaskFactory {
                 depositManager,
                 datasetService,
                 blockedTargetService,
-                depositorAuthorizationValidator
+                depositorAuthorizationValidator,
+                vaultMetadataKey
             );
         }
 

@@ -20,7 +20,7 @@ start-hsqldb-server.sh
 The service needs a Dataverse instance to talk to. For this you can use [dd-dtap]{:target=_blank} (only accessible to DANS developers):
 
 ```commandline
-start-preprovisioned-box -s
+start-preprovisioned-box.py -s
 ```
 
 After start-up:

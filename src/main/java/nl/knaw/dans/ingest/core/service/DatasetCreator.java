@@ -148,9 +148,11 @@ public class DatasetCreator extends DatasetEditor {
     }
 
     String importDataset(DataverseApi api) throws IOException, DataverseException {
+        var keyMap = new HashMap<String, String>(singletonMap("dansDataVaultMetadata", vaultMetadataKey));
+
         var response = isMigration
-            ? api.importDataset(dataset, String.format("doi:%s", deposit.getDoi()), false)
-            : api.createDataset(dataset);
+            ? api.importDataset(dataset, String.format("doi:%s", deposit.getDoi()), false, keyMap)
+            : api.createDataset(dataset, keyMap);
 
         return response.getData().getPersistentId();
     }

@@ -73,11 +73,13 @@ ingestFlow:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
+  vaultMetadataKey: 'changeme' # overrides the default
+
 #
 # Parameters related to communication with the Dataverse instance
 #
 dataverse:
-  baseUrl: 'http://dar.dans.knaw.nl:8080'
+  baseUrl: 'http://dev.archaeology.datastations.nl:8080'
   apiKey: 'changeme' # define override value per ingest area
   unblockKey: 's3kretKey'
   awaitLockStateMaxNumberOfRetries: 30

@@ -64,6 +64,8 @@ ingestFlow:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
+  vaultMetadataKey: 'changeme' # overrides the default
+
 #
 # Parameters related to communication with the Dataverse instance
 #

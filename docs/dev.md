@@ -39,7 +39,8 @@ Open both projects in separate terminal tabs do the following for each:
 start-env.sh
 ```
 
-Configure the correct API key in `etc/config.yml`.
+Configure the correct API keys (`apiKey` and `unblockKey`) in `etc/config.yml`.
+Note the `apiKey` overrides per ingest area.
 
 Now you can start the service:
 
@@ -57,7 +58,7 @@ Once the dependencies and services are started you can ingest a single deposit b
 Note that a migration bag has more data than valid for this process. 
 The validator will inform you about what to remove and how to fix the checksums.
 
-The [dans-datastation-tools]{:target=_blank} project has commands to copy/move your data into an `ingest_area` (autoIngest/import/migration) require a user group `deposits`.
+The [dans-datastation-tools]{:target=_blank} project has commands to copy/move your data into an `ingest_area` (auto-ingest/import/migration) require a user group `deposits`.
 When running locally you don't have such a group, so you can't use these commands.
 Make sure to have the following structure.
 
@@ -66,8 +67,7 @@ dd-ingest-flow
 ├── data
 │   ├── auto-ingest
 │   │   ├── inbox
-│   │   │   └── <SOME-DIR>
-│   │   │       ├── <UUID>
+│   │   │   └── <UUID>
 │   │   │       ├── bag
 │   │   │       │   └── *
 │   │   │       └── deposit.properties

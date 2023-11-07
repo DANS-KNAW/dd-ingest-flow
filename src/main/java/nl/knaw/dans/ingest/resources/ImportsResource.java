@@ -45,9 +45,10 @@ public class ImportsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response startImport(StartImport start) {
         log.debug("Received command = {}", start);
-        String batchName;
+        String batchName = "";
         try {
-            batchName = importArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
+            if ( importArea.IsSafeInputPath(start.getInputPath()) )
+                batchName = importArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
         }
         catch (IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());

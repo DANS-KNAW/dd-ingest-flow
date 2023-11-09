@@ -45,10 +45,9 @@ public class MigrationsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response startImport(StartImport start) {
         log.info("Received command = {}", start);
-        String taskName = "";
+        String taskName;
         try {
-            if ( migrationArea.IsSafeInputPath(start.getInputPath()) )
-                taskName = migrationArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
+            taskName = migrationArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
         }
         catch (IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());

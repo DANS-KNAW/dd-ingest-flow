@@ -35,7 +35,6 @@ import java.util.stream.Stream;
 
 public class ImportArea extends AbstractIngestArea {
     private static final Logger log = LoggerFactory.getLogger(ImportArea.class);
-    private final String unformattedIllegalArgumentExceptionText = "Input directory must be subdirectory of %s. Provide correct absolute path or a path relative to this directory.";
 
     public ImportArea(Path inboxDir, Path outboxDir, DepositIngestTaskFactory taskFactory, TaskEventService taskEventService, EnqueuingService enqueuingService) {
         super(inboxDir, outboxDir, taskFactory, taskEventService, enqueuingService);
@@ -43,11 +42,17 @@ public class ImportArea extends AbstractIngestArea {
 
     public String startImport(Path inputPath, boolean isBatch, boolean continuePrevious) {
         log.trace("startBatch({}, {})", inputPath, continuePrevious);
+
+        if (!isSafeInputPath(inputPath)) {
+            throw new IllegalArgumentException(String.format("Input directory must be subdirectory of %s.", inboxDir));
+        }
+
         Path relativeInputDir;
         if (inputPath.isAbsolute()) {
             relativeInputDir = inboxDir.relativize(inputPath);
             if (relativeInputDir.startsWith(Paths.get(".."))) {
-                throw new IllegalArgumentException(String.format(unformattedIllegalArgumentExceptionText, inboxDir));
+                throw new IllegalArgumentException(
+                    String.format("Input directory must be subdirectory of %s. Provide correct absolute path or a path relative to this directory.", inboxDir));
             }
         }
         else {
@@ -83,12 +88,12 @@ public class ImportArea extends AbstractIngestArea {
         return relativeInputDir.toString();
     }
 
-    public Boolean IsSafeInputPath(Path inputPath) {
+    private Boolean isSafeInputPath(Path inputPath) {
         try {
             String baseParent = getInboxDir().toFile().getCanonicalPath();
             String toCheckInputDir = inputPath.toFile().getCanonicalPath();
             if ( !toCheckInputDir.startsWith(baseParent) ) {
-                throw new IllegalArgumentException(String.format(unformattedIllegalArgumentExceptionText, inboxDir));
+                return false;
             }
         }
         catch (IOException e) {

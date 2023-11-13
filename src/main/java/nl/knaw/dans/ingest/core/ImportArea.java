@@ -71,7 +71,7 @@ public class ImportArea extends AbstractIngestArea {
         log.debug("relativeInputDir = {}, batchInDir = {}, batchOutDir = {}", relativeInputDir, batchInDir, batchOutDir);
 
 
-        if (!isSafeInputPath(inputPath)) {
+        if (!isSafeInputPath(batchOutDir)) {
             throw new IllegalArgumentException(String.format("Input directory must be subdirectory of %s.", inboxDir));
         }
 

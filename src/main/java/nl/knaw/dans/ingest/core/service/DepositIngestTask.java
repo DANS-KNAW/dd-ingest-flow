@@ -460,7 +460,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
             deposit.getDepositorUserId(),
             deposit.restrictedFilesPresent(),
             deposit.getHasOrganizationalIdentifier(),
-            deposit.getHasOrganizationalIdentifierVersion()
+            deposit.getHasOrganizationalIdentifierVersion(),
+            deposit.isUpdate()
         );
     }
 

@@ -64,6 +64,7 @@ import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.joda.time.DateTime;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -81,6 +82,7 @@ import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
 import static nl.knaw.dans.ingest.core.service.XPathConstants.DDM_DCMI_METADATA;
 import static nl.knaw.dans.ingest.core.service.XPathConstants.DDM_PROFILE;
+import static nl.knaw.dans.ingest.core.service.mapper.mapping.Base.yyyymmddPattern;
 
 @Slf4j
 public class DepositToDvDatasetMetadataMapper {
@@ -122,8 +124,8 @@ public class DepositToDvDatasetMetadataMapper {
         String depositorUserId,
         boolean restrictedFilesPresent,
         String hasOrganizationalIdentifier,
-        String hasOrganizationalIdentifierVersion
-    ) throws MissingRequiredFieldException {
+        String hasOrganizationalIdentifierVersion,
+        boolean isUpdate) throws MissingRequiredFieldException {
         var termsOfAccess = "";
 
         if (activeMetadataBlocks.contains("citation")) {
@@ -179,6 +181,9 @@ public class DepositToDvDatasetMetadataMapper {
                 citationFields.addNotesText(getProvenance(ddm)); // CIT017A
                 citationFields.addContributors(getDcmiDdmDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Contributor.toContributorValueObject); // CIT021A
                 citationFields.addDateOfDeposit(dateOfDeposit); // CIT025A
+            }
+            else if (!isUpdate) {
+                citationFields.addDateOfDeposit(DateTime.now().toString(yyyymmddPattern)); // CIT025B
             }
             citationFields.addDatesOfCollection(getDatesOfCollection(ddm)
                 .filter(DatesOfCollection::isValidDatesOfCollectionPattern), DatesOfCollection.toDateOfCollectionValue); // CIT026

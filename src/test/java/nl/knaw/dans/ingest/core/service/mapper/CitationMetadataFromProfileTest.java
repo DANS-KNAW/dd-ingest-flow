@@ -15,27 +15,33 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper;
 
+import org.joda.time.DateTime;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.AUTHOR_NAME;
+import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DATE_OF_DEPOSIT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DESCRIPTION_VALUE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.DISTRIBUTION_DATE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PRODUCTION_DATE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SUBJECT;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.TITLE;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.*;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.createMapper;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.ddmWithCustomProfileContent;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getControlledMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveSingleValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.mapDdmToDataset;
+import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.minimalDdmProfile;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocumentFromString;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toPrettyJsonString;
+import static nl.knaw.dans.ingest.core.service.mapper.mapping.Base.yyyymmddPattern;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CitationMetadataFromProfileTest {
@@ -193,5 +199,37 @@ public class CitationMetadataFromProfileTest {
         var result = mapDdmToDataset(doc, false);
         assertThat(getPrimitiveSingleValueField("citation", DISTRIBUTION_DATE, result))
             .isEqualTo("2014-12-01");
+    }
+
+    @Test
+    void CIT025B_current_date_deposit_for_new_deposit() throws Exception{
+        var doc = readDocumentFromString("<ddm:DDM " + rootAttributes + ">" + minimalDdmProfile() + dcmi("") + "</ddm:DDM>");
+
+        var result =      createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata,null, false, null, null, false);
+
+        assertThat(getPrimitiveSingleValueField("citation", DATE_OF_DEPOSIT, result))
+            .isEqualTo(DateTime.now().toString(yyyymmddPattern));
+    }
+
+    @Test
+    void CIT025B_no_current_date_deposit_for_migration() throws Exception{
+        var doc = readDocumentFromString("<ddm:DDM " + rootAttributes + ">" + minimalDdmProfile() + dcmi("") + "</ddm:DDM>");
+
+        String dateOfDeposit = "2023-02-27";
+        var result =      createMapper(true).toDataverseDataset(doc, null, dateOfDeposit, mockedContact, mockedVaultMetadata,null, false, null, null, false);
+
+        assertThat(getPrimitiveSingleValueField("citation", DATE_OF_DEPOSIT, result))
+            .isEqualTo(dateOfDeposit);
+    }
+
+    @Test
+    void CIT025B_no_deposit_date_for_update_deposit() throws Exception{
+        var doc = readDocumentFromString("<ddm:DDM " + rootAttributes + ">" + minimalDdmProfile() + dcmi("") + "</ddm:DDM>");
+
+        String dateOfDeposit = "2023-02-27";
+        var result =      createMapper(false).toDataverseDataset(doc, null, dateOfDeposit, mockedContact, mockedVaultMetadata,null, false, null, null, true);
+
+        assertThat(getPrimitiveSingleValueField("citation", DATE_OF_DEPOSIT, result))
+            .isEqualTo(null);
     }
 }

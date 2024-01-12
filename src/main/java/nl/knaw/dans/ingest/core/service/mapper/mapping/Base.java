@@ -35,7 +35,7 @@ public class Base {
     //    private static final DateFormat dateAvailableFormat = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat dateAvailableFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-    private static final DateTimeFormatter yyyymmddPattern = DateTimeFormat.forPattern("YYYY-MM-dd");
+    public static final DateTimeFormatter yyyymmddPattern = DateTimeFormat.forPattern("YYYY-MM-dd");
 
     static boolean hasXsiType(Node node, String xsiType) {
         var attributes = node.getAttributes();

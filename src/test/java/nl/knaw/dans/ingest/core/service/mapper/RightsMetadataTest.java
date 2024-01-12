@@ -18,10 +18,6 @@ package nl.knaw.dans.ingest.core.service.mapper;
 import nl.knaw.dans.ingest.core.exception.MissingRequiredFieldException;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.LANGUAGE_OF_METADATA;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.PERSONAL_DATA_PRESENT;
@@ -72,7 +68,7 @@ class RightsMetadataTest {
     @Test
     void RIG000A_organizations_with_role_rightsHolder_map_to_rights_holder() {
 
-        var result = createMapper(true).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null);
+        var result = createMapper(true).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null, false);
         assertThat(getPrimitiveMultiValueField("dansRights", RIGHTS_HOLDER, result))
             .containsOnly("Some org", "Some other org", "Mr. Rights");
     }
@@ -80,7 +76,7 @@ class RightsMetadataTest {
     @Test
     void RIG000A_organizations_with_role_rightsHolder_is_ignored_when_not_migration() {
 
-        var result = createMapper(false).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, null,false, null, null);
+        var result = createMapper(false).toDataverseDataset(ddmWithOrganizations, null, "2023-02-27", mockedContact, mockedVaultMetadata, null,false, null, null, false);
         assertThat(getPrimitiveMultiValueField("dansRights", RIGHTS_HOLDER, result))
             .containsOnly("Mr. Rights");
     }

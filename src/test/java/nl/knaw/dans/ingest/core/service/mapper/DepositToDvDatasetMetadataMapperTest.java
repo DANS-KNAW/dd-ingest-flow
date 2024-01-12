@@ -31,7 +31,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +83,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "otherId:something", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, null,false, null, null);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, null,false, null, null, false);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
@@ -98,7 +97,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, null,false, null, null);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, null,false, null, null, false);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()
@@ -115,7 +114,7 @@ class DepositToDvDatasetMetadataMapperTest {
 
         var vaultMetadata = new VaultMetadata("pid", "bagId", "nbn", "doi:a/b", "swordToken");
 
-        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, null,false, "org-id", null);
+        var result = mapper.toDataverseDataset(doc, null, null, null, vaultMetadata, null,false, "org-id", null, false);
         var str = new ObjectMapper()
             .writer()
             .withDefaultPrettyPrinter()

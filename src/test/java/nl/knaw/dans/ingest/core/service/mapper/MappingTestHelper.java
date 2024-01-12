@@ -91,7 +91,7 @@ public class MappingTestHelper {
     }
 
     static Dataset mapDdmToDataset(Document ddm, boolean restrictedFilesPresent) {
-        return createMapper(true).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata,null, restrictedFilesPresent, null, null);
+        return createMapper(true).toDataverseDataset(ddm, null, "2023-02-27", mockedContact, mockedVaultMetadata,null, restrictedFilesPresent, null, null, false);
     }
 
     static DepositToDvDatasetMetadataMapper createMapper(boolean isMigration) {

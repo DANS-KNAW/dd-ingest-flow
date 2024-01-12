@@ -1,4 +1,0 @@
-    - name: Setup Java JDK
-      uses: actions/setup-java@v1.3.0
-      with:
-        java-version: 17

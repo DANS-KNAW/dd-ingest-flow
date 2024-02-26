@@ -144,7 +144,7 @@ public class DatasetCreator extends DatasetEditor {
         for (var entry : databaseIds.entrySet()) {
             var id = entry.getKey();
             var result = dataverseClient.file(id).updateMetadata(entry.getValue().getMetadata());
-            log.debug("Called updateFileMetadata for id = {}; result = {}", id, result.getHttpResponse().getStatusLine());
+            log.debug("Called updateFileMetadata for id = {}; result = {} {}", id, result.getHttpResponse().getCode(), result.getHttpResponse().getReasonPhrase());
         }
     }
 

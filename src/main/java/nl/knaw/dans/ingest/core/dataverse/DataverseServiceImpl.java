@@ -131,8 +131,12 @@ public class DataverseServiceImpl implements DatasetService {
     @Override
     public void publishDataset(String datasetId) throws IOException, DataverseException {
         var dataset = dataverseClient.dataset(datasetId);
-        dataset.publish(UpdateType.major, true);
+        var result = dataset.publish(UpdateType.major, true);
+        if (log.isDebugEnabled()) {
+            log.debug("Publish response message: {}", result.getEnvelopeAsJson().toPrettyString());
+        }
         dataset.awaitUnlock(publishAwaitUnlockMaxNumberOfRetries, publishAwaitUnlockMillisecondsBetweenRetries);
+        log.debug("Dataset {} published", datasetId);
     }
 
     @Override

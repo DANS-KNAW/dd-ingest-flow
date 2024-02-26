@@ -95,6 +95,17 @@ public class DatasetUpdater extends DatasetEditor {
                         // if fileAccessRequest ends up false, Dataverse requires termsOfAccess to be filled in.
                         (fileAccessRequest ? "" : "N/a"));
                 }
+
+                if (!isMigration) {
+                    // CIT025B
+                    // Copy the dateOfDeposit from the latest version. We make an exception for migration, because the dateOfDeposit is taken
+                    // from the AMD. It should not actually make a difference though.
+                    latestVersion.getMetadataBlocks().get("citation").getFields().stream()
+                        .filter(field -> field.getTypeName().equals("dateOfDeposit"))
+                        .findFirst()
+                        .ifPresent(field -> datasetVersion.getMetadataBlocks().get("citation").getFields().add(field));
+                }
+
                 var keyMap = new HashMap<String, String>(singletonMap("dansDataVaultMetadata", vaultMetadataKey));
                 api.updateMetadata(datasetVersion, keyMap);
                 api.awaitUnlock();
@@ -254,7 +265,7 @@ public class DatasetUpdater extends DatasetEditor {
                 seen.add(id);
 
                 var result = dataverseClient.file(id).updateMetadata(fileMeta);
-                log.debug("Called updateFileMetadata for id = {}; result = {}", id, result.getHttpResponse().getStatusLine());
+                log.debug("Called updateFileMetadata for id = {}; result = {} {}", id, result.getHttpResponse().getCode(), result.getHttpResponse().getReasonPhrase());
             }
         }
     }

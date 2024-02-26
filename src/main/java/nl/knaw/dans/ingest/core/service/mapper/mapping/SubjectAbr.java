@@ -21,7 +21,6 @@ import org.w3c.dom.Node;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_BASE_URL;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_ARTIFACT;
@@ -55,7 +54,7 @@ public class SubjectAbr extends Base {
         );
     }
 
-    private static String attributeToText(Node node) {
+    private static String getValueUri(Node node) {
         return getAttribute(node, "valueURI")
             .map(Node::getTextContent)
             .orElseGet(() -> {
@@ -65,29 +64,23 @@ public class SubjectAbr extends Base {
     }
 
     public static String toAbrComplex(Node node) {
-        return attributeToText(node);
+        return normalizeToNewAbrTerm(getValueUri(node));
     }
 
     public static String toAbrArtifact(Node node) {
-        return attributeToText(node);
+        return normalizeToNewAbrTerm(getValueUri(node));
     }
 
-    public static String fromAbrOldToAbrArtifact(Node node) {
-        if (!isOldAbr(node)) {
+    private static String normalizeToNewAbrTerm(String term) {
+        if (term == null) {
             return null;
         }
-        return Optional.ofNullable(attributeToText(node))
-            .map(value -> {
-                try {
-                    var uuid = Paths.get(new URI(value).getPath()).getFileName().toString();
-                    return String.format("%s/%s", ABR_BASE_URL, uuid);
-                }
-                catch (URISyntaxException e) {
-                    log.error("Invalid URI: {}", value);
-                }
-
-                return null;
-            })
-            .orElse(null);
+        try {
+            var uuid = Paths.get(new URI(term).getPath()).getFileName().toString();
+            return String.format("%s/%s", ABR_BASE_URL, uuid);
+        }
+        catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid URI", e);
+        }
     }
 }

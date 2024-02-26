@@ -79,46 +79,6 @@ class SubjectAbrTest extends BaseTest {
     }
 
     @Test
-    void fromAbrOldToAbrArtifact_should_create_artifact_termURI_from_legacy_URI_by_using_the_UUID_from_the_legacy_URI() throws Exception {
-        var abrBaseUrl = "https://data.cultureelerfgoed.nl/term/id/abr";
-        var termUuid = "ea77d56e-1475-4e4c-94f5-489bd3d9a3e7";
-        var valueUri = "https://data.cultureelerfgoed.nl/term/id/rn/" + termUuid;
-
-        var doc = readDocumentFromString(String.format(
-            "<ddm:subject xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"
-                + "    schemeURI=\"%s\"\n"
-                + "    subjectScheme=\"%s\"\n"
-                + "    valueURI=\"%s\"\n"
-                + "    >\n"
-                + "    ABR BASIS REGISTER OLD\n"
-                + "</ddm:subject>",
-            SCHEME_URI_ABR_OLD, SCHEME_ABR_OLD, valueUri
-        ));
-
-        assertEquals(abrBaseUrl + "/" + termUuid,
-            SubjectAbr.fromAbrOldToAbrArtifact(doc.getDocumentElement()));
-    }
-
-    @Test
-    void fromAbrOldToAbrArtifact_should_return_None_for_an_element_that_is_not_an_old_ABR_element() throws Exception {
-        var termUuid = "ea77d56e-1475-4e4c-94f5-489bd3d9a3e7";
-        var valueUri = "https://data.cultureelerfgoed.nl/term/id/rn/" + termUuid;
-
-        var doc = readDocumentFromString(String.format(
-            "<ddm:subject xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"
-                + "    schemeURI=\"%s\"\n"
-                + "    subjectScheme=\"%s\"\n"
-                + "    valueURI=\"%s\"\n"
-                + "    >\n"
-                + "    ABR BASIS REGISTER OLD\n"
-                + "</ddm:subject>",
-            "http://somethingelse", SCHEME_ABR_OLD, valueUri
-        ));
-
-        assertNull(SubjectAbr.fromAbrOldToAbrArtifact(doc.getDocumentElement()));
-    }
-
-    @Test
     void isAbrArtifact_should_return_true_for_subject_element_matching_schemeURI_and_subjectScheme_attributes() throws Exception {
         var doc = readDocumentFromString(String.format(
             "<ddm:subject xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"
@@ -215,10 +175,11 @@ class SubjectAbrTest extends BaseTest {
     }
 
     @Test
-    void toAbrComplex_should_create_artifact_termURI_from_legacy_URI_by_using_the_UUID_from_the_legacy_URI() throws Exception {
-        var abrBaseUrl = "https://data.cultureelerfgoed.nl/term/id/rn";
+    void toAbrComplex_should_create_new_termURI_from_legacy_URI_by_using_the_UUID_from_the_legacy_URI() throws Exception {
+        var legacyBaseUrl = "https://data.cultureelerfgoed.nl/term/id/rn";
+        var abrBaseUrl = "https://data.cultureelerfgoed.nl/term/id/abr";
         var termUuid = "ea77d56e-1475-4e4c-94f5-489bd3d9a3e7";
-        var valueUri = "https://data.cultureelerfgoed.nl/term/id/rn/" + termUuid;
+        var valueUri = legacyBaseUrl + "/" + termUuid;
 
         var doc = readDocumentFromString(String.format(
             "<ddm:subject xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"

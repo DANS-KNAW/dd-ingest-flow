@@ -39,6 +39,9 @@ import nl.knaw.dans.lib.dataverse.model.dataset.Dataset;
 import nl.knaw.dans.lib.dataverse.model.user.AuthenticatedUser;
 import nl.knaw.dans.validatedansbag.client.api.ValidateCommandDto;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +56,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class DepositIngestTask implements TargetedTask, Comparable<DepositIngestTask> {
-
+    private static final DateTimeFormatter yyyymmddPattern = DateTimeFormat.forPattern("YYYY-MM-dd");
     private static final Logger log = LoggerFactory.getLogger(DepositIngestTask.class);
     protected final String depositorRole;
     protected final Pattern fileExclusionPattern;
@@ -269,6 +272,8 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         }
         else {
             submitForReview(persistentId);
+            log.debug("Dataset {} submitted for review", persistentId);
+            postSubmitForReview(persistentId);
             return false;
         }
     }
@@ -291,11 +296,11 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         }
     }
 
-   boolean isDatasetInReview() throws IOException, DataverseException {
+    boolean isDatasetInReview() throws IOException, DataverseException {
         var deposit = getDeposit();
         var target = deposit.getDataverseDoi();
         return datasetService.isDatasetInReview(target);
-   }
+    }
 
     void checkBlockedTarget() throws TargetBlockedException {
         var deposit = getDeposit();
@@ -355,26 +360,36 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
         }
     }
 
+    void postSubmitForReview(String persistentId) throws IOException, DataverseException, InterruptedException {
+        saveDoiInDepositProperties(persistentId);
+    }
+
     void postPublication(String persistentId) throws IOException, DataverseException, InterruptedException {
         try {
             datasetService.waitForState(persistentId, "RELEASED");
-            savePersistentIdentifiersInDepositProperties(persistentId);
+            saveDoiInDepositProperties(persistentId);
+            saveUrnInDepositProperties(persistentId);
         }
         catch (InvalidDatasetStateException e) {
             throw new FailedDepositException(deposit, e.getMessage());
         }
     }
 
-    void savePersistentIdentifiersInDepositProperties(String persistentId) throws IOException, DataverseException {
-        var urn = datasetService.getDatasetUrnNbn(persistentId)
-            .orElseThrow(() -> new IllegalStateException(String.format("Dataset %s did not obtain a URN:NBN", persistentId)));
-
+    // Does not actually save the DOI, but only sets it on the deposit object
+    void saveDoiInDepositProperties(String persistentId) throws IOException, DataverseException {
         var basePersistentId = persistentId;
         if (persistentId.startsWith("doi:")) {
             basePersistentId = persistentId.substring("doi:".length());
         }
 
         deposit.setDoi(basePersistentId);
+    }
+
+    // Does not actually save the URN, but only sets it on the deposit object
+    void saveUrnInDepositProperties(String persistentId) throws IOException, DataverseException {
+        var urn = datasetService.getDatasetUrnNbn(persistentId)
+            .orElseThrow(() -> new IllegalStateException(String.format("Dataset %s did not obtain a URN:NBN", persistentId)));
+
         deposit.setUrn(urn);
     }
 
@@ -453,7 +468,12 @@ public class DepositIngestTask implements TargetedTask, Comparable<DepositIngest
     }
 
     Optional<String> getDateOfDeposit() {
-        return Optional.empty();
+        if (deposit.isUpdate()) {
+            return Optional.empty(); // See for implementation CIT025B in DatasetUpdater
+        }
+        else {
+            return Optional.of(yyyymmddPattern.print(DateTime.now())); // CIT025B
+        }
     }
 
     Optional<AuthenticatedUser> getDatasetContact() {

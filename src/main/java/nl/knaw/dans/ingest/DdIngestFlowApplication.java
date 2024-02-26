@@ -113,7 +113,7 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final ImportArea importArea = new ImportArea(
             importAreaConfig.getInbox(),
             importAreaConfig.getOutbox(),
-            taskFactoryBuilder.createTaskFactory(importAreaConfig, false),
+            taskFactoryBuilder.createTaskFactory(environment, "dd-ingest-flow/import", importAreaConfig,  false),
             taskEventService,
             enqueuingService);
 
@@ -121,14 +121,14 @@ public class DdIngestFlowApplication extends Application<DdIngestFlowConfigurati
         final ImportArea migrationArea = new ImportArea(
             migrationAreaConfig.getInbox(),
             migrationAreaConfig.getOutbox(),
-            taskFactoryBuilder.createTaskFactory(migrationAreaConfig, true),
+            taskFactoryBuilder.createTaskFactory(environment, "dd-ingest-flow/migration", migrationAreaConfig,true),
             taskEventService,
             enqueuingService);
 
         final AutoIngestArea autoIngestArea = new AutoIngestArea(
             autoIngestAreaConfig.getInbox(),
             autoIngestAreaConfig.getOutbox(),
-            taskFactoryBuilder.createTaskFactory(autoIngestAreaConfig, false),
+            taskFactoryBuilder.createTaskFactory(environment, "dd-ingest-flow/auto-ingest", autoIngestAreaConfig,  false),
             taskEventService,
             enqueuingService
         );

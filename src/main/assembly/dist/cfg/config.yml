@@ -112,9 +112,11 @@ dataverse:
   unblockKey: 'changeme'
   awaitLockStateMaxNumberOfRetries: 30
   awaitLockStateMillisecondsBetweenRetries: 500
-  # TODO: add to dans-dataverse-client-lib
-  #  connectionTimeoutMs: 10000
-  #  readTimeoutMs: 30000
+  httpClient:
+    timeout: 30s
+    connectionTimeout: 15s
+    timeToLive: 1h
+    retries: 2
 
 dataverseExtra:
   publishAwaitUnlockMaxRetries: 900

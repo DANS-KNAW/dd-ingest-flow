@@ -132,7 +132,7 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addAlternativeTitle(otherTitlesAndAlternativeTitles.stream().map(Node::getTextContent)); // CIT002
 
             if (isMigration) {
-                citationFields.addOtherIdsStrings(Stream.ofNullable(vaultMetadata.getOtherId()) // CIT002A
+                    citationFields.addOtherIdsStrings(Stream.ofNullable(vaultMetadata.getOtherId()) // CIT002A
                     .filter(DepositPropertiesVaultMetadata::isValidOtherIdValue), DepositPropertiesVaultMetadata.toOtherIdValue);
                 citationFields.addOtherIds(getIdentifiers(ddm).filter(Identifier::hasXsiTypeEasy2), Identifier.toOtherIdValue); // CIT002B
                 citationFields.addOtherIdsStrings(Stream.ofNullable(otherDoiId), DepositPropertiesOtherDoi.toOtherIdValue); // PAN second version DOIs (migration)
@@ -178,7 +178,9 @@ public class DepositToDvDatasetMetadataMapper {
             if (isMigration) {
                 citationFields.addNotesText(getProvenance(ddm)); // CIT017A
                 citationFields.addContributors(getDcmiDdmDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Contributor.toContributorValueObject); // CIT021A
-                citationFields.addDateOfDeposit(dateOfDeposit); // CIT025A
+            }
+            if (dateOfDeposit != null) {
+                citationFields.addDateOfDeposit(dateOfDeposit); // CIT025A and CIT025B (first dataset versions)
             }
             citationFields.addDatesOfCollection(getDatesOfCollection(ddm)
                 .filter(DatesOfCollection::isValidDatesOfCollectionPattern), DatesOfCollection.toDateOfCollectionValue); // CIT026
@@ -214,8 +216,8 @@ public class DepositToDvDatasetMetadataMapper {
             archaeologyFields.addRapportNummer(getReportNumbers(ddm).filter(AbrReport::isAbrReportType).map(AbrReport::toAbrRapportNumber)); // AR004
             archaeologyFields.addVerwervingswijze(getAcquisitionMethods(ddm).filter(AbrAcquisitionMethod::isVerwervingswijze).map(AbrAcquisitionMethod::toVerwervingswijze)); // AR005
             archaeologyFields.addComplex(getDdmSubjects(ddm).filter(SubjectAbr::isAbrComplex).map(SubjectAbr::toAbrComplex)); // AR006
-            if (isMigration)
-                archaeologyFields.addArtifact(getDdmSubjects(ddm).filter(SubjectAbr::isOldAbr).map(SubjectAbr::fromAbrOldToAbrArtifact)); // TODO: REMOVE AFTER MIGRATION
+            // Keep support for old URIs for PAN. No rule for this in the mapping file.
+            archaeologyFields.addArtifact(getDdmSubjects(ddm).filter(SubjectAbr::isOldAbr).map(SubjectAbr::toAbrArtifact)); // AR007
             archaeologyFields.addArtifact(getDdmSubjects(ddm).filter(SubjectAbr::isAbrArtifact).map(SubjectAbr::toAbrArtifact)); // AR007
             archaeologyFields.addPeriod(getDdmTemporal(ddm).filter(TemporalAbr::isAbrPeriod).map(TemporalAbr::toAbrPeriod)); // AR008
         }

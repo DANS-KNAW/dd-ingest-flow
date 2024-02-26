@@ -16,6 +16,7 @@
 package nl.knaw.dans.ingest.core.service;
 
 import gov.loc.repository.bagit.reader.BagReader;
+import io.dropwizard.core.setup.Environment;
 import nl.knaw.dans.ingest.config.DdIngestFlowConfiguration;
 import nl.knaw.dans.ingest.config.IngestAreaConfig;
 import nl.knaw.dans.ingest.core.dataverse.DataverseServiceImpl;
@@ -63,12 +64,12 @@ public class DepositIngestTaskFactoryBuilder {
         this.blockedTargetService = blockedTargetService;
     }
 
-    public DepositIngestTaskFactory createTaskFactory(IngestAreaConfig ingestAreaConfig, boolean isMigration) throws IOException, URISyntaxException {
+    public DepositIngestTaskFactory createTaskFactory(Environment environment, String name, IngestAreaConfig ingestAreaConfig, boolean isMigration) throws IOException, URISyntaxException {
         final var dataverseClientFactory = configuration.getDataverse();
         if (ingestAreaConfig.getApiKey() != null) {
             dataverseClientFactory.setApiKey(ingestAreaConfig.getApiKey());
         }
-        final var dataverseClient = dataverseClientFactory.build();
+        final var dataverseClient = dataverseClientFactory.build(environment, name);
         final var ingestFlowConfig = configuration.getIngestFlow();
         final var mapperFactory = new DepositToDvDatasetMetadataMapperFactory(
             ingestFlowConfig.getIso1ToDataverseLanguage(),

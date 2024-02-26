@@ -37,6 +37,7 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttr
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toPrettyJsonString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DansArchaeologyMetadataTest {
 
@@ -198,7 +199,7 @@ public class DansArchaeologyMetadataTest {
     }
 
     @Test
-    void AR006_old_abr_complex_with_invalid_URI_is_ignored() throws Exception {
+    void AR006_old_abr_complex_with_invalid_URI_throws_IllegalArgumentException() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"
@@ -211,8 +212,7 @@ public class DansArchaeologyMetadataTest {
             + "    ABR BASIS REGISTER OLD\n"
             + "</ddm:subject>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true).getDatasetVersion().getMetadataBlocks();
-        assertThat(result.get("dansArchaeologyMetadata").getFields()).isEmpty();
+        assertThrows(IllegalArgumentException.class, () -> mapDdmToDataset(doc, true));
     }
 
     @Test

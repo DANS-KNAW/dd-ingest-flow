@@ -24,6 +24,7 @@ import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.validation.Validators;
 import nl.knaw.dans.ingest.config.DdIngestFlowConfiguration;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -41,20 +42,23 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 public class ConfigurationTest {
 
     private final String testDir = "target/test/" + this.getClass().getSimpleName();
-    private final YamlConfigurationFactory<DdIngestFlowConfiguration> factory;
+    private YamlConfigurationFactory<DdIngestFlowConfiguration> factory;
 
+    @BeforeEach
+    public void setUp()
     {
         final var mapper = Jackson.newObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         factory = new YamlConfigurationFactory<>(DdIngestFlowConfiguration.class, Validators.newValidator(), mapper, "dw");
     }
 
     @Test
-    public void assembly_dist_cfg_does_not_throw() {
+    public void assembly_config_does_not_throw() {
         final var dir = "src/main/assembly/dist/cfg";
         final var config = assertDoesNotThrow(() -> factory.build(FileInputStream::new, dir + "/config.yml"));
         config.getIngestFlow().setMappingDefsDir(Paths.get(dir));
         assertDoesNotThrow(() -> readIngestFlowConfiguration(config.getIngestFlow()));
     }
+
 
     @Test
     public void debug_etc_does_not_throw() {

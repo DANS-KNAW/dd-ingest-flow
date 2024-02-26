@@ -51,7 +51,7 @@ public class TemporalAbr extends Base {
         return a1 || a2;
     }
 
-    private static String attributeToText(Node node) {
+    private static String getValueUri(Node node) {
         return getAttribute(node, "valueURI")
             .map(Node::getTextContent)
             .orElseGet(() -> {
@@ -61,6 +61,6 @@ public class TemporalAbr extends Base {
     }
 
     public static String toAbrPeriod(Node node) {
-        return attributeToText(node);
+        return getValueUri(node);
     }
 }

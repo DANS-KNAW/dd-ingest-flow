@@ -51,7 +51,7 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
             var bagInfo = bagDataManager.readBagMetadata(bagDir);
             var depositId = getDepositId(depositDir);
             var target = getTarget(properties);
-            var created = getCreated(bagInfo);
+            var created = getCreated(properties);
 
             return new DepositLocation(depositDir, target, depositId.toString(), created);
         }
@@ -95,19 +95,14 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
         }
     }
 
-    OffsetDateTime getCreated(Metadata bagInfo) throws InvalidDepositException {
+    OffsetDateTime getCreated(Configuration properties) throws InvalidDepositException {
         try {
-            // the created date comes from bag-info.txt, with the Created property
-            var createdItems = bagInfo.get("created");
-
-            if (createdItems.size() < 1) {
-                throw new InvalidDepositException("Missing 'created' property in bag-info.txt");
-            }
-            else if (createdItems.size() > 1) {
-                throw new InvalidDepositException("Value 'created' should contain exactly 1 value in bag; " + createdItems.size() + " found");
+            var created = properties.getString("creation.timestamp");
+            if (StringUtils.isBlank(created)) {
+                throw new InvalidDepositException("No creation timestamp found in deposit");
             }
 
-            return OffsetDateTime.parse(createdItems.get(0));
+            return OffsetDateTime.parse(created);
         }
         catch (DateTimeParseException e) {
             throw new InvalidDepositException("Error while parsing date", e);

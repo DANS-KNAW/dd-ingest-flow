@@ -40,6 +40,7 @@ class DepositLocationReaderImplTest {
         var config = new BaseConfiguration();
         config.setProperty("dataverse.sword-token", "token");
         config.setProperty("identifier.doi", "doi");
+        config.setProperty("creation.timestamp", "2022-10-01T00:03:04+03:00");
 
         Mockito.doReturn(config)
             .when(bagDataManager).readDepositProperties(Mockito.any());

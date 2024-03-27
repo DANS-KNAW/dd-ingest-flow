@@ -42,6 +42,7 @@ public class ImportArea extends AbstractIngestArea {
 
     public String startImport(Path inputPath, boolean isBatch, boolean continuePrevious) {
         log.trace("startBatch({}, {})", inputPath, continuePrevious);
+
         Path relativeInputDir;
         if (inputPath.isAbsolute()) {
             relativeInputDir = inboxDir.relativize(inputPath);
@@ -69,6 +70,11 @@ public class ImportArea extends AbstractIngestArea {
         }
         log.debug("relativeInputDir = {}, batchInDir = {}, batchOutDir = {}", relativeInputDir, batchInDir, batchOutDir);
 
+
+        if (!isSafeInputPath(batchOutDir)) {
+            throw new IllegalArgumentException(String.format("Input directory must be subdirectory of %s.", inboxDir));
+        }
+
         validateInDir(batchInDir);
         initOutbox(batchOutDir, continuePrevious || !isBatch);
         String taskName = relativeInputDir.toString();
@@ -81,6 +87,14 @@ public class ImportArea extends AbstractIngestArea {
         }
         enqueuingService.executeEnqueue(taskSource);
         return relativeInputDir.toString();
+    }
+
+    private Boolean isSafeInputPath(Path inputPath) {
+        if ( inputPath.toAbsolutePath().normalize().startsWith(getInboxDir())) {
+            return true;
+        }
+
+    return false;
     }
 
     private void validateBatchDirectory(Path input) {

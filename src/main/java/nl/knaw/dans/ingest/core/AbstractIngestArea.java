@@ -28,11 +28,18 @@ import java.util.stream.Stream;
 
 public class AbstractIngestArea {
     private static final Logger log = LoggerFactory.getLogger(AbstractIngestArea.class);
+
+
+
     protected final Path inboxDir;
     protected final Path outboxDir;
     protected final DepositIngestTaskFactory taskFactory;
     protected final TaskEventService taskEventService;
     protected final EnqueuingService enqueuingService;
+
+    protected Path getInboxDir() {
+        return inboxDir;
+    }
 
     public AbstractIngestArea(Path inboxDir, Path outboxDir,
         DepositIngestTaskFactory taskFactory, TaskEventService taskEventService, EnqueuingService enqueuingService) {

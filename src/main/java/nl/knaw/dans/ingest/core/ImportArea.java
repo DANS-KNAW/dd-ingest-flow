@@ -109,11 +109,11 @@ public class ImportArea extends AbstractIngestArea {
         }
     }
 
-    public Path getSecurePath(Path path) throws RuntimeException {
-        Path normalizedPath = path.normalize().toAbsolutePath();
-        if (!normalizedPath.startsWith(this.inboxDir)) {
-            throw new IllegalArgumentException(String.format("InsecurePath %s", normalizedPath));
+    public void checkBaseFolderSecurity(Path path) throws RuntimeException {
+        Path toCheckPath = path.normalize().toAbsolutePath();
+        if (!toCheckPath.startsWith(this.inboxDir)) {
+            throw new IllegalArgumentException(String.format("InsecurePath %s", toCheckPath));
         }
-        return normalizedPath;
     }
+
 }

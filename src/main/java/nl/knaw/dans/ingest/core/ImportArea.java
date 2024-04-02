@@ -30,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ImportArea extends AbstractIngestArea {
@@ -86,7 +85,7 @@ public class ImportArea extends AbstractIngestArea {
     private void validateBatchDirectory(Path input) {
         if (Files.isDirectory(input)) {
             try (Stream<Path> subPaths = Files.list(input)) {
-                List<Path> paths = subPaths.collect(Collectors.toList());
+                List<Path> paths = subPaths.toList();
                 for (Path f : paths) {
                     validateDepositDirectory(f);
                 }

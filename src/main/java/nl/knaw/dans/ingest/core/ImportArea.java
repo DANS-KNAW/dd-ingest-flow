@@ -83,6 +83,9 @@ public class ImportArea extends AbstractIngestArea {
         return relativeInputDir.toString();
     }
 
+    public Path getInboxDir() {
+        return inboxDir;
+    }
     private void validateBatchDirectory(Path input) {
         if (Files.isDirectory(input)) {
             try (Stream<Path> subPaths = Files.list(input)) {

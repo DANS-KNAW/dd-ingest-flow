@@ -45,6 +45,7 @@ public class ImportsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response startImport(StartImport start) {
         log.debug("Received command = {}", start);
+        checkBaseFolderSecurity(start.getInputPath());
         String batchName;
         try {
             batchName = importArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
@@ -56,5 +57,12 @@ public class ImportsResource {
                 new ResponseMessage(Response.Status.ACCEPTED.getStatusCode(),
                     String.format("import request was received (batch = %s, continue = %s", batchName, start.isContinue())))
             .build();
+    }
+
+    private void checkBaseFolderSecurity(java.nio.file.Path path) throws RuntimeException {
+        java.nio.file.Path toCheckPath = path.normalize().toAbsolutePath();
+        if (!toCheckPath.startsWith(importArea.getInboxDir())) {
+            throw new IllegalArgumentException(String.format("InsecurePath %s", toCheckPath));
+        }
     }
 }

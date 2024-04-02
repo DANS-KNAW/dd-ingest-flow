@@ -45,6 +45,7 @@ public class MigrationsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response startImport(StartImport start) {
         log.info("Received command = {}", start);
+        checkBaseFolderSecurity(start.getInputPath());
         String taskName;
         try {
             taskName = migrationArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
@@ -56,6 +57,13 @@ public class MigrationsResource {
                 new ResponseMessage(Response.Status.ACCEPTED.getStatusCode(),
                     String.format("migration request was received (batch = %s, continue = %s", taskName, start.isContinue())))
             .build();
+    }
+
+    private void checkBaseFolderSecurity(java.nio.file.Path path) throws RuntimeException {
+        java.nio.file.Path toCheckPath = path.normalize().toAbsolutePath();
+        if (!toCheckPath.startsWith(migrationArea.getInboxDir())) {
+            throw new IllegalArgumentException(String.format("InsecurePath %s", toCheckPath));
+        }
     }
 
 }

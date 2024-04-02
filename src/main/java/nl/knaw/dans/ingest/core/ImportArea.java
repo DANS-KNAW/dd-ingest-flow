@@ -108,4 +108,12 @@ public class ImportArea extends AbstractIngestArea {
             throw new IllegalArgumentException(String.format("Directory %s does not contain file deposit.properties. Not a valid deposit directory", input));
         }
     }
+
+    public Path getSecurePath(Path path) throws RuntimeException {
+        Path normalizedPath = path.normalize().toAbsolutePath();
+        if (!normalizedPath.startsWith(this.inboxDir)) {
+            throw new IllegalArgumentException(String.format("InsecurePath %s", normalizedPath));
+        }
+        return normalizedPath;
+    }
 }

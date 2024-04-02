@@ -47,7 +47,8 @@ public class ImportsResource {
         log.debug("Received command = {}", start);
         String batchName;
         try {
-            batchName = importArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
+            java.nio.file.Path securePath = importArea.getSecurePath(start.getInputPath());
+            batchName = importArea.startImport(securePath, start.isBatch(), start.isContinue());
         }
         catch (IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());

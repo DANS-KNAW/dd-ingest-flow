@@ -80,4 +80,11 @@ public class AbstractIngestArea {
             throw new IllegalArgumentException("cannot initialize outbox for batch at " + outbox, e);
         }
     }
+
+    public void checkBaseFolderSecurity(Path path) throws RuntimeException {
+        Path toCheckPath = path.normalize().toAbsolutePath();
+        if (!toCheckPath.startsWith(this.inboxDir)) {
+            throw new IllegalArgumentException(String.format("InsecurePath %s", toCheckPath));
+        }
+    }
 }

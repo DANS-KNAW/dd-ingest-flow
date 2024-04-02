@@ -46,6 +46,7 @@ public class ImportsResource {
     public Response startImport(StartImport start) {
         log.debug("Received command = {}", start);
         String batchName;
+        importArea.checkBaseFolderSecurity(start.getInputPath());
         try {
             batchName = importArea.startImport(start.getInputPath(), start.isBatch(), start.isContinue());
         }

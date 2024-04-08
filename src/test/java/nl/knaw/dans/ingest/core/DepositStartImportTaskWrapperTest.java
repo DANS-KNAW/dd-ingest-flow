@@ -87,7 +87,7 @@ public class DepositStartImportTaskWrapperTest {
         var fileService = Mockito.mock(FileService.class);
         var bagDataManager = Mockito.mock(BagDataManager.class);
         var bagDirResolver = new BagDirResolverImpl(fileService);
-        var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
+        var depositLocationReader = new DepositLocationReaderImpl(bagDataManager);
         var manifestHelper = Mockito.mock(ManifestHelper.class);
         var depositReader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister, manifestHelper);
         var depositWriter = new DepositWriterImpl(bagDataManager);

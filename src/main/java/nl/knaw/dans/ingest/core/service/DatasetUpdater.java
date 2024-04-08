@@ -231,7 +231,7 @@ public class DatasetUpdater extends DatasetEditor {
                 return doi;
             }
             catch (Exception e) {
-                log.error("Error updating dataset, deleting draft", e);
+                log.error("Error updating dataset" + (deleteDraftOnFailure ? ", deleting draft" : ""), e);
                 deleteDraftIfExists(doi);
                 throw e;
             }
@@ -242,7 +242,7 @@ public class DatasetUpdater extends DatasetEditor {
         }
         finally {
             if (originalMetadata != null) {
-                FileUtils.deleteQuietly(originalMetadata.getPath().toFile())    ;
+                FileUtils.deleteQuietly(originalMetadata.getPath().toFile());
             }
         }
     }

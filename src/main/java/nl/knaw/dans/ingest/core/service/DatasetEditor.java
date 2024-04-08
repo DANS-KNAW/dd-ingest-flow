@@ -74,7 +74,7 @@ public abstract class DatasetEditor {
 
     protected final String vaultMetadataKey;
 
-    private boolean deleteDraftOnFailure;
+    protected boolean deleteDraftOnFailure;
 
     protected DatasetEditor(boolean isMigration,
         Dataset dataset,

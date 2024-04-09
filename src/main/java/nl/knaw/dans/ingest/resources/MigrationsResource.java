@@ -47,7 +47,7 @@ public class MigrationsResource {
         log.info("Received command = {}", start);
         String taskName;
         try {
-            java.nio.file.Path securePath = migrationArea.getSecurePath(start.getInputPath());
+            var securePath = migrationArea.getSecurePath(start.getInputPath());
             taskName = migrationArea.startImport(securePath, start.isBatch(), start.isContinue());
         }
         catch (IllegalArgumentException e) {

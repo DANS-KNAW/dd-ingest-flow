@@ -54,7 +54,7 @@ public class DepositIngestTaskFactoryBuilder {
         final var bagDataManager = new BagDataManagerImpl(bagReader);
         final var bagDirResolver = new BagDirResolverImpl(fileService);
         final var depositReader = new DepositReaderImpl(xmlReader, bagDirResolver, fileService, bagDataManager, depositFileLister, new ManifestHelperImpl());
-        final var depositLocationReader = new DepositLocationReaderImpl(bagDirResolver, bagDataManager);
+        final var depositLocationReader = new DepositLocationReaderImpl(bagDataManager);
         final var depositWriter = new DepositWriterImpl(bagDataManager);
 
         this.configuration = configuration;

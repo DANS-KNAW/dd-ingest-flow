@@ -93,9 +93,12 @@ public class CitationMetadataFromDcmiTest {
         var result = mapDdmToDataset(doc, true);
 
         // CIT002 first of dcmi title/alternative
-        assertThat(getPrimitiveSingleValueField("citation", ALTERNATIVE_TITLE, result))
-            .isEqualTo("title 1");
-
+        //assertThat(getPrimitiveSingleValueField("citation", ALTERNATIVE_TITLE, result))
+        //    .isEqualTo("title 1");
+        assertThat(getPrimitiveMultiValueField("citation", ALTERNATIVE_TITLE, result))
+                .containsExactly("title 1");
+        
+        
         // CIT010 rest of dcmi title/alternative
         assertThat(getCompoundMultiValueField("citation", DESCRIPTION, result))
             .extracting(DESCRIPTION_VALUE).extracting("value")

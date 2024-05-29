@@ -143,7 +143,6 @@ public class DepositToDvDatasetMetadataMapper {
             citationFields.addDescription(getProfileDescriptions(ddm), Description.toDescription); // CIT009
 
             // CIT010
-            // TODO when multiple alternative titles is used, adding to the description is not needed anymore
             if (otherTitlesAndAlternativeTitles.size() > 1) { // First element is put in alternativeTitle field. See CIT002
                 citationFields.addDescription(otherTitlesAndAlternativeTitles.stream().skip(1), Description.toDescription);
             }

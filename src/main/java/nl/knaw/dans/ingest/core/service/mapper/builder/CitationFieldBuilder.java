@@ -68,7 +68,6 @@ public class CitationFieldBuilder extends FieldBuilder {
 
     public void addAlternativeTitle(Stream<String> stream) {
         // Use only the first value (like it is a single value), but then process as a multiple
-        // TODO pass all values instead of only the first one
         Stream<String> firstElementStream = Stream.of(stream.findFirst().orElse(null));
         addMultiplePrimitiveString(ALTERNATIVE_TITLE, firstElementStream);
     }

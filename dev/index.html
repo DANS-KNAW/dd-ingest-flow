@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Development - dd-ingest-flow</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Development";
+        var mkdocs_page_input_path = "dev.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> dd-ingest-flow
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Manual</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">Development</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#set-up">Set-up</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#hsql-database">HSQL database</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#dataverse-instance">Dataverse instance</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#dd-validate-dans-bag">dd-validate-dans-bag</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#dd-ingest-flow">dd-ingest-flow</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#prepare-and-start-a-deposit">Prepare and start a deposit</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../arch/">⇒ DANS Data Station Architecture</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">dd-ingest-flow</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Development</li>
+    <li class="wy-breadcrumbs-aside">
+        <a href="https://github.com/DANS-KNAW/dd-ingest-flow/edit/master/docs/dev.md"> Edit on DANS-KNAW/dd-ingest-flow</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h1>
+<p>This page contains information for developers about how to contribute to this project.</p>
+<h2 id="set-up">Set-up<a class="headerlink" href="#set-up" title="Permanent link">&para;</a></h2>
+<p>This project can be used in combination with  <a href="https://github.com/DANS-KNAW/dans-dev-tools#dans-dev-tools" target="_blank">dans-dev-tools</a>. Before you can start it as a service
+some dependencies must first be started:</p>
+<h3 id="hsql-database">HSQL database<a class="headerlink" href="#hsql-database" title="Permanent link">&para;</a></h3>
+<p>Open a separate terminal tab:</p>
+<pre><code class="language-commandline">start-hsqldb-server.sh
+</code></pre>
+<h3 id="dataverse-instance">Dataverse instance<a class="headerlink" href="#dataverse-instance" title="Permanent link">&para;</a></h3>
+<p>The service needs a Dataverse instance to talk to. For this you can use for example <code>dev_archaeology</code> (only accessible to DANS developers):</p>
+<pre><code class="language-commandline">start-preprovisioned-box.py -s
+</code></pre>
+<p>After start-up:</p>
+<pre><code class="language-commandline">vagrant ssh
+curl -X PUT -d s3kretKey http://localhost:8080/api/admin/settings/:BlockedApiKey
+curl -X PUT -d unblock-key http://localhost:8080/api/admin/settings/:BlockedApiPolicy
+</code></pre>
+<p>This is necessary to allow calls to admin API endpoints from outside the box. This will break access to the admin API from within the box. To
+roll back to the original situation:</p>
+<pre><code class="language-commandline">curl -X PUT -d localhost-only http://localhost:8080/api/admin/settings/:BlockedApiPolicy/?unblock-key=s3kretKey
+</code></pre>
+<h3 id="dd-validate-dans-bag">dd-validate-dans-bag<a class="headerlink" href="#dd-validate-dans-bag" title="Permanent link">&para;</a></h3>
+<p><code>dd-ingest-flow</code> uses <code>dd-validate-dans-bag</code> to validate the bag in the deposit. The validation service must be run outside the vagrant box, because it
+needs disk access to the deposit.</p>
+<p>Open a separate terminal tab:</p>
+<pre><code class="language-commandline">start-env.sh # only first time
+</code></pre>
+<p>Configure the correct API key in <code>etc/config.yml</code>, also set <code>validation.baseFolder</code> to the absolute path of the <code>data</code> directory of <code>dd-ingest-flow</code>.</p>
+<p>Now you can start the service:</p>
+<pre><code class="language-commandline">start-service.sh
+</code></pre>
+<h3 id="dd-ingest-flow">dd-ingest-flow<a class="headerlink" href="#dd-ingest-flow" title="Permanent link">&para;</a></h3>
+<p>Open both projects in separate terminal tabs do the following for each:</p>
+<pre><code class="language-commandline">start-env.sh # only first time
+</code></pre>
+<p>Configure the correct API keys (<code>apiKey</code> and <code>unblockKey</code>) in <code>etc/config.yml</code>.
+Note the <code>apiKey</code> overrides per ingest area.</p>
+<p>Now you can start the service:</p>
+<pre><code class="language-commandline">start-service.sh
+</code></pre>
+<h2 id="prepare-and-start-a-deposit">Prepare and start a deposit<a class="headerlink" href="#prepare-and-start-a-deposit" title="Permanent link">&para;</a></h2>
+<p>Once the dependencies and services are started you can ingest a single deposit by moving
+(not copy) a deposit into <code>data/auto-ingest/inbox</code> or whatever directory is configured in  </p>
+<pre class="codehilite"><code>dd-ingest-flow/etc/config.yml ingestFlow:autoIngest:inbox
+</code></pre>
+
+<p>Note that a migration bag has more data than valid for this process. 
+The validator will inform you about what to remove and how to fix the checksums.</p>
+<p>The <a href="https://github.com/DANS-KNAW/dans-datastation-tools#dans-datastation-tools" target="_blank">dans-datastation-tools</a> project has commands to copy/move your data into an <code>ingest_area</code> (auto-ingest/import/migration) require a user group <code>deposits</code>.
+When running locally you don't have such a group, so you can't use these commands.
+Make sure to have the following structure.</p>
+<pre><code>dd-ingest-flow
+├── data
+│   ├── auto-ingest
+│   │   ├── inbox
+│   │   │   └── &lt;UUID&gt;
+│   │   │       ├── bag
+│   │   │       │   └── *
+│   │   │       └── deposit.properties
+│   │   └── out
+│   └── tmp
+</code></pre>
+<p>Alternatively you can prepare batches in one of the other ingest areas and start as follows.</p>
+<p>Configure the <code>ingest_flow</code> section and <code>dataverse</code> section of <code>.dans-datastation-tools.yml</code> which is  a copy of <code>src/datastation/example-dans-datastation-tools.yml</code>.</p>
+<ul>
+<li><code>service_baseurl</code> should refer to <code>localhost</code></li>
+<li>The <code>ingest_areas</code> should refer to the same folders as the <code>ingestFlow</code> section of <code>dd-ingest-flow/etc/config.yml</code>.
+  Replace the default <code>/var/opt/dans.knaw.nl/tmp</code> in the latter with <code>data</code>.</li>
+<li>Set the <code>apiKey</code></li>
+<li>To repeat a test you'll need the <code>dv-dataset-destroy</code> script which needs <code>safety_latch: OFF</code>, the default is <code>ON</code>.</li>
+</ul>
+<p>Assuming <code>dans-datastation-tools</code> and <code>dd-ingest-flow</code> are in the same directory:</p>
+<pre><code class="language-commandline">cd ~/git/service/data-station/dans-datastation-tools
+poetry run ingest-flow start-migration -s ../dd-ingest-flow/data/migration/inbox/&lt;SOME-DIR&gt;/&lt;UUID&gt;
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="Manual"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../arch/" class="btn btn-neutral float-right" title="⇒ DANS Data Station Architecture">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../arch/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

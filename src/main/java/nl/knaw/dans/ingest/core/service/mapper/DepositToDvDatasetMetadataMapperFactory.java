@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ingest.core.service.mapper;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.lib.dataverse.DataverseException;
@@ -27,24 +28,34 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
+@RequiredArgsConstructor
 public class DepositToDvDatasetMetadataMapperFactory {
-
+    @lombok.NonNull
     private final Map<String, String> iso1ToDataverseLanguage;
+    @lombok.NonNull
     private final Map<String, String> iso2ToDataverseLanguage;
-    private final List<String> spatialCoverageCountryTerms;
-    private final Map<String, String> dataSuppliers;
-    private final List<String> skipFields;
-    private final DataverseClient dataverseClient;
 
-    public DepositToDvDatasetMetadataMapperFactory(Map<String, String> iso1ToDataverseLanguage, Map<String, String> iso2ToDataverseLanguage,
-        List<String> spatialCoverageCountryTerms, Map<String, String> dataSuppliers, List<String> skipFields, DataverseClient dataverseClient) {
-        this.iso1ToDataverseLanguage = iso1ToDataverseLanguage;
-        this.iso2ToDataverseLanguage = iso2ToDataverseLanguage;
-        this.spatialCoverageCountryTerms = spatialCoverageCountryTerms;
-        this.dataSuppliers = dataSuppliers;
-        this.skipFields = skipFields;
-        this.dataverseClient = dataverseClient;
-    }
+    @lombok.NonNull
+    private final Map<String, String> abrReportCodeToTerm;
+    @lombok.NonNull
+    private final Map<String, String> abrAcquisitionMethodCodeToTerm;
+    @lombok.NonNull
+    private final Map<String, String> abrComplexCodeToTerm;
+    @lombok.NonNull
+    private final Map<String, String> abrArtifactCodeToTerm;
+    @lombok.NonNull
+    private final Map<String, String> abrPeriodCodeToTerm;
+
+    @lombok.NonNull
+    private final List<String> spatialCoverageCountryTerms;
+
+    @lombok.NonNull
+    private final Map<String, String> dataSuppliers;
+
+    @lombok.NonNull
+    private final List<String> skipFields;
+
+    private final DataverseClient dataverseClient;
 
     public DepositToDvDatasetMetadataMapper createMapper(boolean deduplicate, boolean isMigration) {
         return new DepositToDvDatasetMetadataMapper(
@@ -52,6 +63,11 @@ public class DepositToDvDatasetMetadataMapperFactory {
             getActiveMetadataBlocks(),
             iso1ToDataverseLanguage,
             iso2ToDataverseLanguage,
+            abrReportCodeToTerm,
+            abrAcquisitionMethodCodeToTerm,
+            abrComplexCodeToTerm,
+            abrArtifactCodeToTerm,
+            abrPeriodCodeToTerm,
             spatialCoverageCountryTerms,
             dataSuppliers,
             skipFields,

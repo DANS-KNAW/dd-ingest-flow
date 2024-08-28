@@ -98,30 +98,6 @@ public class DansArchaeologyMetadataTest {
     }
 
     @Test
-    void AR003_AR004_ddm_report_number_without_type_maps_to_abr_number() throws Exception {
-
-        var doc = readDocumentFromString(""
-            + "<ddm:DDM " + rootAttributes + ">"
-            + minimalDdmProfile() + dcmi(""
-            + "        <ddm:reportNumber"
-            + "                subjectScheme='ABR Rapporten'"
-            + "                schemeURI='https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e'"
-            + "                reportNo='123-A'>"
-            + "            BAAC 123-A"
-            + "        </ddm:reportNumber>")
-            + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true);
-
-        // AR003
-        assertThat(getPrimitiveMultiValueField("dansArchaeologyMetadata", ABR_RAPPORT_TYPE, result))
-            .isNull();
-
-        // AR004
-        assertThat(getPrimitiveMultiValueField("dansArchaeologyMetadata", ABR_RAPPORT_NUMMER, result))
-            .containsOnly("BAAC 123-A");
-    }
-
-    @Test
     void AR005_ddm_acquisitionMethod_maps_to_abr_verwervingswijze() throws Exception {
 
         var doc = readDocumentFromString(""
@@ -216,7 +192,7 @@ public class DansArchaeologyMetadataTest {
     }
 
     @Test
-    void AR006_abr_complex_without_value_uri_is_ignored() throws Exception {
+    void AR006_abr_complex_without_value_uri_throws_IllegalArgumentExcepiton() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"
@@ -227,8 +203,7 @@ public class DansArchaeologyMetadataTest {
             + "            houtwinning"
             + "        </ddm:subject>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true).getDatasetVersion().getMetadataBlocks();
-        assertThat(result.get("dansArchaeologyMetadata").getFields()).isEmpty();
+        assertThrows(IllegalArgumentException.class, () -> mapDdmToDataset(doc, true));
     }
 
     @Test
@@ -270,7 +245,7 @@ public class DansArchaeologyMetadataTest {
     }
 
     @Test
-    void AR008_abr_period_without_value_uri_is_ignored() throws Exception {
+    void AR008_abr_period_without_value_uri_throws_IllegalArgumentException() throws Exception {
 
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"
@@ -282,8 +257,7 @@ public class DansArchaeologyMetadataTest {
             + "            Midden Romeinse Tijd A"
             + "        </ddm:temporal>")
             + "</ddm:DDM>");
-        var result = mapDdmToDataset(doc, true).getDatasetVersion().getMetadataBlocks();
-        assertThat(result.get("dansArchaeologyMetadata").getFields()).isEmpty();
+        assertThrows(IllegalArgumentException.class, () -> mapDdmToDataset(doc, true));
     }
 
 }

@@ -17,6 +17,8 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_PERIOD;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_PLUS;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_PERIOD;
@@ -119,7 +121,7 @@ class TemporalAbrTest extends BaseTest {
                 + "      valueURI=\"https://data.cultureelerfgoed.nl/term/id/abr/c6858173-5ca2-4319-b242-f828ec53d52d\" xml:lang=\"nl\">Nieuwe Tijd</ddm:temporal>\n"
             , SCHEME_URI_ABR_PERIOD, SCHEME_ABR_PERIOD));
 
-        var value = TemporalAbr.toAbrPeriod(doc.getDocumentElement());
+        var value = TemporalAbr.toAbrPeriod(doc.getDocumentElement(), Map.of());
         assertEquals("https://data.cultureelerfgoed.nl/term/id/abr/c6858173-5ca2-4319-b242-f828ec53d52d", value);
     }
 

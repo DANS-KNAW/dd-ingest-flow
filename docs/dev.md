@@ -15,9 +15,9 @@ Open a separate terminal tab:
 start-hsqldb-server.sh
 ```
 
-### dd-dtap
+### Dataverse instance
 
-The service needs a Dataverse instance to talk to. For this you can use [dd-dtap]{:target=_blank} (only accessible to DANS developers):
+The service needs a Dataverse instance to talk to. For this you can use for example `dev_archaeology` (only accessible to DANS developers):
 
 ```commandline
 start-preprovisioned-box.py -s
@@ -31,12 +31,38 @@ curl -X PUT -d s3kretKey http://localhost:8080/api/admin/settings/:BlockedApiKey
 curl -X PUT -d unblock-key http://localhost:8080/api/admin/settings/:BlockedApiPolicy
 ```
 
-### dd-ingest-flow + dd-validate-dans-bag/application
+This is necessary to allow calls to admin API endpoints from outside the box. This will break access to the admin API from within the box. To
+roll back to the original situation:
+
+```commandline
+curl -X PUT -d localhost-only http://localhost:8080/api/admin/settings/:BlockedApiPolicy/?unblock-key=s3kretKey
+```
+
+### dd-validate-dans-bag
+
+`dd-ingest-flow` uses `dd-validate-dans-bag` to validate the bag in the deposit. The validation service must be run outside the vagrant box, because it
+needs disk access to the deposit.
+
+Open a separate terminal tab:
+
+```commandline
+start-env.sh # only first time
+```
+
+Configure the correct API key in `etc/config.yml`, also set `validation.baseFolder` to the absolute path of the `data` directory of `dd-ingest-flow`.
+
+Now you can start the service:
+
+```commandline
+start-service.sh
+```
+
+### dd-ingest-flow 
 
 Open both projects in separate terminal tabs do the following for each:
 
 ```commandline
-start-env.sh
+start-env.sh # only first time
 ```
 
 Configure the correct API keys (`apiKey` and `unblockKey`) in `etc/config.yml`.
@@ -48,7 +74,7 @@ Now you can start the service:
 start-service.sh
 ```
 
-## Prepare and start an ingest
+## Prepare and start a deposit
 
 Once the dependencies and services are started you can ingest a single deposit by moving
 (not copy) a deposit into `data/auto-ingest/inbox` or whatever directory is configured in  
@@ -97,4 +123,3 @@ poetry run ingest-flow start-migration -s ../dd-ingest-flow/data/migration/inbox
 
 [dans-datastation-tools]: https://github.com/DANS-KNAW/dans-datastation-tools#dans-datastation-tools
 
-[dd-dtap]: https://github.com/DANS-KNAW/dd-dtap

@@ -17,6 +17,7 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.ingest.core.exception.MissingRequiredFieldException;
@@ -83,8 +84,38 @@ import static nl.knaw.dans.ingest.core.service.XPathConstants.DDM_DCMI_METADATA;
 import static nl.knaw.dans.ingest.core.service.XPathConstants.DDM_PROFILE;
 
 @Slf4j
+@RequiredArgsConstructor
 public class DepositToDvDatasetMetadataMapper {
+    private final boolean deduplicate;
+    @lombok.NonNull
     private final Set<String> activeMetadataBlocks;
+    @lombok.NonNull
+    private final Map<String, String> iso1ToDataverseLanguage;
+    @lombok.NonNull
+    private final Map<String, String> iso2ToDataverseLanguage;
+
+    @lombok.NonNull
+    private final Map<String, String> abrReportCodeToTerm;
+    @lombok.NonNull
+    private final Map<String, String> abrAcquisitionMethodCodeToTerm;
+    @lombok.NonNull
+    private final Map<String, String> abrComplexCodeToTerm;
+    @lombok.NonNull
+    private final Map<String, String> abrArtifactCodeToTerm;
+    @lombok.NonNull
+    private final Map<String, String> abrPeriodCodeToTerm;
+
+    @lombok.NonNull
+    private final List<String> spatialCoverageCountryTerms;
+
+    @lombok.NonNull
+    private final Map<String, String> dataSuppliers;
+
+    @lombok.NonNull
+    private final List<String> skipFields;
+
+    private final boolean isMigration;
+
 
     private final CitationFieldBuilder citationFields = new CitationFieldBuilder();
     private final RightsFieldBuilder rightsFields = new RightsFieldBuilder();
@@ -92,26 +123,6 @@ public class DepositToDvDatasetMetadataMapper {
     private final ArchaeologyFieldBuilder archaeologyFields = new ArchaeologyFieldBuilder();
     private final TemporalSpatialFieldBuilder temporalSpatialFields = new TemporalSpatialFieldBuilder();
     private final DataVaultFieldBuilder dataVaultFieldBuilder = new DataVaultFieldBuilder();
-
-    private final Map<String, String> iso1ToDataverseLanguage;
-    private final Map<String, String> iso2ToDataverseLanguage;
-    private final List<String> spatialCoverageCountryTerms;
-    private final Map<String, String> dataSuppliers;
-    private final List<String> skipFields;
-    private final boolean isMigration;
-    private final boolean deduplicate;
-
-    DepositToDvDatasetMetadataMapper(boolean deduplicate, Set<String> activeMetadataBlocks, Map<String, String> iso1ToDataverseLanguage,
-        Map<String, String> iso2ToDataverseLanguage, List<String> spatialCoverageCountryTerms, Map<String, String> dataSuppliers, List<String> skipFields, boolean isMigration) {
-        this.deduplicate = deduplicate;
-        this.activeMetadataBlocks = activeMetadataBlocks;
-        this.iso1ToDataverseLanguage = iso1ToDataverseLanguage;
-        this.iso2ToDataverseLanguage = iso2ToDataverseLanguage;
-        this.spatialCoverageCountryTerms = spatialCoverageCountryTerms;
-        this.dataSuppliers = dataSuppliers;
-        this.skipFields = skipFields;
-        this.isMigration = isMigration;
-    }
 
     public Dataset toDataverseDataset(
         @NonNull Document ddm,
@@ -210,14 +221,14 @@ public class DepositToDvDatasetMetadataMapper {
         if (activeMetadataBlocks.contains("dansArchaeologyMetadata")) {
             archaeologyFields.addArchisZaakId(getIdentifiers(ddm).filter(Identifier::isArchisZaakId).map(Identifier::toArchisZaakId)); // AR001
             archaeologyFields.addArchisNumber(getIdentifiers(ddm).filter(Identifier::isArchisNumber), Identifier.toArchisNumberValue); // AR002
-            archaeologyFields.addRapportType(getReportNumbers(ddm).filter(AbrReport::isAbrReportType).map(AbrReport::toAbrRapportType)); // AR003
+            archaeologyFields.addRapportType(getReportNumbers(ddm).filter(AbrReport::isAbrReportType).map(node -> AbrReport.toAbrRapportType(node, abrReportCodeToTerm))); // AR003
             archaeologyFields.addRapportNummer(getReportNumbers(ddm).filter(AbrReport::isAbrReportType).map(AbrReport::toAbrRapportNumber)); // AR004
-            archaeologyFields.addVerwervingswijze(getAcquisitionMethods(ddm).filter(AbrAcquisitionMethod::isVerwervingswijze).map(AbrAcquisitionMethod::toVerwervingswijze)); // AR005
-            archaeologyFields.addComplex(getDdmSubjects(ddm).filter(SubjectAbr::isAbrComplex).map(SubjectAbr::toAbrComplex)); // AR006
+            archaeologyFields.addVerwervingswijze(getAcquisitionMethods(ddm).filter(AbrAcquisitionMethod::isVerwervingswijze).map(node -> AbrAcquisitionMethod.toVerwervingswijze(node, abrAcquisitionMethodCodeToTerm))); // AR005
+            archaeologyFields.addComplex(getDdmSubjects(ddm).filter(SubjectAbr::isAbrComplex).map(node -> SubjectAbr.toAbrComplex(node, abrComplexCodeToTerm))); // AR006
             // Keep support for old URIs for PAN. No rule for this in the mapping file.
-            archaeologyFields.addArtifact(getDdmSubjects(ddm).filter(SubjectAbr::isOldAbr).map(SubjectAbr::toAbrArtifact)); // AR007
-            archaeologyFields.addArtifact(getDdmSubjects(ddm).filter(SubjectAbr::isAbrArtifact).map(SubjectAbr::toAbrArtifact)); // AR007
-            archaeologyFields.addPeriod(getDdmTemporal(ddm).filter(TemporalAbr::isAbrPeriod).map(TemporalAbr::toAbrPeriod)); // AR008
+            archaeologyFields.addArtifact(getDdmSubjects(ddm).filter(SubjectAbr::isOldAbr).map(node -> SubjectAbr.toAbrArtifact(node, abrArtifactCodeToTerm))); // AR007
+            archaeologyFields.addArtifact(getDdmSubjects(ddm).filter(SubjectAbr::isAbrArtifact).map(node -> SubjectAbr.toAbrArtifact(node, abrArtifactCodeToTerm))); // AR007
+            archaeologyFields.addPeriod(getDdmTemporal(ddm).filter(TemporalAbr::isAbrPeriod).map(node -> TemporalAbr.toAbrPeriod(node, abrPeriodCodeToTerm))); // AR008
         }
 
         if (activeMetadataBlocks.contains("dansTemporalSpatial")) {

@@ -15,21 +15,21 @@ ingestFlow:
   skipFields: [] # see hidden_fields in dd-dtap though don't skip data vault metadata
 
   import:
-    apiKey: 'changeme' # overrides the default
+ #   apiKey: 'changeme' # overrides the default
     inbox: data/import/inbox
     outbox: data/import/outbox
 
   migration:
-    apiKey: 'changeme' # overrides the default
+#    apiKey: 'changeme' # overrides the default
     inbox: data/migration/deposits
     outbox: data/migration/out
 
   autoIngest:
-    apiKey: 'changeme' # overrides the default
+#    apiKey: 'changeme' # overrides the default
     inbox: data/auto-ingest/inbox
     outbox: data/auto-ingest/outbox
     authorization:
-      datasetPublisher: swordcreator
+      datasetPublisher: swordpublisher
       datasetUpdater: swordupdater
 
   authorization:
@@ -64,20 +64,24 @@ ingestFlow:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
-  vaultMetadataKey: 'changeme' # overrides the default
+  vaultMetadataKey: 'password_vault_metadata'
 
 #
 # Parameters related to communication with the Dataverse instance
 #
 dataverse:
-  baseUrl: 'http://dar.dans.knaw.nl:8080'
+  baseUrl: 'http://dev.archaeology.datastations.nl:8080'
   apiKey: 'changeme' # define override value per ingest area
   unblockKey: 's3kretKey'
   awaitLockStateMaxNumberOfRetries: 30
   awaitLockStateMillisecondsBetweenRetries: 500
-  # TODO: add to dans-dataverse-client-lib
-  #  connectionTimeoutMs: 10000
-  #  readTimeoutMs: 30000
+  httpClient:
+    timeout: 30s
+    connectionTimeout: 15s
+    connectionRequestTimeout: 15s
+    timeToLive: 1h
+    retries: 2
+    userAgent: dd-ingest-flow
 
 dataverseExtra:
   publishAwaitUnlockMaxRetries: 900

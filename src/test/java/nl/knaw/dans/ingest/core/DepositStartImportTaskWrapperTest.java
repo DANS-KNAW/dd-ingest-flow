@@ -44,8 +44,6 @@ import org.mockito.Mockito;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +129,11 @@ public class DepositStartImportTaskWrapperTest {
     DepositToDvDatasetMetadataMapperFactory getMapperFactory() {
         return new DepositToDvDatasetMetadataMapperFactory(
             iso1ToDataverseLanguage, iso2ToDataverseLanguage,
+            Map.of(),
+            Map.of(),
+            Map.of(),
+            Map.of(),
+            Map.of(),
             List.of("Netherlands", "United Kingdom", "Belgium", "Germany"),
             Map.of(),
             skipFields, Mockito.mock(DataverseClient.class)

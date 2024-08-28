@@ -74,6 +74,11 @@ public class DepositIngestTaskFactoryBuilder {
         final var mapperFactory = new DepositToDvDatasetMetadataMapperFactory(
             ingestFlowConfig.getIso1ToDataverseLanguage(),
             ingestFlowConfig.getIso2ToDataverseLanguage(),
+            ingestFlowConfig.getAbrReportCodeToTerm(),
+            ingestFlowConfig.getAbrAcquisitionMethodCodeToTerm(),
+            ingestFlowConfig.getAbrComplexTypeCodeToTerm(),
+            ingestFlowConfig.getAbrArtifactCodeToTerm(),
+            ingestFlowConfig.getAbrPeriodCodeToTerm(),
             ingestFlowConfig.getSpatialCoverageCountryTerms(),
             ingestFlowConfig.getDataSuppliers(),
             configuration.getIngestFlow().getSkipFields(), dataverseClient

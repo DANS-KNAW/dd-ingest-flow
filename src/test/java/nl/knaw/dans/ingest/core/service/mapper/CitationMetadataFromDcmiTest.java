@@ -17,13 +17,11 @@ package nl.knaw.dans.ingest.core.service.mapper;
 
 import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import nl.knaw.dans.lib.dataverse.model.dataset.CompoundMultiValueField;
-import nl.knaw.dans.lib.dataverse.model.dataset.CompoundSingleValueField;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ALTERNATIVE_TITLE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.CONTRIBUTOR;
@@ -64,7 +62,6 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.config;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.createMapper;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.dcmi;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundMultiValueField;
-import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getCompoundSingleValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getControlledMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveMultiValueField;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.getPrimitiveSingleValueField;
@@ -76,7 +73,6 @@ import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.readDocu
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.rootAttributes;
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.toPrettyJsonString;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CitationMetadataFromDcmiTest {
 
@@ -94,9 +90,8 @@ public class CitationMetadataFromDcmiTest {
 
         // CIT002 first of dcmi title/alternative
         assertThat(getPrimitiveMultiValueField("citation", ALTERNATIVE_TITLE, result))
-                .containsExactly("title 1");
-        
-        
+            .containsExactly("title 1");
+
         // CIT010 rest of dcmi title/alternative
         assertThat(getCompoundMultiValueField("citation", DESCRIPTION, result))
             .extracting(DESCRIPTION_VALUE).extracting("value")
@@ -138,7 +133,7 @@ public class CitationMetadataFromDcmiTest {
             + minimalDdmProfile() + dcmi(""
             + "<dct:identifier xsi:type='id-type:EASY2'>easy-dataset:123</dct:identifier>")
             + "</ddm:DDM>");
-        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), null,true, null, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), null, true, null, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -155,7 +150,7 @@ public class CitationMetadataFromDcmiTest {
             + minimalDdmProfile() + dcmi(""
             + "<dct:identifier xsi:type='id-type:EASY2'>easy-dataset:123</dct:identifier>")
             + "</ddm:DDM>");
-        var result = createMapper(false).toDataverseDataset(doc, null, null, null, new VaultMetadata(), null,true, null, null);
+        var result = createMapper(false).toDataverseDataset(doc, null, null, null, new VaultMetadata(), null, true, null, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).isNull();
@@ -168,7 +163,7 @@ public class CitationMetadataFromDcmiTest {
             + minimalDdmProfile() + dcmi(""
             + "<dct:identifier>typeless:123</dct:identifier>")
             + "</ddm:DDM>");
-        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), null,true, null, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, null, null, new VaultMetadata(), null, true, null, null);
         var field = getCompoundMultiValueField("citation", OTHER_ID, result);
 
         assertThat(field).hasSize(1);
@@ -339,15 +334,14 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<dct:accessRights>Some story</dct:accessRights>")
             + "</ddm:DDM>");
 
-        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null,false, null, null);
+        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null);
         var str = toPrettyJsonString(result);
 
         assertThat(str).doesNotContain("<p>Some story</p>");
 
-
         var field = getCompoundMultiValueField("citation", DESCRIPTION, result);
         assertThat(field).extracting(DESCRIPTION_VALUE).extracting("value")
-            .containsOnly( "<p>Lorem ipsum.</p>");
+            .containsOnly("<p>Lorem ipsum.</p>");
         assertThat(result.getDatasetVersion().getTermsOfAccess()).isEqualTo("");
     }
 
@@ -466,8 +460,9 @@ public class CitationMetadataFromDcmiTest {
 
         var skipFields = List.of("dateOfDeposit", "publication");
         var activeMetadataBlocks = Set.of("citation", "dansRights", "dansDataVaultMetadata");
-        var result = new DepositToDvDatasetMetadataMapper(true, activeMetadataBlocks, Map.of(), Map.of(), List.of(), config.getDataSuppliers(), skipFields, true)
-            .toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata,null, false, null, null);
+        var result = new DepositToDvDatasetMetadataMapper(true, activeMetadataBlocks, Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), List.of(), config.getDataSuppliers(),
+            skipFields, true)
+            .toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null);
         var field = getCompoundMultiValueField("citation", PUBLICATION, result);
         assertThat(field).isNull();
     }
@@ -480,7 +475,7 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<dct:provenance>copied xml to csv</dct:provenance>")
             + "</ddm:DDM>");
 
-        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null,false, null, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null);
         var str = toPrettyJsonString(result);
 
         assertThat(str).containsOnlyOnce("copied xml to csv");
@@ -498,7 +493,7 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<dct:provenance>copied xml to csv</dct:provenance>")
             + "</ddm:DDM>");
 
-        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null,false, null, null);
+        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null);
         var str = toPrettyJsonString(result);
 
         assertThat(str).doesNotContain("copied xml to csv");
@@ -588,7 +583,7 @@ public class CitationMetadataFromDcmiTest {
     void CIT021_contributor_organization_role_maps_to_contributor_type() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + " xmlns:dcx-dai='http://easy.dans.knaw.nl/schemas/dcx/dai/'>"
-            + minimalDdmProfile() + dcmi("" 
+            + minimalDdmProfile() + dcmi(""
             + "        <dcx-dai:contributorDetails>"
             + "            <dcx-dai:organization>"
             + "                <dcx-dai:name xml:lang='en'>Contributing Org</dcx-dai:name>"
@@ -631,7 +626,7 @@ public class CitationMetadataFromDcmiTest {
             + dcmi("<ddm:description descriptionType='Other'>Author from description other</ddm:description>")
             + "</ddm:DDM>");
 
-        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null,false, null, null);
+        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null);
         var field = getCompoundMultiValueField("citation", CONTRIBUTOR, result);
         var expected = "Author from description other";
         assertThat(field).extracting(CONTRIBUTOR_NAME).extracting("value")

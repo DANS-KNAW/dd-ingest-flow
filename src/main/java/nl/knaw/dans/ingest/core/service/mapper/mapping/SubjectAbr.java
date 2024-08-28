@@ -21,6 +21,7 @@ import org.w3c.dom.Node;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.ABR_BASE_URL;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_ARTIFACT;
@@ -54,21 +55,12 @@ public class SubjectAbr extends Base {
         );
     }
 
-    private static String getValueUri(Node node) {
-        return getAttribute(node, "valueURI")
-            .map(Node::getTextContent)
-            .orElseGet(() -> {
-                log.error("Missing {} attribute on {} node", "valueURI", node.getNodeName());
-                return null;
-            });
+    public static String toAbrComplex(Node node, Map<String, String> abrComplexCodeToTerm) {
+        return normalizeToNewAbrTerm(getValueUri(node, abrComplexCodeToTerm));
     }
 
-    public static String toAbrComplex(Node node) {
-        return normalizeToNewAbrTerm(getValueUri(node));
-    }
-
-    public static String toAbrArtifact(Node node) {
-        return normalizeToNewAbrTerm(getValueUri(node));
+    public static String toAbrArtifact(Node node, Map<String, String> abrArtifactCodeToTerm) {
+        return normalizeToNewAbrTerm(getValueUri(node, abrArtifactCodeToTerm));
     }
 
     private static String normalizeToNewAbrTerm(String term) {

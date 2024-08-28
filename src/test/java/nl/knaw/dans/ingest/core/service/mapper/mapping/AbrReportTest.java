@@ -17,39 +17,45 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AbrReportTest extends BaseTest {
 
     @Test
     void isAbrReportType_should_return_true_when_properties_match() throws Exception {
-        var doc = readDocumentFromString("<ddm:reportNumber \n"
-            + "            xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"
-            + "            subjectScheme=\"ABR Rapporten\" \n"
-            + "            schemeURI=\"https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e\">value</ddm:reportNumber>");
+        var doc = readDocumentFromString("""
+            <ddm:reportNumber\s
+                        xmlns:ddm="http://schemas.dans.knaw.nl/dataset/ddm-v2/"
+                        subjectScheme="ABR Rapporten"\s
+                        schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e">value</ddm:reportNumber>""");
 
         assertTrue(AbrReport.isAbrReportType(doc.getDocumentElement()));
     }
 
     @Test
     void isAbrReportType_should_return_false_when_subjectScheme_does_not_match() throws Exception {
-        var doc = readDocumentFromString("<ddm:reportNumber \n"
-            + "            xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"
-            + "            subjectScheme=\"INVALID\" \n"
-            + "            schemeURI=\"https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e\">value</ddm:reportNumber>");
+        var doc = readDocumentFromString("""
+            <ddm:reportNumber\s
+                        xmlns:ddm="http://schemas.dans.knaw.nl/dataset/ddm-v2/"
+                        subjectScheme="INVALID"\s
+                        schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e">value</ddm:reportNumber>""");
 
         assertFalse(AbrReport.isAbrReportType(doc.getDocumentElement()));
     }
 
     @Test
     void isAbrReportType_should_return_false_when_schemeURI_does_not_match() throws Exception {
-        var doc = readDocumentFromString("<ddm:reportNumber \n"
-            + "            xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"
-            + "            subjectScheme=\"ABR Rapporten\" \n"
-            + "            schemeURI=\"https://fake.data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e\">value</ddm:reportNumber>");
+        var doc = readDocumentFromString("""
+            <ddm:reportNumber\s
+                        xmlns:ddm="http://schemas.dans.knaw.nl/dataset/ddm-v2/"
+                        subjectScheme="ABR Rapporten"\s
+                        schemeURI="https://fake.data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e">value</ddm:reportNumber>""");
 
         assertFalse(AbrReport.isAbrReportType(doc.getDocumentElement()));
     }
@@ -57,35 +63,38 @@ class AbrReportTest extends BaseTest {
     @Test
     void toAbrRapportType_should_return_valueURI() throws Exception {
         var doc = readDocumentFromString(
-            "<ddm:reportNumber \n"
-                + "            xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"
-                + "            subjectScheme=\"ABR Rapporten\" \n"
-                + "            valueURI=\"https://dar.dans.knaw.nl/\" \n"
-                + "            schemeURI=\"https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e\" />");
+            """
+                <ddm:reportNumber\s
+                            xmlns:ddm="http://schemas.dans.knaw.nl/dataset/ddm-v2/"
+                            subjectScheme="ABR Rapporten"\s
+                            valueURI="https://dar.dans.knaw.nl/"\s
+                            schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e" />""");
 
-        assertEquals("https://dar.dans.knaw.nl/", AbrReport.toAbrRapportType(doc.getDocumentElement()));
+        assertEquals("https://dar.dans.knaw.nl/", AbrReport.toAbrRapportType(doc.getDocumentElement(), Map.of()));
     }
 
     @Test
-    void toAbrRapportType_should_return_null_when_valueURI_is_missing() throws Exception {
+    void toAbrRapportType_should_throw_IllegalArgumentException_when_valueURI_is_missing() throws Exception {
         var doc = readDocumentFromString(
-            "<ddm:reportNumber \n"
-                + "            xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"
-                + "            subjectScheme=\"ABR Rapporten\" \n"
-                + "            schemeURI=\"https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e\" />");
+            """
+                <ddm:reportNumber\s
+                            xmlns:ddm="http://schemas.dans.knaw.nl/dataset/ddm-v2/"
+                            subjectScheme="ABR Rapporten"\s
+                            schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e" />""");
 
-        assertNull(AbrReport.toAbrRapportType(doc.getDocumentElement()));
+        assertThrows(IllegalArgumentException.class, () -> AbrReport.toAbrRapportType(doc.getDocumentElement(), Map.of()));
     }
 
     @Test
     void toAbrRapportNumber_should_return_node_text() throws Exception {
         var doc = readDocumentFromString(
-            "<ddm:reportNumber \n"
-                + "            xmlns:ddm=\"http://schemas.dans.knaw.nl/dataset/ddm-v2/\"\n"
-                + "            subjectScheme=\"ABR Rapporten\" \n"
-                + "            schemeURI=\"https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e\">"
-                + "ABR node value"
-                + "</ddm:reportNumber>");
+            """
+                <ddm:reportNumber\s
+                            xmlns:ddm="http://schemas.dans.knaw.nl/dataset/ddm-v2/"
+                            subjectScheme="ABR Rapporten"\s
+                            schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e">\
+                ABR node value\
+                </ddm:reportNumber>""");
 
         assertEquals("ABR node value", AbrReport.toAbrRapportNumber(doc.getDocumentElement()));
     }

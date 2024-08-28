@@ -19,6 +19,8 @@ import nl.knaw.dans.ingest.core.domain.VaultMetadata;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static nl.knaw.dans.ingest.core.service.mapper.MappingTestHelper.ddmWithCustomProfileContent;
@@ -32,9 +34,14 @@ public class DansDataVaultMetadataTest {
     private final DepositToDvDatasetMetadataMapper mapper = new DepositToDvDatasetMetadataMapper(
         true,
         Set.of("citation", "dansRights", "dansDataVaultMetadata"),
-        null,
-        null,
-        null,
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        List.of(),
         getIngestFlowConfig().getDataSuppliers(), // VLT008
         Arrays.asList("".split(",")),
         true

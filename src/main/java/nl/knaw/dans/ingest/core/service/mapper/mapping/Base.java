@@ -25,6 +25,7 @@ import org.w3c.dom.Node;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -79,6 +80,24 @@ public class Base {
             .map(n -> StringUtils.equals(value, n.getTextContent()))
             .orElse(false);
 
+    }
+
+    static String getValueUri(Node node, Map<String, String> codeToTerm) {
+        return getAttribute(node, "valueURI")
+            .map(Node::getTextContent)
+            .orElseGet(() -> {
+                var valueCode = getAttribute(node, "valueCode")
+                    .map(Node::getTextContent)
+                    .orElse(null);
+                if (valueCode == null) {
+                    throw new IllegalArgumentException(String.format("No valueURI or valueCode found for for %s element", node.getLocalName()));
+                }
+                var term = codeToTerm.get(valueCode.trim());
+                if (term == null) {
+                    throw new IllegalArgumentException("No term URI found for code " + valueCode);
+                }
+                return term;
+            });
     }
 
     public static String asText(Node node) {

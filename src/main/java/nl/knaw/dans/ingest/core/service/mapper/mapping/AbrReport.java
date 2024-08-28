@@ -18,6 +18,8 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Node;
 
+import java.util.Map;
+
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_RAPPORT_TYPE;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_RAPPORT_TYPE;
 
@@ -29,13 +31,8 @@ public class AbrReport extends Base {
             && hasSchemeAndUriAttribute(node, SCHEME_ABR_RAPPORT_TYPE, SCHEME_URI_ABR_RAPPORT_TYPE);
     }
 
-    public static String toAbrRapportType(Node node) {
-        return getAttribute(node, "valueURI")
-            .map(Node::getTextContent)
-            .orElseGet(() -> {
-                log.error("Missing valueURI attribute on ddm:reportNumber node");
-                return null;
-            });
+    public static String toAbrRapportType(Node node, Map<String, String> abrReportCodeToTerm) {
+        return getValueUri(node, abrReportCodeToTerm);
     }
 
     public static String toAbrRapportNumber(Node node) {

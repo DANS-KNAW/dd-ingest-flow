@@ -18,6 +18,8 @@ package nl.knaw.dans.ingest.core.service.mapper.mapping;
 import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Node;
 
+import java.util.Map;
+
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_PERIOD;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_ABR_PLUS;
 import static nl.knaw.dans.ingest.core.service.DepositDatasetFieldNames.SCHEME_URI_ABR_PERIOD;
@@ -51,16 +53,7 @@ public class TemporalAbr extends Base {
         return a1 || a2;
     }
 
-    private static String getValueUri(Node node) {
-        return getAttribute(node, "valueURI")
-            .map(Node::getTextContent)
-            .orElseGet(() -> {
-                log.error("Missing {} attribute on {} node", "valueURI", node.getNodeName());
-                return null;
-            });
-    }
-
-    public static String toAbrPeriod(Node node) {
-        return getValueUri(node);
+    public static String toAbrPeriod(Node node, Map<String, String> abrPeriodCodeToTerm) {
+        return getValueUri(node, abrPeriodCodeToTerm);
     }
 }

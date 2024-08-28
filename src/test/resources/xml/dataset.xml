@@ -128,13 +128,9 @@
         <ddm:relation href="https://knaw.nl/">Relation</ddm:relation>
         <ddm:conformsTo>Conforms To</ddm:conformsTo>
         <ddm:acquisitionMethod subjectScheme="ABR verwervingswijzen"
-                               schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238">
+                               schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
+                               valueCode="ADXX">
             Method 1
-        </ddm:acquisitionMethod>
-
-        <ddm:acquisitionMethod subjectScheme="ABR something else"
-                               schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238">
-            Method 2
         </ddm:acquisitionMethod>
     </ddm:dcmiMetadata>
 </ddm:DDM>

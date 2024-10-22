@@ -652,6 +652,61 @@ public class CitationMetadataFromDcmiTest {
     }
 
     @Test
+    void CIT021B_dc_contributor_is_mapped_to_contributor_if_migration() throws Exception {
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">"
+            + minimalDdmProfile()
+            + dcmi(""
+            + "        <dc:contributor>Author from dc contributor</dc:contributor>")
+            + "</ddm:DDM>");
+
+        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null);
+        var field = getCompoundMultiValueField("citation", CONTRIBUTOR, result);
+        var expected = "Author from dc contributor";
+        assertThat(field).extracting(CONTRIBUTOR_NAME).extracting("value")
+            .containsOnly(expected);
+        // not as description and author
+        assertThat(toPrettyJsonString(result)).containsOnlyOnce(expected);
+    }
+
+    @Test
+    void CIT021B_dcterms_contributor_is_mapped_to_contributor_if_migration() throws Exception {
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">"
+            + minimalDdmProfile()
+            + dcmi(""
+            + "        <dct:contributor>Author from dcterms contributor</dct:contributor>")
+            + "</ddm:DDM>");
+
+        var result = createMapper(true).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null);
+        var field = getCompoundMultiValueField("citation", CONTRIBUTOR, result);
+        var expected = "Author from dcterms contributor";
+        assertThat(field).extracting(CONTRIBUTOR_NAME).extracting("value")
+            .containsOnly(expected);
+        // not as description and author
+        assertThat(toPrettyJsonString(result)).containsOnlyOnce(expected);
+    }
+
+
+    @Test
+    void CIT021B_dc_contributor_is_ignored_when_not_migration() throws Exception {
+        var doc = readDocumentFromString(""
+            + "<ddm:DDM " + rootAttributes + ">"
+            + minimalDdmProfile()
+            + dcmi(""
+            + "        <dc:contributor>Author from dc contributor</dc:contributor>")
+            + "</ddm:DDM>");
+
+        var result = createMapper(false).toDataverseDataset(doc, null, "2023-02-27", mockedContact, mockedVaultMetadata, null, false, null, null);
+        var field = getCompoundMultiValueField("citation", CONTRIBUTOR, result);
+        var notExpected = "Author from dc contributor";
+        assertThat(field).isNull();
+        // not as description and author
+        assertThat(toPrettyJsonString(result)).doesNotContain(notExpected);
+    }
+
+
+    @Test
     void CIT022_ddm_funder_maps_to_grant_number() throws Exception {
         var doc = readDocumentFromString(""
             + "<ddm:DDM " + rootAttributes + ">"

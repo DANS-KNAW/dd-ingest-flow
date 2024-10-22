@@ -39,7 +39,7 @@ public final class Contributor extends Base {
                 .filter(n -> !DcxDaiOrganization.isRightsHolderOrFunder(n))
                 .ifPresent(n -> DcxDaiOrganization.toContributorValueObject.build(builder, n));
         }
-        else if ("description".equals(node.getLocalName())) {
+        else if ("description".equals(node.getLocalName()) || "contributor".equals(node.getLocalName())) {
             builder.addSubfield(CONTRIBUTOR_NAME, node.getTextContent());
         }
     };

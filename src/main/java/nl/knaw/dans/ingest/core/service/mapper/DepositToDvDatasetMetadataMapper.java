@@ -187,6 +187,7 @@ public class DepositToDvDatasetMetadataMapper {
             if (isMigration) {
                 citationFields.addNotesText(getProvenance(ddm)); // CIT017A
                 citationFields.addContributors(getDcmiDdmDescriptions(ddm).filter(Description::hasDescriptionTypeOther), Contributor.toContributorValueObject); // CIT021A
+                citationFields.addContributors(getDcmiContributors(ddm), Contributor.toContributorValueObject); // CIT021B
             }
             if (dateOfDeposit != null) {
                 citationFields.addDateOfDeposit(dateOfDeposit); // CIT025A and CIT025B (first dataset versions)
@@ -344,6 +345,10 @@ public class DepositToDvDatasetMetadataMapper {
 
     Stream<Node> getDcmiDdmDescriptions(Document ddm) {
         return XPathEvaluator.nodes(ddm, DDM_DCMI_METADATA + "/ddm:description");
+    }
+
+    Stream<Node> getDcmiContributors(Document ddm) {
+        return XPathEvaluator.nodes(ddm, DDM_DCMI_METADATA + "/dcterms:contributor", DDM_DCMI_METADATA + "/dc:contributor");
     }
 
     Stream<Node> getProvenance(Document ddm) {

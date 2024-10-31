@@ -66,7 +66,11 @@ public class DepositLocationReaderImpl implements DepositLocationReader {
         }
 
         if (StringUtils.isBlank(target)) {
-            throw new MissingTargetException("No viable target found in deposit");
+            /*
+             * Target is required for the deposit to be processed. If not found, this must be an import deposit for a new dataset. It will be assigned a random target.
+             * The dataset will get a DOI assigned by Dataverse when the deposit is processed. For subsequent versions of the dataset, the DOI will be used as the target.
+             */
+            target = "temp:" + UUID.randomUUID();
         }
 
         return target;

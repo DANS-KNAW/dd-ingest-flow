@@ -112,17 +112,4 @@ class DepositLocationReaderImplTest {
 
         assertEquals("doi", result);
     }
-
-    @Test
-    void getTarget_should_throw_MissingTargetException_when_targets_are_missing() throws Throwable {
-        var config = new BaseConfiguration();
-        config.setProperty("dataverse.sword-token", " ");
-        config.setProperty("identifier.doi", " ");
-
-        var bagDataManager = Mockito.mock(BagDataManager.class);
-
-        var reader = new DepositLocationReaderImpl(bagDataManager);
-
-        assertThrows(MissingTargetException.class, () -> reader.getTarget(config));
-    }
 }

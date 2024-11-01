@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>dd-ingest-flow</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Manual";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> dd-ingest-flow
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href=".">Manual</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#synopsis">SYNOPSIS</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#description">DESCRIPTION</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#summary">Summary</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ingest-areas">Ingest areas</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#processing-of-a-deposit">Processing of a deposit</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#order-of-deposit-processing">Order of deposit processing</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#processing-steps">Processing steps</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#update-deposit">Update-deposit</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#mapping-to-dataverse-dataset">Mapping to Dataverse dataset</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#arguments">ARGUMENTS</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#server">Server</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#client">Client</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#installation-and-configuration">INSTALLATION AND CONFIGURATION</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#building-from-source">BUILDING FROM SOURCE</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="dev/">Development</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="arch/">⇒ DANS Data Station Architecture</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">dd-ingest-flow</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Manual</li>
+    <li class="wy-breadcrumbs-aside">
+        <a href="https://github.com/DANS-KNAW/dd-ingest-flow/edit/master/docs/index.md"> Edit on DANS-KNAW/dd-ingest-flow</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="dd-ingest-flow">dd-ingest-flow<a class="headerlink" href="#dd-ingest-flow" title="Permanent link">&para;</a></h1>
+<p>Ingests DANS deposit directories into Dataverse.</p>
+<h2 id="synopsis">SYNOPSIS<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
+<pre class="codehilite"><code># Start server
+dd-ingest-flow { server | check }
+
+# Client
+ingest-flow-*
+</code></pre>
+
+<p>For <code>ingest-flow-*</code> commands see <a href="https://dans-knaw.github.io/dans-datastation-tools/" target="_blank">dans-datastation-tools</a>.</p>
+<h2 id="description">DESCRIPTION<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
+<h3 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h3>
+<p>The <code>dd-ingest-flow</code> service imports <a href="https://dans-knaw.github.io/dans-datastation-architecture/deposit-directory/" target="_blank">deposit directories</a> into Dataverse. If successful, this will result in a new dataset in
+Dataverse or a new version of an existing dataset. The input deposit directories must be located in a directory on local disk storage known as
+an <a href="#ingest-areas">ingest area</a>.</p>
+<h3 id="ingest-areas">Ingest areas<a class="headerlink" href="#ingest-areas" title="Permanent link">&para;</a></h3>
+<p>An ingest area is a directory on local disk storage that is used by the service to receive deposits. It contains the following subdirectories:</p>
+<ul>
+<li><code>inbox</code> - the directory under which all input deposits must be located</li>
+<li><code>outbox</code> - a directory where the processed deposit are moved to (if successful to a subdirectory <code>processed</code>, otherwise to one of <code>rejected</code> or <code>failed</code>)</li>
+</ul>
+<p>The service supports three ingest areas:</p>
+<ul>
+<li>import - for bulk import of deposits, triggered by a data manager;</li>
+<li>migration - for bulk import of datasets migrated from <a href="https://easy.dans.knaw.nl" target="_blank">EASY</a>;</li>
+<li>auto-ingest - for continuous import of deposits offered through deposit service, such as <a href="https://dans-knaw.github.io/dd-sword2/" target="_blank">dd-sword2</a>;</li>
+</ul>
+<h3 id="processing-of-a-deposit">Processing of a deposit<a class="headerlink" href="#processing-of-a-deposit" title="Permanent link">&para;</a></h3>
+<h4 id="order-of-deposit-processing">Order of deposit processing<a class="headerlink" href="#order-of-deposit-processing" title="Permanent link">&para;</a></h4>
+<p>A deposit directory represents one dataset version. The version history of a datasets is represented by a sequence of deposit directories. When enqueuing
+deposits the program will first order them by the timestamp in the <code>Created</code> element in the contained bag's <code>bag-info.txt</code> file.</p>
+<h4 id="processing-steps">Processing steps<a class="headerlink" href="#processing-steps" title="Permanent link">&para;</a></h4>
+<p>The processing of a deposit consists of the following steps:</p>
+<ol>
+<li>Check that the deposit is a valid <a href="https://dans-knaw.github.io/dans-datastation-architecture/deposit-directory/" target="_blank">deposit directory</a>.</li>
+<li>Check that the bag in the deposit is a valid v1 <a href="https://dans-knaw.github.io/dans-bagit-profile/versions/1.0.0/" target="_blank">DANS bag</a>.</li>
+<li>Map the dataset level metadata to the metadata fields expected in the target Dataverse.</li>
+<li>If:<ul>
+<li>deposit represents first version of a dataset: create a new dataset draft.</li>
+<li>deposit represents an update to an existing dataset: <a href="#update-deposit">draft a new version</a>.</li>
+</ul>
+</li>
+<li>Publish the new dataset-version.</li>
+</ol>
+<h4 id="update-deposit">Update-deposit<a class="headerlink" href="#update-deposit" title="Permanent link">&para;</a></h4>
+<p>When receiving a deposit that specifies a new version for an existing dataset (an update-deposit) the assumption is that the bag contains the metadata and file
+data that must be in the new version. This means:</p>
+<ul>
+<li>The metadata specified completely overwrites the metadata in the latest version. So, even if the client needs to change only one word, it must send all the
+  existing metadata with only that particular word changed. Any metadata left out will be deleted in the new version.</li>
+<li>The files will replace the files in the latest version. So the files that are in the deposit are the ones that will be in the new version. If a file is to be
+  deleted from the new version, it should simply be left out in the deposit. If a file is to remain unchanged in the new version, an exact copy of the current
+  file must be sent.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">File path is key</p>
+<p>The local file path (in Dataverse terms: directoryLabel + name) is used as the key to determine what file in the latest published version, if any, is targetting. 
+For example, to replace a published file with label <code>foo.txt</code> and directoryLabel <code>my/special/folder</code>, the bag must contain the new version at 
+<code>data/my/special/folder/foo.txt</code>. (Note that the directoryLabel is the path relative to the bag's <code>data/</code> folder.)</p>
+</div>
+<h3 id="mapping-to-dataverse-dataset">Mapping to Dataverse dataset<a class="headerlink" href="#mapping-to-dataverse-dataset" title="Permanent link">&para;</a></h3>
+<p>The mapping rules are documented in the spreadsheet <a href="https://docs.google.com/spreadsheets/d/1G5YHSDg3a91nI9NgRjbz11iRFU9qgnNkde6K84j1NWI/edit#gid=107937978" target="_blank">DD Ingest Flow Mapping Rules</a>. Access to the Google spreadsheet is granted on 
+request to customers of DANS.</p>
+<p>The spreadsheet includes rules for:</p>
+<ul>
+<li>dataset level metadata</li>
+<li>dataset terms</li>
+<li>file level metadata and attributes (including setting an embargo)</li>
+</ul>
+<h2 id="arguments">ARGUMENTS<a class="headerlink" href="#arguments" title="Permanent link">&para;</a></h2>
+<h3 id="server">Server<a class="headerlink" href="#server" title="Permanent link">&para;</a></h3>
+<pre><code class="language-text">positional arguments:
+{server,check}         available commands
+
+named arguments:
+-h, --help             show this help message and exit
+-v, --version          show the application version and exit
+</code></pre>
+<h3 id="client">Client<a class="headerlink" href="#client" title="Permanent link">&para;</a></h3>
+<p>The service has a RESTful API. In <a href="https://dans-knaw.github.io/dans-datastation-tools/" target="_blank">dans-datastation-tools</a> commands to manage the service are available. These commands have names starting with
+<code>ingest-flow-</code>.</p>
+<h2 id="installation-and-configuration">INSTALLATION AND CONFIGURATION<a class="headerlink" href="#installation-and-configuration" title="Permanent link">&para;</a></h2>
+<p>Currently this project is built as an RPM package for RHEL7/CentOS7 and later. The RPM will install the binaries to
+<code>/opt/dans.knaw.nl/dd-ingest-flow</code> and the configuration files to <code>/etc/opt/dans.knaw.nl/dd-ingest-flow</code>. The configuration options are documented by comments
+in the default configuration file <code>config.yml</code>.</p>
+<p>To install the module on systems that do not support RPM, you can copy and unarchive the tarball to the target host. You will have to take care of placing the
+files in the correct locations for your system yourself. For instructions on building the tarball, see next section.</p>
+<h2 id="building-from-source">BUILDING FROM SOURCE<a class="headerlink" href="#building-from-source" title="Permanent link">&para;</a></h2>
+<p>Prerequisites:</p>
+<ul>
+<li>Java 11 or higher</li>
+<li>Maven 3.3.3 or higher</li>
+<li>RPM</li>
+</ul>
+<p>Steps:</p>
+<pre><code class="language-shell">git clone https://github.com/DANS-KNAW/dd-ingest-flow.git
+cd dd-ingest-flow
+mvn clean install
+</code></pre>
+<p>If the <code>rpm</code> executable is found at <code>/usr/local/bin/rpm</code>, the build profile that includes the RPM packaging will be activated. If <code>rpm</code> is available, but at a
+different path, then activate it by using Maven's <code>-P</code> switch: <code>mvn -Pprm install</code>.</p>
+<p>Alternatively, to build the tarball execute:</p>
+<pre><code class="language-bash">mvn clean install assembly:single
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="dev/" class="btn btn-neutral float-right" title="Development">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+      <span><a href="dev/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme_extra.js" defer></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.3.0
+Build Date UTC : 2024-11-01 10:19:48.297646+00:00
+-->

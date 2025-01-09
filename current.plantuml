@@ -1,0 +1,58 @@
+@startuml
+
+participant DepositIngestTask
+participant DatasetEditor
+participant DansBagValidator
+participant DatasetMetadataMapper
+participant DepositManager
+participant EventWriter
+participant XPathEvaluator
+participant DataverseClient
+participant Files
+
+DepositIngestTask -> EventWriter: writeEvent
+
+
+== Validation ==
+DepositIngestTask -> DepositIngestTask: checkDepositType()
+DepositIngestTask -> DansBagValidator: validateBag()
+DansBagValidator -> "dd-validate-dans-bag (http)": POST /validate
+
+"dd-validate-dans-bag (http)" --> DansBagValidator: ValidateOk response
+DansBagValidator ---> DepositIngestTask: ValidateOk response
+
+== Data prep ==
+
+DepositIngestTask -> DataverseClient: listSingleUser()
+DataverseClient --> DepositIngestTask: AuthenticatedUser (optional)
+DepositIngestTask -> XPathEvaluator: get accessible rights
+XPathEvaluator --> DepositIngestTask: list of nodes
+DepositIngestTask -> DatasetMetadataMapper ++:  toDataverseDataset()
+return new Dataset
+
+== Modifying dataset ==
+
+DepositIngestTask -> DatasetEditor ++: performEdit()
+    DatasetEditor -> XPathEvaluator: get license
+    XPathEvaluator --> DatasetEditor: list of licenses
+    DatasetEditor -> DataverseClient: update metadata
+    DatasetEditor -> DataverseClient: update file metadata
+return
+
+DepositIngestTask -> DataverseClient: publish dataset
+loop until state is no longer RELEASED
+    DepositIngestTask -> DataverseClient: get dataset state
+    DataverseClient --> DepositIngestTask: dataset state
+end
+
+DepositIngestTask -> DataverseClient: get metadata for dataset
+DataverseClient --> DepositIngestTask: urn and doi
+
+== Finalizing ==
+
+DepositIngestTask -> EventWriter: writeEvent
+DepositIngestTask -> DepositManager: saveDeposit()
+DepositIngestTask -> Files: move directory
+
+
+@enduml
